@@ -1,6 +1,4 @@
-# dgo
-
-[![GoDoc](https://godoc.org/github.com/dgraph-io/dgraph/client?status.svg)](https://godoc.org/github.com/dgraph-io/dgraph/client)
+# dgo [![GoDoc](https://godoc.org/github.com/dgraph-io/dgo?status.svg)](https://godoc.org/github.com/dgraph-io/dgo)
 
 Official Dgraph Go client which communicates with the server using [gRPC](https://grpc.io/).
 
@@ -25,5 +23,15 @@ and understand how to run and work with Dgraph.
 - [Development](#development)
   - [Building the source](#building-the-source)
   - [Running tests](#running-tests)
+
+## Install
+
+```sh
+go get -u -v github.com/dgraph-io/dgo
+```
+
+## Using a client
+
+### Create a client
 
 

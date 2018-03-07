@@ -1,4 +1,4 @@
-package client_test
+package dgo_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/dgraph-io/dgraph/client"
+	"github.com/dgraph-io/dgo"
 	"github.com/dgraph-io/dgraph/protos/api"
 	"google.golang.org/grpc"
 )
@@ -44,7 +44,7 @@ func Example_setObject() {
 	defer conn.Close()
 
 	dc := api.NewDgraphClient(conn)
-	dg := client.NewDgraphClient(dc)
+	dg := dgo.NewDgraphClient(dc)
 
 	dob := time.Date(1980, 01, 01, 23, 0, 0, 0, time.UTC)
 	// While setting an object if a struct has a Uid then its properties in the graph are updated

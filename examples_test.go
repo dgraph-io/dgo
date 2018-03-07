@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package client_test
+package dgo_test
 
 import (
 	"context"
@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgraph-io/dgraph/client"
+	"github.com/dgraph-io/dgo"
 	"github.com/dgraph-io/dgraph/protos/api"
 	"github.com/dgraph-io/dgraph/x"
 	"google.golang.org/grpc"
@@ -87,7 +87,7 @@ func ExampleDgraph_Alter_dropAll() {
 	defer conn.Close()
 
 	dc := api.NewDgraphClient(conn)
-	dg := client.NewDgraphClient(dc)
+	dg := dgo.NewDgraphClient(dc)
 
 	op := api.Operation{
 		DropAll: true,
@@ -110,7 +110,7 @@ func ExampleTxn_Query_variables() {
 	defer conn.Close()
 
 	dc := api.NewDgraphClient(conn)
-	dg := client.NewDgraphClient(dc)
+	dg := dgo.NewDgraphClient(dc)
 
 	type Person struct {
 		Uid  string `json:"uid,omitempty"`
@@ -204,7 +204,7 @@ func ExampleTxn_Mutate() {
 	defer conn.Close()
 
 	dc := api.NewDgraphClient(conn)
-	dg := client.NewDgraphClient(dc)
+	dg := dgo.NewDgraphClient(dc)
 
 	// While setting an object if a struct has a Uid then its properties in the graph are updated
 	// else a new node is created.
@@ -309,7 +309,7 @@ func ExampleTxn_Mutate_bytes() {
 	defer conn.Close()
 
 	dc := api.NewDgraphClient(conn)
-	dg := client.NewDgraphClient(dc)
+	dg := dgo.NewDgraphClient(dc)
 
 	type Person struct {
 		Uid   string `json:"uid,omitempty"`
@@ -395,7 +395,7 @@ func ExampleTxn_Query_unmarshal() {
 	defer conn.Close()
 
 	dc := api.NewDgraphClient(conn)
-	dg := client.NewDgraphClient(dc)
+	dg := dgo.NewDgraphClient(dc)
 
 	op := &api.Operation{}
 	op.Schema = `
@@ -512,7 +512,7 @@ func ExampleTxn_Mutate_facets() {
 	defer conn.Close()
 
 	dc := api.NewDgraphClient(conn)
-	dg := client.NewDgraphClient(dc)
+	dg := dgo.NewDgraphClient(dc)
 
 	// Doing a dropAll isn't required by the user. We do it here so that we can verify that the
 	// example runs as expected.
@@ -635,7 +635,7 @@ func ExampleTxn_Mutate_list() {
 	defer conn.Close()
 
 	dc := api.NewDgraphClient(conn)
-	dg := client.NewDgraphClient(dc)
+	dg := dgo.NewDgraphClient(dc)
 	// This example shows example for SetObject for predicates with list type.
 	type Person struct {
 		Uid         string   `json:"uid"`
@@ -710,7 +710,7 @@ func ExampleDeleteEdges() {
 	defer conn.Close()
 
 	dc := api.NewDgraphClient(conn)
-	dg := client.NewDgraphClient(dc)
+	dg := dgo.NewDgraphClient(dc)
 
 	op := &api.Operation{}
 	op.Schema = `
@@ -798,7 +798,7 @@ func ExampleDeleteEdges() {
 
 	// Now lets delete the friend and location edge from Alice
 	mu = &api.Mutation{}
-	client.DeleteEdges(mu, alice, "friends", "loc")
+	dgo.DeleteEdges(mu, alice, "friends", "loc")
 
 	mu.CommitNow = true
 	_, err = dg.NewTxn().Mutate(ctx, mu)
@@ -829,7 +829,7 @@ func ExampleTxn_Mutate_deleteNode() {
 	defer conn.Close()
 
 	dc := api.NewDgraphClient(conn)
-	dg := client.NewDgraphClient(dc)
+	dg := dgo.NewDgraphClient(dc)
 
 	// In this test we check S * * deletion.
 	type Person struct {
@@ -968,7 +968,7 @@ func ExampleTxn_Mutate_deletePredicate() {
 	defer conn.Close()
 
 	dc := api.NewDgraphClient(conn)
-	dg := client.NewDgraphClient(dc)
+	dg := dgo.NewDgraphClient(dc)
 
 	type Person struct {
 		Uid     string   `json:"uid,omitempty"`
