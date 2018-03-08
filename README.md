@@ -34,4 +34,27 @@ go get -u -v github.com/dgraph-io/dgo
 
 ### Create a client
 
+```go
+	conn, err := grpc.Dial("localhost:9080", grpc.WithInsecure())
+	if err != nil {
+		log.Fatal(err)
+	}
+	dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
+```
 
+### Alter the database
+
+To set the schema, using the `Alter` endpoint.
+
+```go
+	op := &api.Operation{
+		Schema: `name: string @index(exact) .`,
+	}
+	err := dgraphClient.Alter(context.Background(), op)
+	// Check error
+
+```
+
+`Operation` contains other fields as well, including drop predicate and drop all.
+Drop all is useful if you wish to discard all the data, and start from a clean
+slate, without bringing the instance down.
