@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/dgraph-io/dgo"
+	"github.com/dgraph-io/dgo/x"
 	"github.com/dgraph-io/dgraph/protos/api"
-	"github.com/dgraph-io/dgraph/x"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 )
@@ -42,7 +42,7 @@ func TestMain(m *testing.M) {
 	dgraph := exec.Command(os.ExpandEnv("dgraph"),
 		"server",
 		"--memory_mb=2048",
-		fmt.Sprintf("--zero=127.0.0.1:%d", x.PortZeroGrpc),
+		fmt.Sprintf("--zero=127.0.0.1:%d", 5080),
 		"-o=1",
 	)
 	dgraph.Stdout = os.Stdout

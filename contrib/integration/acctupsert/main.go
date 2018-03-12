@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/dgraph-io/dgo"
+	"github.com/dgraph-io/dgo/x"
 	"github.com/dgraph-io/dgraph/protos/api"
-	"github.com/dgraph-io/dgraph/x"
 	"github.com/dgraph-io/dgraph/y"
 	"google.golang.org/grpc"
 )
