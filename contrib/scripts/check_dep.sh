@@ -10,7 +10,7 @@ google.golang.org/grpc/status
 math/rand
 sync"
 
-got=$(go list -f '{{ join .Imports "\n" }}' github.com/dgraph-io/dgo)
+got=$(go list -f '{{ join .Imports "\n" }}' github.com/dgraph-io/dgo/...)
 
 if [ "$got" != "$expected" ]; then
   echo "Imports for Go client didn't match."
