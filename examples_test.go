@@ -28,8 +28,8 @@ import (
 	"time"
 
 	"github.com/dgraph-io/dgo"
+	"github.com/dgraph-io/dgo/protos/api"
 	"github.com/dgraph-io/dgo/x"
-	"github.com/dgraph-io/dgraph/protos/api"
 	"google.golang.org/grpc"
 )
 
@@ -38,11 +38,6 @@ func TestMain(m *testing.M) {
 	zw, err := ioutil.TempDir("", "")
 	x.Check(err)
 
-	cmd := exec.Command("go", "install", "github.com/dgraph-io/dgraph/dgraph")
-	cmd.Env = os.Environ()
-	if out, err := cmd.CombinedOutput(); err != nil {
-		log.Fatalf("Could not run %q: %s", cmd.Args, string(out))
-	}
 	zero := exec.Command(os.ExpandEnv("$GOPATH/bin/dgraph"),
 		"zero",
 		"-w", zw,
