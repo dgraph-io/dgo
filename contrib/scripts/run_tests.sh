@@ -1,7 +1,11 @@
 #!/bin/bash
 
-dgo_scripts=$GOPATH/src/github.com/dgraph-io/dgo/contrib/scripts
+dgo=$GOPATH/src/github.com/dgraph-io/dgo
+dgo_scripts=$dgo/contrib/scripts
 
-$dgo_scripts/install_dgraph.sh
+pushd $dgo
+go test -v .
+popd
+
 $dgo_scripts/check_dep.sh
 $dgo_scripts/transaction.sh
