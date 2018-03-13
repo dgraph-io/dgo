@@ -21,8 +21,8 @@ import (
 	"math/rand"
 	"sync"
 
-	"github.com/dgraph-io/dgraph/protos/api"
-	"github.com/dgraph-io/dgraph/y"
+	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/dgraph-io/dgo/y"
 	"github.com/gogo/protobuf/proto"
 )
 
