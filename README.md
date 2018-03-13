@@ -150,9 +150,11 @@ txn := dgraphClient.NewTxn()
 
 err := txn.Commit(ctx)
 if err == y.ErrAborted {
-	// Retry or handle error
+  // Retry or handle error
 }
 ```
+
+## Development
 
 ### Running tests
 
