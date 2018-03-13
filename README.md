@@ -10,7 +10,6 @@ and understand how to run and work with Dgraph.
 ## Table of contents
 
 - [Install](#install)
-- [Quickstart](#quickstart)
 - [Using a client](#using-a-client)
   - [Create a client](#create-a-client)
   - [Alter the database](#alter-the-database)
@@ -18,10 +17,7 @@ and understand how to run and work with Dgraph.
   - [Run a mutation](#run-a-mutation)
   - [Run a query](#run-a-query)
   - [Commit a transaction](#commit-a-transaction)
-  - [Cleanup Resources](#cleanup-resources)
-  - [Debug mode](#debug-mode)
 - [Development](#development)
-  - [Building the source](#building-the-source)
   - [Running tests](#running-tests)
 
 ## Install
@@ -57,7 +53,7 @@ To set the schema, create an instance of `api.Operation` and use the `Alter` end
 op := &api.Operation{
   Schema: `name: string @index(exact) .`,
 }
-err := dgraphClient.Alter(context.Background(), op)
+err := dgraphClient.Alter(ctx, op)
 // Check error
 ```
 
@@ -85,34 +81,34 @@ defer txn.Discard(ctx)
 `txn.Mutate(ctx, mu)` runs a mutation. It takes in a `context.Context` and a `*api.Mutation`
 object. You can set the data using JSON or RDF N-Quad format.
 
-We define a person struct to represent a Person and marshal an instance of it to use with `Mutation`
+We define a Person struct to represent a Person and marshal an instance of it to use with `Mutation`
 object.
 ```go
 type Person struct {
-	Uid  string `json:"uid,omitempty"`
-	Name string `json:"name,omitempty"`
+  Uid  string `json:"uid,omitempty"`
+  Name string `json:"name,omitempty"`
 }
 
 p := Person{
-	Uid:  "_:alice",
-	Name: "Alice",
+  Uid:  "_:alice",
+  Name: "Alice",
 }
 
 pb, err := json.Marshal(p)
 if err != nil {
-	log.Fatal(err)
+  log.Fatal(err)
 }
 
 mu := &api.Mutation{
-	SetJson: pb,
+  SetJson: pb,
 }
 assigned, err := txn.Mutate(ctx, mu)
 if err != nil {
-	log.Fatal(err)
+  log.Fatal(err)
 }
 ```
 
-For a more complete example, see [GoDoc](https://godoc.org/github.com/dgraph-io/dgo?status.svg)](https://godoc.org/github.com/dgraph-io/dgo#example-package--SetObject).
+For a more complete example, see [GoDoc](https://godoc.org/github.com/dgraph-io/dgo#example-package--SetObject).
 
 Sometimes, you only want to commit a mutation, without querying anything further.
 In such cases, you can use `mu.CommitNow = true` to indicate that the
@@ -127,10 +123,10 @@ you want to pass an additional map of any variables that you might want to set i
 Let's run the following query with a variable $a:
 ```go
 q := `query all($a: string) {
-		all(func: eq(name, $a)) {
-			name
-		}
-	}`
+    all(func: eq(name, $a)) {
+      name
+    }
+  }`
 
 resp, err := txn.QueryWithVars(ctx, q, map[string]string{"$a": "Alice"})
 fmt.Println(string(resp.Json))
