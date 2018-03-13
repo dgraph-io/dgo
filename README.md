@@ -2,10 +2,12 @@
 
 Official Dgraph Go client which communicates with the server using [gRPC](https://grpc.io/).
 
-Before using this client, we highly recommend that you go through [docs.dgraph.io],
-and understand how to run and work with Dgraph.
+Before using this client, we highly recommend that you go through [tour.dgraph.io] and [docs.dgraph.io]
+to understand how to run and work with Dgraph.
 
 [docs.dgraph.io]:https://docs.dgraph.io
+[tour.dgraph.io]:https://tour.dgraph.io
+
 
 ## Table of contents
 
