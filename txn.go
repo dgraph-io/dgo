@@ -46,10 +46,15 @@ var (
 type Txn struct {
 	context *api.TxnContext
 
-	finished bool
-	mutated  bool
+	finished      bool
+	mutated       bool
+	serverLinRead bool
 
 	dg *Dgraph
+}
+
+func (txn *Txn) SetServerLevelLinRead(b bool) {
+	txn.serverLinRead = b
 }
 
 // NewTxn creates a new transaction.
@@ -83,6 +88,7 @@ func (txn *Txn) QueryWithVars(ctx context.Context, q string,
 		StartTs: txn.context.StartTs,
 		LinRead: txn.context.LinRead,
 	}
+	req.LinRead.ServerLevel = txn.serverLinRead
 	dc := txn.dg.anyClient()
 	resp, err := dc.Query(ctx, req)
 	if err == nil {

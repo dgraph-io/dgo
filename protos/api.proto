@@ -97,6 +97,7 @@ message Version {
 
 message LinRead {
 	map<uint32, uint64> ids = 1;
+	bool server_level = 2;
 }
 
 message Latency {
