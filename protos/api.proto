@@ -96,7 +96,13 @@ message Version {
 }
 
 message LinRead {
+	enum Sequencing {
+		CLIENT_SIDE = 0;
+		SERVER_SIDE = 1;
+	}
+
 	map<uint32, uint64> ids = 1;
+	Sequencing sequencing = 2;
 }
 
 message Latency {
