@@ -46,10 +46,15 @@ var (
 type Txn struct {
 	context *api.TxnContext
 
-	finished bool
-	mutated  bool
+	finished   bool
+	mutated    bool
+	sequencing api.LinRead_Sequencing
 
 	dg *Dgraph
+}
+
+func (txn *Txn) Sequencing(sequencing api.LinRead_Sequencing) {
+	txn.sequencing = sequencing
 }
 
 // NewTxn creates a new transaction.
@@ -83,6 +88,7 @@ func (txn *Txn) QueryWithVars(ctx context.Context, q string,
 		StartTs: txn.context.StartTs,
 		LinRead: txn.context.LinRead,
 	}
+	req.LinRead.Sequencing = txn.sequencing
 	dc := txn.dg.anyClient()
 	resp, err := dc.Query(ctx, req)
 	if err == nil {
