@@ -162,5 +162,5 @@ Make sure you have `dgraph` installed before you run the tests. This script will
 integration tests.
 
 ```sh
-./contrib/scripts/run_tests.sh
+go test -v ./...
 ```

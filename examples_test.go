@@ -38,7 +38,7 @@ func TestMain(m *testing.M) {
 	zw, err := ioutil.TempDir("", "")
 	x.Check(err)
 
-	zero := exec.Command(os.ExpandEnv("$GOPATH/bin/dgraph"),
+	zero := exec.Command(os.ExpandEnv("dgraph"),
 		"zero",
 		"-w", zw,
 		"-o", "1",
@@ -52,12 +52,12 @@ func TestMain(m *testing.M) {
 	w, err := ioutil.TempDir("", "")
 	x.Check(err)
 
-	server := exec.Command(os.ExpandEnv("$GOPATH/bin/dgraph"),
+	server := exec.Command(os.ExpandEnv("dgraph"),
 		"server",
 		"-w", w,
 		"-p", p,
 		"--zero", "127.0.0.1:5081",
-		"--memory_mb", "2048",
+		"--lru_mb", "2048",
 	)
 	server.Stdout = os.Stdout
 	server.Stderr = os.Stdout
@@ -711,6 +711,7 @@ func ExampleDeleteEdges() {
 	op.Schema = `
 			age: int .
 			married: bool .
+			name: string @lang .
 		`
 
 	ctx := context.Background()
