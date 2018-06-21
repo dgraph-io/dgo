@@ -712,6 +712,7 @@ func ExampleDeleteEdges() {
 			age: int .
 			married: bool .
 			name: string @lang .
+			location: string .
 		`
 
 	ctx := context.Background()
@@ -731,7 +732,7 @@ func ExampleDeleteEdges() {
 		Age      int       `json:"age,omitempty"`
 		Married  bool      `json:"married,omitempty"`
 		Friends  []Person  `json:"friends,omitempty"`
-		Location string    `json:"loc,omitempty"`
+		Location string    `json:"location,omitempty"`
 		Schools  []*School `json:"schools,omitempty"`
 	}
 
