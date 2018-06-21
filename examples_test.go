@@ -712,6 +712,8 @@ func ExampleDeleteEdges() {
 			age: int .
 			married: bool .
 			name: string @lang .
+			loc: string .
+		      //location: string .    // Comment the loc above & Use this if you have used loc predicate elsewhere & dont want to over-write it.
 		`
 
 	ctx := context.Background()
@@ -731,7 +733,8 @@ func ExampleDeleteEdges() {
 		Age      int       `json:"age,omitempty"`
 		Married  bool      `json:"married,omitempty"`
 		Friends  []Person  `json:"friends,omitempty"`
-		Location string    `json:"loc,omitempty"`
+		Location string    `json:"loc,omitempty"`     // Comment this if you are using line number 737
+	       //Location string  `json:"location,omitempty"` // Uncomment this line along with line number 716 and comment line number 736 & 715, if you are using this.
 		Schools  []*School `json:"schools,omitempty"`
 	}
 
