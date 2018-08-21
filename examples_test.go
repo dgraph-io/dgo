@@ -692,8 +692,9 @@ func ExampleTxn_Mutate_list() {
 		log.Fatal(err)
 	}
 
+	// List items aren't guaranteed to be in the same order.
 	fmt.Println(string(resp.Json))
-	// Output: {"me":[{"address":["Riley Street","Redfern"],"phone_number":[9876,123]}]}
+	// {"me":[{"address":["Riley Street","Redfern"],"phone_number":[9876,123]}]}
 
 }
 
