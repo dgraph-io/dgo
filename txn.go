@@ -51,6 +51,7 @@ type Txn struct {
 	sequencing api.LinRead_Sequencing
 
 	dg *Dgraph
+	dc api.DgraphClient
 }
 
 func (txn *Txn) Sequencing(sequencing api.LinRead_Sequencing) {
@@ -61,6 +62,7 @@ func (txn *Txn) Sequencing(sequencing api.LinRead_Sequencing) {
 func (d *Dgraph) NewTxn() *Txn {
 	txn := &Txn{
 		dg: d,
+		dc: d.anyClient(),
 		context: &api.TxnContext{
 			LinRead: d.getLinRead(),
 		},
@@ -89,8 +91,7 @@ func (txn *Txn) QueryWithVars(ctx context.Context, q string,
 		LinRead: txn.context.LinRead,
 	}
 	req.LinRead.Sequencing = txn.sequencing
-	dc := txn.dg.anyClient()
-	resp, err := dc.Query(ctx, req)
+	resp, err := txn.dc.Query(ctx, req)
 	if err == nil {
 		if err := txn.mergeContext(resp.GetTxn()); err != nil {
 			return nil, err
@@ -114,6 +115,7 @@ func (txn *Txn) mergeContext(src *api.TxnContext) error {
 		return errors.New("StartTs mismatch")
 	}
 	txn.context.Keys = append(txn.context.Keys, src.Keys...)
+	txn.context.Preds = append(txn.context.Preds, src.Preds...)
 	return nil
 }
 
@@ -134,8 +136,7 @@ func (txn *Txn) Mutate(ctx context.Context, mu *api.Mutation) (*api.Assigned, er
 
 	txn.mutated = true
 	mu.StartTs = txn.context.StartTs
-	dc := txn.dg.anyClient()
-	ag, err := dc.Mutate(ctx, mu)
+	ag, err := txn.dc.Mutate(ctx, mu)
 	if err != nil {
 		// Since a mutation error occurred, the txn should no longer be used
 		// (some mutations could have applied but not others, but we don't know
@@ -174,8 +175,7 @@ func (txn *Txn) Commit(ctx context.Context) error {
 	if !txn.mutated {
 		return nil
 	}
-	dc := txn.dg.anyClient()
-	_, err := dc.CommitOrAbort(ctx, txn.context)
+	_, err := txn.dc.CommitOrAbort(ctx, txn.context)
 	if s, ok := status.FromError(err); ok && s.Code() == codes.Aborted {
 		err = y.ErrAborted
 	}
@@ -201,7 +201,6 @@ func (txn *Txn) Discard(ctx context.Context) error {
 		return nil
 	}
 	txn.context.Aborted = true
-	dc := txn.dg.anyClient()
-	_, err := dc.CommitOrAbort(ctx, txn.context)
+	_, err := txn.dc.CommitOrAbort(ctx, txn.context)
 	return err
 }

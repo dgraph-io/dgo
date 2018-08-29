@@ -85,7 +85,8 @@ message TxnContext {
 	uint64 start_ts = 1;
 	uint64 commit_ts = 2;
 	bool aborted = 3;
-	repeated string keys = 4;
+	repeated string keys = 4;  // List of keys to be used for conflict detection.
+	repeated string preds = 5; // List of predicates involved in this transaction.
 	LinRead lin_read = 13;
 }
 
