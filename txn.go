@@ -46,26 +46,23 @@ var (
 type Txn struct {
 	context *api.TxnContext
 
-	finished   bool
-	mutated    bool
-	sequencing api.LinRead_Sequencing
+	finished bool
+	mutated  bool
 
 	dg *Dgraph
 	dc api.DgraphClient
 }
 
 func (txn *Txn) Sequencing(sequencing api.LinRead_Sequencing) {
-	txn.sequencing = sequencing
+	// Sequencing is no longer used.
 }
 
 // NewTxn creates a new transaction.
 func (d *Dgraph) NewTxn() *Txn {
 	txn := &Txn{
-		dg: d,
-		dc: d.anyClient(),
-		context: &api.TxnContext{
-			LinRead: d.getLinRead(),
-		},
+		dg:      d,
+		dc:      d.anyClient(),
+		context: &api.TxnContext{},
 	}
 	return txn
 }
@@ -88,9 +85,7 @@ func (txn *Txn) QueryWithVars(ctx context.Context, q string,
 		Query:   q,
 		Vars:    vars,
 		StartTs: txn.context.StartTs,
-		LinRead: txn.context.LinRead,
 	}
-	req.LinRead.Sequencing = txn.sequencing
 	resp, err := txn.dc.Query(ctx, req)
 	if err == nil {
 		if err := txn.mergeContext(resp.GetTxn()); err != nil {
@@ -104,9 +99,6 @@ func (txn *Txn) mergeContext(src *api.TxnContext) error {
 	if src == nil {
 		return nil
 	}
-
-	y.MergeLinReads(txn.context.LinRead, src.LinRead)
-	txn.dg.mergeLinRead(src.LinRead) // Also merge it with client.
 
 	if txn.context.StartTs == 0 {
 		txn.context.StartTs = src.StartTs

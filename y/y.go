@@ -20,27 +20,9 @@ package y
 
 import (
 	"errors"
-
-	"github.com/dgraph-io/dgo/protos/api"
 )
 
 var (
 	ErrAborted  = errors.New("Transaction has been aborted. Please retry.")
 	ErrConflict = errors.New("Conflicts with pending transaction. Please abort.")
 )
-
-func MergeLinReads(dst *api.LinRead, src *api.LinRead) {
-	if src == nil || src.Ids == nil {
-		return
-	}
-	if dst.Ids == nil {
-		dst.Ids = make(map[uint32]uint64)
-	}
-	for gid, sid := range src.Ids {
-		if did, has := dst.Ids[gid]; has && did >= sid {
-			// do nothing.
-		} else {
-			dst.Ids[gid] = sid
-		}
-	}
-}

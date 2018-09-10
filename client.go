@@ -19,19 +19,13 @@ package dgo
 import (
 	"context"
 	"math/rand"
-	"sync"
 
 	"github.com/dgraph-io/dgo/protos/api"
-	"github.com/dgraph-io/dgo/y"
-	"github.com/gogo/protobuf/proto"
 )
 
 // Dgraph is a transaction aware client to a set of dgraph server instances.
 type Dgraph struct {
 	dc []api.DgraphClient
-
-	mu      sync.Mutex
-	linRead *api.LinRead
 }
 
 // NewDgraphClient creates a new Dgraph for interacting with the Dgraph store connected to in
@@ -42,23 +36,10 @@ type Dgraph struct {
 // A single client is thread safe for sharing with multiple go routines.
 func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 	dg := &Dgraph{
-		dc:      clients,
-		linRead: &api.LinRead{},
+		dc: clients,
 	}
 
 	return dg
-}
-
-func (d *Dgraph) mergeLinRead(src *api.LinRead) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	y.MergeLinReads(d.linRead, src)
-}
-
-func (d *Dgraph) getLinRead() *api.LinRead {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	return proto.Clone(d.linRead).(*api.LinRead)
 }
 
 // By setting various fields of api.Operation, Alter can be used to do the
