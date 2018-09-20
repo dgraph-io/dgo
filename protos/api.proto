@@ -36,6 +36,7 @@ message Request {
 
 	uint64 start_ts = 13;
 	LinRead lin_read = 14;
+	bool read_only = 15;
 }
 
 message Response {
@@ -64,11 +65,6 @@ message Mutation {
 	bool ignore_index_conflict = 15; // this field is not parsed and used by the server anymore.
 }
 
-
-message AssignedIds {
-	uint64 startId = 1;
-	uint64 endId = 2;
-}
 
 message Operation {
 	string schema = 1;

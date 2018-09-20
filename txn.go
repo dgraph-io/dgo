@@ -29,6 +29,7 @@ import (
 
 var (
 	ErrFinished = errors.New("Transaction has already been committed or discarded")
+	ErrReadOnly = errors.New("Readonly transaction cannot run mutations or be committed")
 )
 
 // Txn is a single atomic transaction.
@@ -48,6 +49,7 @@ type Txn struct {
 
 	finished bool
 	mutated  bool
+	readOnly bool
 
 	dg *Dgraph
 	dc api.DgraphClient
@@ -59,11 +61,16 @@ func (txn *Txn) Sequencing(sequencing api.LinRead_Sequencing) {
 
 // NewTxn creates a new transaction.
 func (d *Dgraph) NewTxn() *Txn {
-	txn := &Txn{
+	return &Txn{
 		dg:      d,
 		dc:      d.anyClient(),
 		context: &api.TxnContext{},
 	}
+}
+
+func (d *Dgraph) NewReadOnlyTxn() *Txn {
+	txn := d.NewTxn()
+	txn.readOnly = true
 	return txn
 }
 
@@ -82,9 +89,10 @@ func (txn *Txn) QueryWithVars(ctx context.Context, q string,
 		return nil, ErrFinished
 	}
 	req := &api.Request{
-		Query:   q,
-		Vars:    vars,
-		StartTs: txn.context.StartTs,
+		Query:    q,
+		Vars:     vars,
+		StartTs:  txn.context.StartTs,
+		ReadOnly: txn.readOnly,
 	}
 	resp, err := txn.dc.Query(ctx, req)
 	if err == nil {
@@ -122,7 +130,10 @@ func (txn *Txn) mergeContext(src *api.TxnContext) error {
 // If the mutation fails, then the transaction is discarded and all future
 // operations on it will fail.
 func (txn *Txn) Mutate(ctx context.Context, mu *api.Mutation) (*api.Assigned, error) {
-	if txn.finished {
+	switch {
+	case txn.readOnly:
+		return nil, ErrReadOnly
+	case txn.finished:
 		return nil, ErrFinished
 	}
 
@@ -159,7 +170,10 @@ func (txn *Txn) Mutate(ctx context.Context, mu *api.Mutation) (*api.Assigned, er
 // concurrently. It's up to the user to decide if they wish to retry. In this
 // case, the user should create a new transaction.
 func (txn *Txn) Commit(ctx context.Context) error {
-	if txn.finished {
+	switch {
+	case txn.readOnly:
+		return ErrReadOnly
+	case txn.finished:
 		return ErrFinished
 	}
 	txn.finished = true
