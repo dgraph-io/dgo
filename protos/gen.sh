@@ -5,4 +5,4 @@
 dgraph_io=${GOPATH-$HOME/go}/src/github.com/dgraph-io
 protos=$dgraph_io/dgo/protos
 pushd $protos > /dev/null
-protoc --gofast_out=plugins=grpc:api api.proto
+protoc -I=. --gogofaster_out=plugins=grpc:api api.proto
