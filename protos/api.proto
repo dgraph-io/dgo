@@ -14,9 +14,21 @@
  * limitations under the License.
  */
 
+// Style guide for Protocol Buffer 3.
+// Use CamelCase (with an initial capital) for message names – for example,
+// SongServerRequest. Use underscore_separated_names for field names – for
+// example, song_name.
+
 syntax = "proto3";
 
 package api;
+
+import "gogoproto/gogo.proto";
+
+option (gogoproto.marshaler_all) = true;
+option (gogoproto.sizer_all) = true;
+option (gogoproto.unmarshaler_all) = true;
+option (gogoproto.goproto_getters_all) = true;
 
 option java_package = "io.dgraph";
 option java_outer_classname = "DgraphProto";
