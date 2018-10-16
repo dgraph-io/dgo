@@ -18,6 +18,6 @@ clean:
 regenerate: clean
 	@protoc \
 		--proto_path=${PROTO_PATH} \
-		--gogofaster_out=plugins=grpc:api \
+		--gofast_out=plugins=grpc:api \
 		api.proto
 	@echo Done.

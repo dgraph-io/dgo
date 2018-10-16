@@ -70,7 +70,7 @@ func DeleteEdges(mu *api.Mutation, uid string, predicates ...string) {
 			Subject:   uid,
 			Predicate: predicate,
 			// _STAR_ALL is defined as x.Star in x package.
-			ObjectValue: &api.Value{&api.Value_DefaultVal{"_STAR_ALL"}},
+			ObjectValue: &api.Value{Val: &api.Value_DefaultVal{"_STAR_ALL"}},
 		})
 	}
 }
