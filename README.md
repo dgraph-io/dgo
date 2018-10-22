@@ -19,6 +19,7 @@ to understand how to run and work with Dgraph.
   - [Run a mutation](#run-a-mutation)
   - [Run a query](#run-a-query)
   - [Commit a transaction](#commit-a-transaction)
+  - [Setting Metadata Headers](#setting-metadata-headers)
 - [Development](#development)
   - [Running tests](#running-tests)
 
@@ -152,6 +153,17 @@ err := txn.Commit(ctx)
 if err == y.ErrAborted {
   // Retry or handle error
 }
+```
+
+### Setting Metadata Headers
+Metadata headers such as authentication tokens can be set through the context of RPC methods. Below is an example of how to set a header named "auth-token"
+```go
+// The following piece of code shows how one can set metadata with
+// auth-token, to allow Alter operation, if the server requires it.
+md := metadata.New(nil)
+md.Append("auth-token", "the-auth-token-value")
+ctx := metadata.NewOutgoingContext(context.Background(), md)
+dg.Alter(ctx, &op)
 ```
 
 ## Development
