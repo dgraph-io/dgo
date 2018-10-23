@@ -156,7 +156,7 @@ if err == y.ErrAborted {
 ```
 
 ### Setting Metadata Headers
-Metadata headers such as authentication tokens can be set through the context of RPC methods. Below is an example of how to set a header named "auth-token"
+Metadata headers such as authentication tokens can be set through the context of gRPC methods. Below is an example of how to set a header named "auth-token".
 ```go
 // The following piece of code shows how one can set metadata with
 // auth-token, to allow Alter operation, if the server requires it.
