@@ -21,28 +21,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
-	"os/exec"
-	"testing"
 	"time"
 
 	"github.com/dgraph-io/dgo"
 	"github.com/dgraph-io/dgo/protos/api"
-	"github.com/dgraph-io/dgo/x"
 	"google.golang.org/grpc"
 )
-
-func TestMain(m *testing.M) {
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	setupClusterCmd := exec.Command("sh", "./run.sh")
-	setupClusterCmd.Dir = os.Getenv("GOPATH") + "/src/github.com/dgraph-io/dgraph/dgraph"
-	x.Check(setupClusterCmd.Start())
-	time.Sleep(15 * time.Second)
-	s := m.Run()
-
-	x.Check(setupClusterCmd.Process.Kill())
-	os.Exit(s)
-}
 
 func ExampleDgraph_Alter_dropAll() {
 	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
