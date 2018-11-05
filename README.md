@@ -135,6 +135,24 @@ resp, err := txn.QueryWithVars(ctx, q, map[string]string{"$a": "Alice"})
 fmt.Println(string(resp.Json))
 ```
 
+When running a schema query, the schema response is found in the `Schema` field of `api.Response`.
+
+```
+q := `schema(pred: [name]) {
+  type
+  index
+  reverse
+  tokenizer
+  list
+  count
+  upsert
+  lang
+}`
+
+resp, err := txn.Query(ctx, q)
+fmt.Println(resp.Schema)
+```
+
 ### Commit a transaction
 
 A transaction can be committed using the `txn.Commit(ctx)` method. If your transaction
