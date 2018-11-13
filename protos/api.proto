@@ -95,6 +95,7 @@ message TxnContext {
 	bool aborted = 3;
 	repeated string keys = 4;  // List of keys to be used for conflict detection.
 	repeated string preds = 5; // List of predicates involved in this transaction.
+	string jwt = 6;
 	LinRead lin_read = 13;
 }
 
@@ -172,6 +173,26 @@ message SchemaNode {
 	bool list = 7;
 	bool upsert = 8;
 	bool lang = 9;
+}
+
+service DgraphAccess {
+    rpc LogIn (LogInRequest)       returns (LogInResponse) {}
+}
+
+message LogInRequest {
+	string userid = 1;
+	string password = 2;
+}
+
+message LogInResponse {
+	AclResponseCode code = 1;
+	TxnContext context = 2;
+	Latency latency = 12;
+}
+
+enum AclResponseCode {
+	OK = 0;
+	UNAUTHENTICATED = 1;
 }
 
 // vim: noexpandtab sw=2 ts=2
