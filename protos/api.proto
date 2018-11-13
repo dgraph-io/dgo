@@ -174,4 +174,34 @@ message SchemaNode {
 	bool lang = 9;
 }
 
+service DgraphAdmin {
+    rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {}
+    rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse) {}
+}
+
+message CreateUserRequest {
+    AclUser user = 1;
+}
+
+message AclUser {
+    string userid = 1;
+    string password = 2;
+    string username = 3;
+}
+
+message CreateUserResponse {
+    string uid = 1;
+    TxnContext context = 2;
+    Latency latency = 12;
+}
+
+message DeleteUserRequest {
+    string userid = 1;
+}
+
+message DeleteUserResponse {
+    TxnContext context = 1;
+    Latency latency = 12;
+}
+
 // vim: noexpandtab sw=2 ts=2
