@@ -186,12 +186,18 @@ message CreateUserRequest {
 message AclUser {
     string userid = 1;
     string password = 2;
-    string username = 3;
+	map<string, string> attrs = 3;
+}
+
+enum AclResponseCode {
+	OK = 0;
+	CONFLICT = 1; // the entity already exists
 }
 
 message CreateUserResponse {
     string uid = 1;
-    TxnContext context = 2;
+	AclResponseCode code = 2;
+    TxnContext context = 3;
     Latency latency = 12;
 }
 
@@ -201,6 +207,7 @@ message DeleteUserRequest {
 
 message DeleteUserResponse {
     TxnContext context = 1;
+	AclResponseCode code = 2;
     Latency latency = 12;
 }
 

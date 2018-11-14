@@ -18,7 +18,7 @@ package dgo
 
 import (
 	"context"
-
+	"fmt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -104,18 +104,22 @@ func (txn *Txn) QueryWithVars(ctx context.Context, q string,
 }
 
 func (txn *Txn) mergeContext(src *api.TxnContext) error {
+	return MergeContext(txn.context, src)
+}
+
+func MergeContext(context *api.TxnContext, src *api.TxnContext) error {
 	if src == nil {
 		return nil
 	}
 
-	if txn.context.StartTs == 0 {
-		txn.context.StartTs = src.StartTs
+	if context.StartTs == 0 {
+		context.StartTs = src.StartTs
 	}
-	if txn.context.StartTs != src.StartTs {
+	if context.StartTs != src.StartTs {
 		return errors.New("StartTs mismatch")
 	}
-	txn.context.Keys = append(txn.context.Keys, src.Keys...)
-	txn.context.Preds = append(txn.context.Preds, src.Preds...)
+	context.Keys = append(context.Keys, src.Keys...)
+	context.Preds = append(context.Preds, src.Preds...)
 	return nil
 }
 
@@ -140,6 +144,7 @@ func (txn *Txn) Mutate(ctx context.Context, mu *api.Mutation) (*api.Assigned, er
 	txn.mutated = true
 	mu.StartTs = txn.context.StartTs
 	ag, err := txn.dc.Mutate(ctx, mu)
+	fmt.Printf("assigned ids context %v, local context: %v", ag.Context, ctx)
 	if err != nil {
 		// Since a mutation error occurred, the txn should no longer be used
 		// (some mutations could have applied but not others, but we don't know
