@@ -175,7 +175,7 @@ message SchemaNode {
 	bool lang = 9;
 }
 
-service DgraphAdmin {
+service DgraphAccess {
 	rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {}
 	rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse) {}
 	rpc LogIn (LogInRequest) returns (LogInResponse) {}
