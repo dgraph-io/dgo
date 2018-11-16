@@ -204,6 +204,7 @@ message AclUser {
 enum AclResponseCode {
 	OK = 0;
 	CONFLICT = 1; // the entity already exists
+	UNAUTHENTICATED = 2;
 }
 
 message CreateUserResponse {
