@@ -176,9 +176,9 @@ message SchemaNode {
 }
 
 service DgraphAccess {
-	rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {}
-	rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse) {}
 	rpc LogIn (LogInRequest) returns (LogInResponse) {}
+	rpc Query (AclQueryRequest) returns (AclQueryResponse) {}
+	rpc Mutate (AclMutationRequest) returns (AclMutationResponse) {}
 }
 
 message LogInRequest {
@@ -189,39 +189,37 @@ message LogInRequest {
 message LogInResponse {
 	AclResponseCode code = 1;
 	TxnContext context = 2;
+	Latency latency = 12;
 }
 
-message CreateUserRequest {
-	AclUser user = 1;
+message AclQueryRequest {
+	string query = 1;
+	map<string, string> vars = 2;
 }
 
-message AclUser {
-	string userid = 1;
-	string password = 2;
-	map<string, string> attrs = 3;
+message AclQueryResponse {
+	AclResponseCode code = 1;
+	bytes json = 2;
+	TxnContext context = 3;
+	Latency latency = 12;
+}
+
+message AclMutationRequest {
+	bytes set_json = 1;
+	bytes delete_json = 2;
+}
+
+message AclMutationResponse {
+	AclResponseCode code = 1;
+	bytes json = 2;
+	TxnContext context = 3;
+	Latency latency = 12;
 }
 
 enum AclResponseCode {
 	OK = 0;
 	CONFLICT = 1; // the entity already exists
 	UNAUTHENTICATED = 2;
-}
-
-message CreateUserResponse {
-	AclResponseCode code = 1;
-	string uid = 2;
-	TxnContext context = 3;
-	Latency latency = 12;
-}
-
-message DeleteUserRequest {
-	string userid = 1;
-}
-
-message DeleteUserResponse {
-	TxnContext context = 1;
-	AclResponseCode code = 2;
-	Latency latency = 12;
 }
 
 // vim: noexpandtab sw=2 ts=2
