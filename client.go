@@ -25,6 +25,7 @@ import (
 
 // Dgraph is a transaction aware client to a set of dgraph server instances.
 type Dgraph struct {
+	jwt string
 	dc []api.DgraphClient
 }
 
@@ -40,6 +41,25 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 	}
 
 	return dg
+}
+
+func (d *Dgraph) Login(ctx context.Context, userid string, password string) error {
+	dc := d.anyClient()
+	loginRequest := &api.LogInRequest{
+		Userid: userid,
+		Password: password,
+	}
+	resp, err := dc.LogIn(ctx, loginRequest)
+	if err != nil {
+		return err
+	}
+
+	d.jwt = resp.Context.Jwt
+	return nil
+}
+
+func (d *Dgraph) GetJwt() string {
+	return d.jwt
 }
 
 // By setting various fields of api.Operation, Alter can be used to do the
