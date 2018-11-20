@@ -35,7 +35,6 @@ option java_outer_classname = "DgraphProto";
 
 // Graph response.
 service Dgraph {
-    rpc LogIn (LogInRequest)       returns (LogInResponse) {}
 	rpc Query (Request)            returns (Response) {}
 	rpc Mutate (Mutation)          returns (Assigned) {}
 	rpc Alter (Operation)          returns (Payload) {}
@@ -174,6 +173,10 @@ message SchemaNode {
 	bool list = 7;
 	bool upsert = 8;
 	bool lang = 9;
+}
+
+service DgraphAccess {
+    rpc LogIn (LogInRequest)       returns (LogInResponse) {}
 }
 
 message LogInRequest {
