@@ -26,7 +26,6 @@ import (
 // Dgraph is a transaction aware client to a set of dgraph server instances.
 type Dgraph struct {
 	jwt string
-	dgraphAccessClient []api.DgraphAccessClient
 	dc []api.DgraphClient
 }
 
@@ -44,12 +43,8 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 	return dg
 }
 
-func (d *Dgraph) SetAccessClients(accessClients ...api.DgraphAccessClient) {
-	d.dgraphAccessClient = accessClients
-}
-
 func (d *Dgraph) Login(ctx context.Context, userid string, password string) error {
-	dc := d.anyAccessClient()
+	dc := d.anyClient()
 	loginRequest := &api.LogInRequest{
 		Userid: userid,
 		Password: password,
@@ -85,9 +80,6 @@ func (d *Dgraph) anyClient() api.DgraphClient {
 	return d.dc[rand.Intn(len(d.dc))]
 }
 
-func (d *Dgraph) anyAccessClient() api.DgraphAccessClient {
-	return d.dgraphAccessClient[rand.Intn(len(d.dgraphAccessClient))]
-}
 // DeleteEdges sets the edges corresponding to predicates on the node with the given uid
 // for deletion.
 // This helper function doesn't run the mutation on the server. It must be done by the user
