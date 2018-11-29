@@ -26,7 +26,7 @@ import (
 // Dgraph is a transaction aware client to a set of dgraph server instances.
 type Dgraph struct {
 	jwt string
-	dc []api.DgraphClient
+	dc  []api.DgraphClient
 }
 
 // NewDgraphClient creates a new Dgraph for interacting with the Dgraph store connected to in
@@ -46,7 +46,7 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 func (d *Dgraph) Login(ctx context.Context, userid string, password string) error {
 	dc := d.anyClient()
 	loginRequest := &api.LogInRequest{
-		Userid: userid,
+		Userid:   userid,
 		Password: password,
 	}
 	resp, err := dc.Login(ctx, loginRequest)
