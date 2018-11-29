@@ -35,7 +35,7 @@ option java_outer_classname = "DgraphProto";
 
 // Graph response.
 service Dgraph {
-	rpc LogIn (LogInRequest)       returns (LogInResponse) {}
+	rpc Login (LogInRequest)       returns (LogInResponse) {}
 	rpc Query (Request)            returns (Response) {}
 	rpc Mutate (Mutation)          returns (Assigned) {}
 	rpc Alter (Operation)          returns (Payload) {}

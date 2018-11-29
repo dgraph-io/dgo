@@ -49,7 +49,7 @@ func (d *Dgraph) Login(ctx context.Context, userid string, password string) erro
 		Userid: userid,
 		Password: password,
 	}
-	resp, err := dc.LogIn(ctx, loginRequest)
+	resp, err := dc.Login(ctx, loginRequest)
 	if err != nil {
 		return err
 	}
