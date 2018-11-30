@@ -35,7 +35,7 @@ option java_outer_classname = "DgraphProto";
 
 // Graph response.
 service Dgraph {
-	rpc Login (LogInRequest)       returns (LogInResponse) {}
+	rpc Login (LogInRequest)       returns (Response) {}
 	rpc Query (Request)            returns (Response) {}
 	rpc Mutate (Mutation)          returns (Assigned) {}
 	rpc Alter (Operation)          returns (Payload) {}
@@ -96,7 +96,6 @@ message TxnContext {
 	bool aborted = 3;
 	repeated string keys = 4;  // List of keys to be used for conflict detection.
 	repeated string preds = 5; // List of predicates involved in this transaction.
-	string jwt = 6;
 	LinRead lin_read = 13;
 }
 
@@ -179,17 +178,6 @@ message SchemaNode {
 message LogInRequest {
 	string userid = 1;
 	string password = 2;
-}
-
-message LogInResponse {
-	AclResponseCode code = 1;
-	TxnContext context = 2;
-	Latency latency = 12;
-}
-
-enum AclResponseCode {
-	OK = 0;
-	UNAUTHENTICATED = 1;
 }
 
 // vim: noexpandtab sw=2 ts=2

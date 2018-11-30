@@ -18,6 +18,7 @@ package dgo
 
 import (
 	"context"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -103,22 +104,18 @@ func (txn *Txn) QueryWithVars(ctx context.Context, q string,
 }
 
 func (txn *Txn) mergeContext(src *api.TxnContext) error {
-	return MergeContext(txn.context, src)
-}
-
-func MergeContext(context *api.TxnContext, src *api.TxnContext) error {
 	if src == nil {
 		return nil
 	}
 
-	if context.StartTs == 0 {
-		context.StartTs = src.StartTs
+	if txn.context.StartTs == 0 {
+		txn.context.StartTs = src.StartTs
 	}
-	if context.StartTs != src.StartTs {
+	if txn.context.StartTs != src.StartTs {
 		return errors.New("StartTs mismatch")
 	}
-	context.Keys = append(context.Keys, src.Keys...)
-	context.Preds = append(context.Preds, src.Preds...)
+	txn.context.Keys = append(txn.context.Keys, src.Keys...)
+	txn.context.Preds = append(txn.context.Preds, src.Preds...)
 	return nil
 }
 

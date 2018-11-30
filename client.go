@@ -54,12 +54,16 @@ func (d *Dgraph) Login(ctx context.Context, userid string, password string) erro
 		return err
 	}
 
-	d.jwt = resp.Context.Jwt
+	d.jwt = string(resp.GetJson())
 	return nil
 }
 
-func (d *Dgraph) GetJwt() string {
-	return d.jwt
+func (d *Dgraph) GetContext(ctx context.Context) context.Context {
+	if len(d.jwt) > 0 {
+		return context.WithValue(ctx, "jwt", d.jwt)
+	}
+	// otherwise return the jwt as it is
+	return ctx
 }
 
 // By setting various fields of api.Operation, Alter can be used to do the
