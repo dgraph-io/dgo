@@ -45,7 +45,7 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 
 func (d *Dgraph) Login(ctx context.Context, userid string, password string) error {
 	dc := d.anyClient()
-	loginRequest := &api.LogInRequest{
+	loginRequest := &api.LoginRequest{
 		Userid:   userid,
 		Password: password,
 	}
