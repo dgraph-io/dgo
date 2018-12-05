@@ -178,6 +178,12 @@ message SchemaNode {
 message LogInRequest {
 	string userid = 1;
 	string password = 2;
+	string refresh_token = 3;
+}
+
+message Jwt {
+	string accessJwt = 1;
+	string refreshJwt = 2;
 }
 
 // vim: noexpandtab sw=2 ts=2

@@ -25,7 +25,7 @@ import (
 
 // Dgraph is a transaction aware client to a set of dgraph server instances.
 type Dgraph struct {
-	jwt string
+	jwt api.Jwt
 	dc  []api.DgraphClient
 }
 
@@ -54,16 +54,25 @@ func (d *Dgraph) Login(ctx context.Context, userid string, password string) erro
 		return err
 	}
 
-	d.jwt = string(resp.GetJson())
+	err = d.jwt.Unmarshal(resp.Json)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (d *Dgraph) GetContext(ctx context.Context) context.Context {
-	if len(d.jwt) > 0 {
-		return context.WithValue(ctx, "jwt", d.jwt)
+	newCtx := ctx
+	if len(d.jwt.AccessJwt) > 0 {
+		newCtx = context.WithValue(newCtx, "accessJwt", d.jwt.AccessJwt)
 	}
+	if len(d.jwt.RefreshJwt) > 0 {
+		newCtx = context.WithValue(newCtx, "refreshJwt", d.jwt.RefreshJwt)
+	}
+
 	// otherwise return the jwt as it is
-	return ctx
+	return newCtx
 }
 
 // By setting various fields of api.Operation, Alter can be used to do the
