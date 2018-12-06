@@ -182,8 +182,8 @@ message LoginRequest {
 }
 
 message Jwt {
-	string accessJwt = 1;
-	string refreshJwt = 2;
+	string access_jwt = 1;
+	string refresh_jwt = 2;
 }
 
 // vim: noexpandtab sw=2 ts=2

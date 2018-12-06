@@ -58,11 +58,7 @@ func (d *Dgraph) Login(ctx context.Context, userid string, password string) erro
 
 	d.jwtMutex.Lock()
 	defer d.jwtMutex.Unlock()
-	if err = d.jwt.Unmarshal(resp.Json); err != nil {
-		return err
-	}
-
-	return nil
+	return d.jwt.Unmarshal(resp.Json)
 }
 
 func (d *Dgraph) GetContext(ctx context.Context) context.Context {
