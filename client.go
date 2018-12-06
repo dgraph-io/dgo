@@ -19,13 +19,16 @@ package dgo
 import (
 	"context"
 	"math/rand"
+	"sync"
 
 	"github.com/dgraph-io/dgo/protos/api"
 )
 
 // Dgraph is a transaction aware client to a set of dgraph server instances.
 type Dgraph struct {
-	dc []api.DgraphClient
+	jwtMutex sync.RWMutex
+	jwt      api.Jwt
+	dc       []api.DgraphClient
 }
 
 // NewDgraphClient creates a new Dgraph for interacting with the Dgraph store connected to in
@@ -40,6 +43,37 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 	}
 
 	return dg
+}
+
+func (d *Dgraph) Login(ctx context.Context, userid string, password string) error {
+	dc := d.anyClient()
+	loginRequest := &api.LoginRequest{
+		Userid:   userid,
+		Password: password,
+	}
+	resp, err := dc.Login(ctx, loginRequest)
+	if err != nil {
+		return err
+	}
+
+	d.jwtMutex.Lock()
+	defer d.jwtMutex.Unlock()
+	return d.jwt.Unmarshal(resp.Json)
+}
+
+func (d *Dgraph) GetContext(ctx context.Context) context.Context {
+	d.jwtMutex.RLock()
+	defer d.jwtMutex.RUnlock()
+	newCtx := ctx
+	if len(d.jwt.AccessJwt) > 0 {
+		newCtx = context.WithValue(newCtx, "accessJwt", d.jwt.AccessJwt)
+	}
+	if len(d.jwt.RefreshJwt) > 0 {
+		newCtx = context.WithValue(newCtx, "refreshJwt", d.jwt.RefreshJwt)
+	}
+
+	// otherwise return the jwt as it is
+	return newCtx
 }
 
 // By setting various fields of api.Operation, Alter can be used to do the

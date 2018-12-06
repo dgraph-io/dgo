@@ -35,6 +35,7 @@ option java_outer_classname = "DgraphProto";
 
 // Graph response.
 service Dgraph {
+	rpc Login (LoginRequest)       returns (Response) {}
 	rpc Query (Request)            returns (Response) {}
 	rpc Mutate (Mutation)          returns (Assigned) {}
 	rpc Alter (Operation)          returns (Payload) {}
@@ -172,6 +173,17 @@ message SchemaNode {
 	bool list = 7;
 	bool upsert = 8;
 	bool lang = 9;
+}
+
+message LoginRequest {
+	string userid = 1;
+	string password = 2;
+	string refresh_token = 3;
+}
+
+message Jwt {
+	string access_jwt = 1;
+	string refresh_jwt = 2;
 }
 
 // vim: noexpandtab sw=2 ts=2
