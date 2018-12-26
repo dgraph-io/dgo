@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dgo_test
+package test
 
 import (
 	"context"
@@ -25,19 +25,11 @@ import (
 
 	"github.com/dgraph-io/dgo"
 	"github.com/dgraph-io/dgo/protos/api"
-	"google.golang.org/grpc"
 )
 
 func ExampleDgraph_Alter_dropAll() {
-	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal("While trying to dial gRPC")
-	}
-	defer conn.Close()
-
-	dc := api.NewDgraphClient(conn)
-	dg := dgo.NewDgraphClient(dc)
-
+	dg, cancel := GetDgraphClient()
+	defer cancel()
 	op := api.Operation{
 		DropAll: true,
 	}
@@ -45,22 +37,12 @@ func ExampleDgraph_Alter_dropAll() {
 	if err := dg.Alter(ctx, &op); err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Println(err)
-
-	// Output: <nil>
+	// Output:
 }
 
 func ExampleTxn_Query_variables() {
-	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal("While trying to dial gRPC")
-	}
-	defer conn.Close()
-
-	dc := api.NewDgraphClient(conn)
-	dg := dgo.NewDgraphClient(dc)
-
+	dg, cancel := GetDgraphClient()
+	defer cancel()
 	type Person struct {
 		Uid  string `json:"uid,omitempty"`
 		Name string `json:"name,omitempty"`
@@ -72,7 +54,7 @@ func ExampleTxn_Query_variables() {
 	`
 
 	ctx := context.Background()
-	err = dg.Alter(ctx, op)
+	err := dg.Alter(ctx, op)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -146,15 +128,8 @@ func ExampleTxn_Mutate() {
 		School   []School `json:"school,omitempty"`
 	}
 
-	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal("While trying to dial gRPC")
-	}
-	defer conn.Close()
-
-	dc := api.NewDgraphClient(conn)
-	dg := dgo.NewDgraphClient(dc)
-
+	dg, cancel := GetDgraphClient()
+	defer cancel()
 	// While setting an object if a struct has a Uid then its properties in the graph are updated
 	// else a new node is created.
 	// In the example below new nodes for Alice, Bob and Charlie and school are created (since they
@@ -187,8 +162,7 @@ func ExampleTxn_Mutate() {
 	`
 
 	ctx := context.Background()
-	err = dg.Alter(ctx, op)
-	if err != nil {
+	if err := dg.Alter(ctx, op); err != nil {
 		log.Fatal(err)
 	}
 
@@ -251,15 +225,8 @@ func ExampleTxn_Mutate() {
 }
 
 func ExampleTxn_Mutate_bytes() {
-	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal("While trying to dial gRPC")
-	}
-	defer conn.Close()
-
-	dc := api.NewDgraphClient(conn)
-	dg := dgo.NewDgraphClient(dc)
-
+	dg, cancel := GetDgraphClient()
+	defer cancel()
 	type Person struct {
 		Uid   string `json:"uid,omitempty"`
 		Name  string `json:"name,omitempty"`
@@ -272,7 +239,7 @@ func ExampleTxn_Mutate_bytes() {
 	`
 
 	ctx := context.Background()
-	err = dg.Alter(ctx, op)
+	err := dg.Alter(ctx, op)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -337,15 +304,8 @@ func ExampleTxn_Query_unmarshal() {
 		School  []School `json:"school,omitempty"`
 	}
 
-	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal("While trying to dial gRPC")
-	}
-	defer conn.Close()
-
-	dc := api.NewDgraphClient(conn)
-	dg := dgo.NewDgraphClient(dc)
-
+	dg, cancel := GetDgraphClient()
+	defer cancel()
 	op := &api.Operation{}
 	op.Schema = `
 		age: int .
@@ -353,7 +313,7 @@ func ExampleTxn_Query_unmarshal() {
 	`
 
 	ctx := context.Background()
-	err = dg.Alter(ctx, op)
+	err := dg.Alter(ctx, op)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -454,15 +414,8 @@ func ExampleTxn_Query_unmarshal() {
 }
 
 func ExampleTxn_Mutate_facets() {
-	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal("While trying to dial gRPC")
-	}
-	defer conn.Close()
-
-	dc := api.NewDgraphClient(conn)
-	dg := dgo.NewDgraphClient(dc)
-
+	dg, cancel := GetDgraphClient()
+	defer cancel()
 	// Doing a dropAll isn't required by the user. We do it here so that we can verify that the
 	// example runs as expected.
 	op := api.Operation{
@@ -478,7 +431,7 @@ func ExampleTxn_Mutate_facets() {
 		name: string @index(exact) .
 	`
 
-	err = dg.Alter(ctx, &op)
+	err := dg.Alter(ctx, &op)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -577,15 +530,8 @@ func ExampleTxn_Mutate_facets() {
 }
 
 func ExampleTxn_Mutate_list() {
-	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal("While trying to dial gRPC")
-	}
-	defer conn.Close()
-
-	dc := api.NewDgraphClient(conn)
-	dg := dgo.NewDgraphClient(dc)
-	// This example shows example for SetObject for predicates with list type.
+	dg, cancel := GetDgraphClient()
+	defer cancel() // This example shows example for SetObject for predicates with list type.
 	type Person struct {
 		Uid         string   `json:"uid"`
 		Address     []string `json:"address"`
@@ -603,7 +549,7 @@ func ExampleTxn_Mutate_list() {
 		phone_number: [int] .
 	`
 	ctx := context.Background()
-	err = dg.Alter(ctx, op)
+	err := dg.Alter(ctx, op)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -653,15 +599,8 @@ func ExampleTxn_Mutate_list() {
 }
 
 func ExampleDeleteEdges() {
-	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal("While trying to dial gRPC")
-	}
-	defer conn.Close()
-
-	dc := api.NewDgraphClient(conn)
-	dg := dgo.NewDgraphClient(dc)
-
+	dg, cancel := GetDgraphClient()
+	defer cancel()
 	op := &api.Operation{}
 	op.Schema = `
 			age: int .
@@ -671,7 +610,7 @@ func ExampleDeleteEdges() {
 		`
 
 	ctx := context.Background()
-	err = dg.Alter(ctx, op)
+	err := dg.Alter(ctx, op)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -774,15 +713,8 @@ func ExampleDeleteEdges() {
 }
 
 func ExampleTxn_Mutate_deleteNode() {
-	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal("While trying to dial gRPC")
-	}
-	defer conn.Close()
-
-	dc := api.NewDgraphClient(conn)
-	dg := dgo.NewDgraphClient(dc)
-
+	dg, cancel := GetDgraphClient()
+	defer cancel()
 	// In this test we check S * * deletion.
 	type Person struct {
 		Uid     string    `json:"uid,omitempty"`
@@ -812,7 +744,7 @@ func ExampleTxn_Mutate_deleteNode() {
 	`
 
 	ctx := context.Background()
-	err = dg.Alter(ctx, op)
+	err := dg.Alter(ctx, op)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -913,15 +845,8 @@ func ExampleTxn_Mutate_deleteNode() {
 }
 
 func ExampleTxn_Mutate_deletePredicate() {
-	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal("While trying to dial gRPC")
-	}
-	defer conn.Close()
-
-	dc := api.NewDgraphClient(conn)
-	dg := dgo.NewDgraphClient(dc)
-
+	dg, cancel := GetDgraphClient()
+	defer cancel()
 	type Person struct {
 		Uid     string   `json:"uid,omitempty"`
 		Name    string   `json:"name,omitempty"`
@@ -950,7 +875,7 @@ func ExampleTxn_Mutate_deletePredicate() {
 	`
 
 	ctx := context.Background()
-	err = dg.Alter(ctx, op)
+	err := dg.Alter(ctx, op)
 	if err != nil {
 		log.Fatal(err)
 	}

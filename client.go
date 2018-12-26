@@ -18,10 +18,15 @@ package dgo
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
+	"strings"
 	"sync"
 
 	"github.com/dgraph-io/dgo/protos/api"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 // Dgraph is a transaction aware client to a set of dgraph server instances.
@@ -46,6 +51,9 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 }
 
 func (d *Dgraph) Login(ctx context.Context, userid string, password string) error {
+	d.jwtMutex.Lock()
+	defer d.jwtMutex.Unlock()
+
 	dc := d.anyClient()
 	loginRequest := &api.LoginRequest{
 		Userid:   userid,
@@ -56,24 +64,42 @@ func (d *Dgraph) Login(ctx context.Context, userid string, password string) erro
 		return err
 	}
 
-	d.jwtMutex.Lock()
-	defer d.jwtMutex.Unlock()
 	return d.jwt.Unmarshal(resp.Json)
 }
 
-func (d *Dgraph) GetContext(ctx context.Context) context.Context {
-	d.jwtMutex.RLock()
-	defer d.jwtMutex.RUnlock()
-	newCtx := ctx
-	if len(d.jwt.AccessJwt) > 0 {
-		newCtx = context.WithValue(newCtx, "accessJwt", d.jwt.AccessJwt)
-	}
-	if len(d.jwt.RefreshJwt) > 0 {
-		newCtx = context.WithValue(newCtx, "refreshJwt", d.jwt.RefreshJwt)
+func (d *Dgraph) loginWithRefreshJwt(ctx context.Context) error {
+	d.jwtMutex.Lock()
+	defer d.jwtMutex.Unlock()
+
+	if len(d.jwt.RefreshJwt) == 0 {
+		return fmt.Errorf("refresh jwt should not be empty")
 	}
 
-	// otherwise return the jwt as it is
-	return newCtx
+	dc := d.anyClient()
+	loginRequest := &api.LoginRequest{
+		RefreshToken: d.jwt.RefreshJwt,
+	}
+	resp, err := dc.Login(ctx, loginRequest)
+	if err != nil {
+		return err
+	}
+	return d.jwt.Unmarshal(resp.Json)
+}
+
+func (d *Dgraph) getContext(ctx context.Context) context.Context {
+	d.jwtMutex.RLock()
+	defer d.jwtMutex.RUnlock()
+	if len(d.jwt.AccessJwt) > 0 {
+		md, ok := metadata.FromOutgoingContext(ctx)
+		if !ok {
+			// no metadata key is in the context, add one
+			md = metadata.New(nil)
+		}
+		md.Append("accessJwt", d.jwt.AccessJwt)
+		return metadata.NewOutgoingContext(ctx, md)
+	}
+
+	return ctx
 }
 
 // By setting various fields of api.Operation, Alter can be used to do the
@@ -86,8 +112,36 @@ func (d *Dgraph) GetContext(ctx context.Context) context.Context {
 // 3. Drop the database.
 func (d *Dgraph) Alter(ctx context.Context, op *api.Operation) error {
 	dc := d.anyClient()
-	_, err := dc.Alter(ctx, op)
+
+	ctxWithJwt := d.getContext(ctx)
+	_, err := dc.Alter(ctxWithJwt, op)
+
+	retry, newCtx := d.checkJwtExpiration(ctx, err)
+	if retry {
+		_, err = dc.Alter(newCtx, op)
+	}
 	return err
+}
+
+// returns whether the operation should be tried
+func (d *Dgraph) checkJwtExpiration(ctx context.Context, err error) (bool, context.Context) {
+	if err == nil {
+		return false, nil
+	}
+
+	st, ok := status.FromError(err)
+	if ok && st.Code() == codes.Unauthenticated &&
+		strings.Contains(err.Error(), "Token is expired") {
+		// try to login with the refreshJwt
+		if e := d.loginWithRefreshJwt(ctx); e != nil {
+			return false, nil
+		}
+
+		return true, d.getContext(ctx)
+	}
+
+	// no need to retry if the err is not the type we expect
+	return false, nil
 }
 
 func (d *Dgraph) anyClient() api.DgraphClient {

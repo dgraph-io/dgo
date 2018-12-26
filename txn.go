@@ -19,11 +19,7 @@ package dgo
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/dgraph-io/dgo/protos/api"
-	"github.com/dgraph-io/dgo/y"
 	"github.com/pkg/errors"
 )
 
@@ -94,7 +90,13 @@ func (txn *Txn) QueryWithVars(ctx context.Context, q string,
 		StartTs:  txn.context.StartTs,
 		ReadOnly: txn.readOnly,
 	}
-	resp, err := txn.dc.Query(ctx, req)
+	ctxWithJwt := txn.dg.getContext(ctx)
+	resp, err := txn.dc.Query(ctxWithJwt, req)
+	retry, newCtx := txn.dg.checkJwtExpiration(ctx, err)
+	if retry {
+		resp, err = txn.dc.Query(newCtx, req)
+	}
+
 	if err == nil {
 		if err := txn.mergeContext(resp.GetTxn()); err != nil {
 			return nil, err
@@ -139,22 +141,18 @@ func (txn *Txn) Mutate(ctx context.Context, mu *api.Mutation) (*api.Assigned, er
 
 	txn.mutated = true
 	mu.StartTs = txn.context.StartTs
-	ag, err := txn.dc.Mutate(ctx, mu)
-	if err != nil {
-		// Since a mutation error occurred, the txn should no longer be used
-		// (some mutations could have applied but not others, but we don't know
-		// which ones).  Discarding the transaction enforces that the user
-		// cannot use the txn further.
-		_ = txn.Discard(ctx) // Ignore error - user should see the original error.
+	ctxWithJwt := txn.dg.getContext(ctx)
+	ag, err := txn.dc.Mutate(ctxWithJwt, mu)
+	retry, newCtx := txn.dg.checkJwtExpiration(ctx, err)
+	if retry {
+		ag, err = txn.dc.Mutate(newCtx, mu)
+	}
 
-		// Transaction could be aborted(codes.Aborted) if CommitNow was true, or server could send a
-		// message that this mutation conflicts(codes.FailedPrecondition) with another transaction.
-		if s, ok := status.FromError(err); ok && s.Code() == codes.Aborted ||
-			s.Code() == codes.FailedPrecondition {
-			err = y.ErrAborted
-		}
+	if err != nil {
+		_ = txn.Discard(ctx) // Ignore error - user should see the original error.
 		return nil, err
 	}
+
 	if mu.CommitNow {
 		txn.finished = true
 	}
@@ -181,9 +179,11 @@ func (txn *Txn) Commit(ctx context.Context) error {
 	if !txn.mutated {
 		return nil
 	}
-	_, err := txn.dc.CommitOrAbort(ctx, txn.context)
-	if s, ok := status.FromError(err); ok && s.Code() == codes.Aborted {
-		err = y.ErrAborted
+	ctxWithJwt := txn.dg.getContext(ctx)
+	_, err := txn.dc.CommitOrAbort(ctxWithJwt, txn.context)
+	retry, newCtx := txn.dg.checkJwtExpiration(ctx, err)
+	if retry {
+		_, err = txn.dc.CommitOrAbort(newCtx, txn.context)
 	}
 	return err
 }
@@ -207,6 +207,11 @@ func (txn *Txn) Discard(ctx context.Context) error {
 		return nil
 	}
 	txn.context.Aborted = true
-	_, err := txn.dc.CommitOrAbort(ctx, txn.context)
+	ctxWithJwt := txn.dg.getContext(ctx)
+	_, err := txn.dc.CommitOrAbort(ctxWithJwt, txn.context)
+	retry, newCtx := txn.dg.checkJwtExpiration(ctx, err)
+	if retry {
+		_, err = txn.dc.CommitOrAbort(newCtx, txn.context)
+	}
 	return err
 }
