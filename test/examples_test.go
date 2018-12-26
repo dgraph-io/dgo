@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dgo_test
+package test
 
 import (
 	"context"
