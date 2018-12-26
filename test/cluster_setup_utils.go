@@ -19,6 +19,7 @@ package test
 import (
 	"fmt"
 	"github.com/dgraph-io/dgo"
+	"log"
 	"math/rand"
 	"net"
 	"os"
@@ -45,6 +46,14 @@ type DgraphCluster struct {
 	Dgraph *exec.Cmd
 
 	Client *dgo.Dgraph
+}
+
+func init() {
+	cmd := exec.Command("go", "install", "github.com/dgraph-io/dgraph/dgraph")
+	cmd.Env = os.Environ()
+	if out, err := cmd.CombinedOutput(); err != nil {
+		log.Fatalf("Could not run %q: %s", cmd.Args, string(out))
+	}
 }
 
 func FreePort(port int) int {
@@ -83,8 +92,8 @@ func (d *DgraphCluster) StartZeroOnly() error {
 		"--replicas", "3",
 	)
 	d.Zero.Dir = d.Dir
-	d.Zero.Stdout = os.Stdout
-	d.Zero.Stderr = os.Stderr
+	d.Zero.Stdout = nil
+	d.Zero.Stderr = nil
 
 	if err := d.Zero.Start(); err != nil {
 		return err
@@ -108,8 +117,8 @@ func (d *DgraphCluster) Start() error {
 		"--custom_tokenizers", d.TokenizerPluginsArg,
 	)
 	d.Dgraph.Dir = d.Dir
-	d.Dgraph.Stdout = os.Stdout
-	d.Dgraph.Stderr = os.Stderr
+	d.Dgraph.Stdout = nil
+	d.Dgraph.Stderr = nil
 	if err := d.Dgraph.Start(); err != nil {
 		return err
 	}
@@ -163,4 +172,11 @@ func (d *DgraphCluster) Close() {
 	if d.Dgraph != nil && d.Dgraph.Process != nil {
 		d.Dgraph.Process.Kill()
 	}
+}
+
+func MakeDirEmpty(dir string) error {
+	if err := os.RemoveAll(dir); err != nil {
+		return err
+	}
+	return os.MkdirAll(dir, 0755)
 }
