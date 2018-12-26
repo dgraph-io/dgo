@@ -102,7 +102,7 @@ func Example_setObject() {
 		log.Fatal(err)
 	}
 
-	// Assigned uids for nodes which were created would be returned in the resp.AssignedUids map.
+	// Assigned uids for nodes which were created would be returned in the assigned.Uids map.
 	variables := map[string]string{"$id": assigned.Uids["blank-0"]}
 	q := `query Me($id: string){
 		me(func: uid($id)) {
