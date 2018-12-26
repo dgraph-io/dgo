@@ -29,7 +29,7 @@ import (
 )
 
 func ExampleDgraph_Alter_dropAll() {
-	conn, err := grpc.Dial("127.0.0.1:9080", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
@@ -52,7 +52,7 @@ func ExampleDgraph_Alter_dropAll() {
 }
 
 func ExampleTxn_Query_variables() {
-	conn, err := grpc.Dial("127.0.0.1:9080", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
@@ -146,7 +146,7 @@ func ExampleTxn_Mutate() {
 		School   []School `json:"school,omitempty"`
 	}
 
-	conn, err := grpc.Dial("127.0.0.1:9080", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
@@ -251,7 +251,7 @@ func ExampleTxn_Mutate() {
 }
 
 func ExampleTxn_Mutate_bytes() {
-	conn, err := grpc.Dial("127.0.0.1:9080", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
@@ -337,7 +337,7 @@ func ExampleTxn_Query_unmarshal() {
 		School  []School `json:"school,omitempty"`
 	}
 
-	conn, err := grpc.Dial("127.0.0.1:9080", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
@@ -454,7 +454,7 @@ func ExampleTxn_Query_unmarshal() {
 }
 
 func ExampleTxn_Mutate_facets() {
-	conn, err := grpc.Dial("127.0.0.1:9080", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
@@ -577,7 +577,7 @@ func ExampleTxn_Mutate_facets() {
 }
 
 func ExampleTxn_Mutate_list() {
-	conn, err := grpc.Dial("127.0.0.1:9080", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
@@ -653,7 +653,7 @@ func ExampleTxn_Mutate_list() {
 }
 
 func ExampleDeleteEdges() {
-	conn, err := grpc.Dial("127.0.0.1:9080", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
@@ -774,7 +774,7 @@ func ExampleDeleteEdges() {
 }
 
 func ExampleTxn_Mutate_deleteNode() {
-	conn, err := grpc.Dial("127.0.0.1:9080", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
@@ -913,7 +913,7 @@ func ExampleTxn_Mutate_deleteNode() {
 }
 
 func ExampleTxn_Mutate_deletePredicate() {
-	conn, err := grpc.Dial("127.0.0.1:9080", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}

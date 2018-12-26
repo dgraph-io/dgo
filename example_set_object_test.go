@@ -37,7 +37,7 @@ type Person struct {
 }
 
 func Example_setObject() {
-	conn, err := grpc.Dial("127.0.0.1:9080", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
