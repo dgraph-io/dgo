@@ -18,6 +18,7 @@ package dgo
 
 import (
 	"context"
+	"google.golang.org/grpc/metadata"
 	"math/rand"
 	"sync"
 
@@ -64,16 +65,16 @@ func (d *Dgraph) Login(ctx context.Context, userid string, password string) erro
 func (d *Dgraph) GetContext(ctx context.Context) context.Context {
 	d.jwtMutex.RLock()
 	defer d.jwtMutex.RUnlock()
-	newCtx := ctx
+
+	md := metadata.New(nil)
 	if len(d.jwt.AccessJwt) > 0 {
-		newCtx = context.WithValue(newCtx, "accessJwt", d.jwt.AccessJwt)
+		md.Append("accessJwt", d.jwt.AccessJwt)
 	}
 	if len(d.jwt.RefreshJwt) > 0 {
-		newCtx = context.WithValue(newCtx, "refreshJwt", d.jwt.RefreshJwt)
+		md.Append("refreshJwt", d.jwt.RefreshJwt)
 	}
 
-	// otherwise return the jwt as it is
-	return newCtx
+	return metadata.NewOutgoingContext(ctx, md)
 }
 
 // By setting various fields of api.Operation, Alter can be used to do the

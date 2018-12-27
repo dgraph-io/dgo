@@ -74,9 +74,6 @@ func createAccountAndData(t *testing.T, dg *dgo.Dgraph) {
 	}
 
 	ctxWithAdminJwt := dg.GetContext(ctx)
-	require.True(t, ctxWithAdminJwt.Value("accessJwt") != nil, "the accessJwt "+
-		"should not be empty")
-
 	op := api.Operation{
 		DropAll: true,
 	}
@@ -88,18 +85,18 @@ func createAccountAndData(t *testing.T, dg *dgo.Dgraph) {
 	createUserCmd := exec.Command(os.ExpandEnv("$GOPATH/bin/dgraph"),
 		"acl", "useradd",
 		"-d", "localhost:9180",
-		"-u", user, "-p", password)
+		"-u", user, "-p", password, "--adminPassword", "password")
 	if err := createUserCmd.Run(); err != nil {
 		t.Fatalf("Unable to create user:%v", err)
 	}
 
 	// create some data, e.g. user with name alice
-	require.NoError(t, dg.Alter(ctx, &api.Operation{
+	require.NoError(t, dg.Alter(ctxWithAdminJwt, &api.Operation{
 		Schema: `city_name: string @index(exact) .`,
 	}))
 
 	txn := dg.NewTxn()
-	_, err := txn.Mutate(ctx, &api.Mutation{
+	_, err := txn.Mutate(ctxWithAdminJwt, &api.Mutation{
 		SetNquads: []byte(`
 			_:a <city_name> "SF" .
 		`),
