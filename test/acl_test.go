@@ -18,60 +18,46 @@ package test
 
 import (
 	"context"
-	"github.com/dgraph-io/dgo/protos/api"
-	"github.com/stretchr/testify/require"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"github.com/dgraph-io/dgo"
+	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcl(t *testing.T) {
-	// setup a cluster and clean the database
-	cluster := setupCluster()
-	defer cluster.Close()
-	op := api.Operation{
-		DropAll: true,
-	}
-	ctx := context.Background()
-	if err := cluster.Client.Alter(ctx, &op); err != nil {
-		t.Fatalf("Unable to cleanup db:%v", err)
-	}
+	// setup a cluster
+	//cluster := setupCluster()
+	//defer cluster.Close()
+	dg, close := GetDgraphClient()
+	defer close()
 
-	// use commands to create users and groups
-	createUserCmd := exec.Command(os.ExpandEnv("$GOPATH/bin/dgraph"),
-		"acl", "useradd",
-		"-d", "localhost:" + cluster.DgraphPort,
-		"-u", user, "-p", password)
-	if err := createUserCmd.Run(); err != nil {
-		t.Fatalf("Unable to create user:%v", err)
-	}
-
-	// create some data, e.g. user with name alice
-	require.NoError(t, cluster.Client.Alter(ctx, &api.Operation{
-		Schema: `name: string @index(exact) .`,
-	}))
-
-	txn := cluster.Client.NewTxn()
-	_, err := txn.Mutate(ctx, &api.Mutation{
-		SetNquads: []byte(`
-			_:a <name> "Alice" .
-		`),
-	})
-	require.NoError(t, err)
-	require.NoError(t, txn.Commit(ctx))
+	createAccountAndData(t, dg)
 
 	// try to query the user whose name is alice
-	const aliceQuery = `
+	ctx := context.Background()
+	if err := dg.Login(ctx, user, password); err != nil {
+		t.Fatalf("unable to login using the account %v", user)
+	}
+
+	ctxWithUserJwt := dg.GetContext(ctx)
+	require.True(t, ctxWithUserJwt.Value("accessJwt") != nil, "the accessJwt "+
+		"should not be empty")
+
+	txn := dg.NewTxn()
+	const cityQuery = `
 	{
-		q(func: eq(name, "Alice")) {
+		q(func: eq(city_name, "SF")) {
 			name
 		}
 	}`
 
-	txn = cluster.Client.NewTxn()
-	_, err = txn.Query(ctx, aliceQuery)
+	txn = dg.NewTxn()
+	_, err := txn.Query(ctxWithUserJwt, cityQuery)
 
 	// verify that the access is not authorized
 	require.Error(t, err)
@@ -80,6 +66,47 @@ func TestAcl(t *testing.T) {
 var user = "alice"
 var password = "password123"
 var rootDir = filepath.Join(os.TempDir(), "acl_test")
+
+func createAccountAndData(t *testing.T, dg *dgo.Dgraph) {
+	ctx := context.Background()
+	if err := dg.Login(ctx, "admin", "password"); err != nil {
+		t.Fatalf("unable to login using the admin account")
+	}
+
+	ctxWithAdminJwt := dg.GetContext(ctx)
+	require.True(t, ctxWithAdminJwt.Value("accessJwt") != nil, "the accessJwt "+
+		"should not be empty")
+
+	op := api.Operation{
+		DropAll: true,
+	}
+	if err := dg.Alter(ctxWithAdminJwt, &op); err != nil {
+		t.Fatalf("Unable to cleanup db:%v", err)
+	}
+
+	// use commands to create users and groups
+	createUserCmd := exec.Command(os.ExpandEnv("$GOPATH/bin/dgraph"),
+		"acl", "useradd",
+		"-d", "localhost:9180",
+		"-u", user, "-p", password)
+	if err := createUserCmd.Run(); err != nil {
+		t.Fatalf("Unable to create user:%v", err)
+	}
+
+	// create some data, e.g. user with name alice
+	require.NoError(t, dg.Alter(ctx, &api.Operation{
+		Schema: `city_name: string @index(exact) .`,
+	}))
+
+	txn := dg.NewTxn()
+	_, err := txn.Mutate(ctx, &api.Mutation{
+		SetNquads: []byte(`
+			_:a <city_name> "SF" .
+		`),
+	})
+	require.NoError(t, err)
+	require.NoError(t, txn.Commit(ctx))
+}
 
 func setupCluster() *DgraphCluster {
 	if err := MakeDirEmpty(rootDir); err != nil {
@@ -92,4 +119,3 @@ func setupCluster() *DgraphCluster {
 	}
 	return cluster
 }
-
