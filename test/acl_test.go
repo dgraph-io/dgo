@@ -18,11 +18,17 @@ package test
 
 import (
 	"context"
+	"fmt"
+	"google.golang.org/grpc/metadata"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"testing"
+	"time"
+
+	"github.com/dgraph-io/dgraph/ee/acl"
 
 	"github.com/dgraph-io/dgo"
 	"github.com/dgraph-io/dgo/protos/api"
@@ -37,7 +43,22 @@ func TestAcl(t *testing.T) {
 	defer close()
 
 	createAccountAndData(t, dg)
+	queryPredicateWithUserAccount(t, dg, true)
+	createGroupAndAcls(t)
+	// wait for 35 seconds to ensure the new acl have reached all acl caches
+	// on all alpha servers
+	log.Println("Sleeping for 35 seconds for acl to catch up")
+	time.Sleep(35 * time.Second)
+	queryPredicateWithUserAccount(t, dg, false)
+}
 
+var user = "alice"
+var password = "password123"
+var predicate = "city_name"
+var group = "dev"
+var rootDir = filepath.Join(os.TempDir(), "acl_test")
+
+func queryPredicateWithUserAccount(t *testing.T, dg *dgo.Dgraph, shouldFail bool) {
 	// try to query the user whose name is alice
 	ctx := context.Background()
 	if err := dg.Login(ctx, user, password); err != nil {
@@ -45,34 +66,35 @@ func TestAcl(t *testing.T) {
 	}
 
 	ctxWithUserJwt := dg.GetContext(ctx)
-	require.True(t, ctxWithUserJwt.Value("accessJwt") != nil, "the accessJwt "+
-		"should not be empty")
+	md, ok := metadata.FromOutgoingContext(ctxWithUserJwt)
+	if !ok {
+		t.Fatalf("unable to get outgoing metadata")
+	}
+	log.Printf("outgoing metadata:%v\n", md)
 
 	txn := dg.NewTxn()
-	const cityQuery = `
+	query := fmt.Sprintf(`
 	{
-		q(func: eq(city_name, "SF")) {
+		q(func: eq(%s, "SF")) {
 			name
 		}
-	}`
-
+	}`, predicate)
 	txn = dg.NewTxn()
-	_, err := txn.Query(ctxWithUserJwt, cityQuery)
+	_, err := txn.Query(ctxWithUserJwt, query)
 
-	// verify that the access is not authorized
-	require.Error(t, err)
+	if shouldFail {
+		require.Error(t, err, "the query should have failed")
+	} else {
+		require.NoError(t, err, "the query should have succeeded")
+	}
 }
 
-var user = "alice"
-var password = "password123"
-var rootDir = filepath.Join(os.TempDir(), "acl_test")
-
 func createAccountAndData(t *testing.T, dg *dgo.Dgraph) {
+	// use the admin account to clean the database
 	ctx := context.Background()
 	if err := dg.Login(ctx, "admin", "password"); err != nil {
 		t.Fatalf("unable to login using the admin account")
 	}
-
 	ctxWithAdminJwt := dg.GetContext(ctx)
 	op := api.Operation{
 		DropAll: true,
@@ -97,14 +119,41 @@ func createAccountAndData(t *testing.T, dg *dgo.Dgraph) {
 
 	txn := dg.NewTxn()
 	_, err := txn.Mutate(ctxWithAdminJwt, &api.Mutation{
-		SetNquads: []byte(`
-			_:a <city_name> "SF" .
-		`),
+		SetNquads: []byte(fmt.Sprintf("_:a <%s> \"SF\" .", predicate)),
 	})
 	require.NoError(t, err)
 	require.NoError(t, txn.Commit(ctx))
 }
 
+func createGroupAndAcls(t *testing.T) {
+	// use commands to create users and groups
+	createGroupCmd := exec.Command(os.ExpandEnv("$GOPATH/bin/dgraph"),
+		"acl", "groupadd",
+		"-d", "localhost:9180",
+		"-g", group, "--adminPassword", "password")
+	if err := createGroupCmd.Run(); err != nil {
+		t.Fatalf("Unable to create group:%v", err)
+	}
+
+	addPermCmd := exec.Command(os.ExpandEnv("$GOPATH/bin/dgraph"),
+		"acl", "chmod",
+		"-d", "localhost:9180",
+		"-g", group, "-p", predicate, "-P", strconv.Itoa(int(acl.Read)), "--adminPassword",
+		"password")
+	if err := addPermCmd.Run(); err != nil {
+		t.Fatalf("Unable to add permission to group %s:%v", group, err)
+	}
+
+	addUserToGroupCmd := exec.Command(os.ExpandEnv("$GOPATH/bin/dgraph"),
+		"acl", "usermod",
+		"-d", "localhost:9180",
+		"-u", user, "-g", group, "--adminPassword", "password")
+	if err := addUserToGroupCmd.Run(); err != nil {
+		t.Fatalf("Unable to add user %s to group %s:%v", user, group, err)
+	}
+}
+
+/*
 func setupCluster() *DgraphCluster {
 	if err := MakeDirEmpty(rootDir); err != nil {
 		log.Fatalf("Unable to create dir %v", rootDir)
@@ -116,3 +165,4 @@ func setupCluster() *DgraphCluster {
 	}
 	return cluster
 }
+*/
