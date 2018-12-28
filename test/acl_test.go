@@ -19,7 +19,6 @@ package test
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc/metadata"
 	"log"
 	"os"
 	"os/exec"
@@ -66,12 +65,6 @@ func queryPredicateWithUserAccount(t *testing.T, dg *dgo.Dgraph, shouldFail bool
 	}
 
 	ctxWithUserJwt := dg.GetContext(ctx)
-	md, ok := metadata.FromOutgoingContext(ctxWithUserJwt)
-	if !ok {
-		t.Fatalf("unable to get outgoing metadata")
-	}
-	log.Printf("outgoing metadata:%v\n", md)
-
 	txn := dg.NewTxn()
 	query := fmt.Sprintf(`
 	{
@@ -135,14 +128,24 @@ func createGroupAndAcls(t *testing.T) {
 		t.Fatalf("Unable to create group:%v", err)
 	}
 
-	addPermCmd := exec.Command(os.ExpandEnv("$GOPATH/bin/dgraph"),
+	addPermCmd1 := exec.Command(os.ExpandEnv("$GOPATH/bin/dgraph"),
 		"acl", "chmod",
 		"-d", "localhost:9180",
 		"-g", group, "-p", predicate, "-P", strconv.Itoa(int(acl.Read)), "--adminPassword",
 		"password")
-	if err := addPermCmd.Run(); err != nil {
+	if err := addPermCmd1.Run(); err != nil {
 		t.Fatalf("Unable to add permission to group %s:%v", group, err)
 	}
+
+	addPermCmd2 := exec.Command(os.ExpandEnv("$GOPATH/bin/dgraph"),
+		"acl", "chmod",
+		"-d", "localhost:9180",
+		"-g", group, "-p", "name", "-P", strconv.Itoa(int(acl.Read)), "--adminPassword",
+		"password")
+	if err := addPermCmd2.Run(); err != nil {
+		t.Fatalf("Unable to add permission to group %s:%v", group, err)
+	}
+
 
 	addUserToGroupCmd := exec.Command(os.ExpandEnv("$GOPATH/bin/dgraph"),
 		"acl", "usermod",
