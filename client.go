@@ -18,6 +18,7 @@ package dgo
 
 import (
 	"context"
+	"fmt"
 	"google.golang.org/grpc/metadata"
 	"math/rand"
 	"sync"
@@ -62,6 +63,25 @@ func (d *Dgraph) Login(ctx context.Context, userid string, password string) erro
 	return d.jwt.Unmarshal(resp.Json)
 }
 
+func (d *Dgraph) LoginWithRefreshJwt(ctx context.Context) error {
+	if len(d.jwt.RefreshJwt) == 0 {
+		return fmt.Errorf("refresh jwt should not be empty")
+	}
+
+	dc := d.anyClient()
+	loginRequest := &api.LoginRequest{
+		RefreshToken: d.jwt.RefreshJwt,
+	}
+	resp, err := dc.Login(ctx, loginRequest)
+	if err != nil {
+		return err
+	}
+
+	d.jwtMutex.Lock()
+	defer d.jwtMutex.Unlock()
+	return d.jwt.Unmarshal(resp.Json)
+}
+
 func (d *Dgraph) GetContext(ctx context.Context) context.Context {
 	d.jwtMutex.RLock()
 	defer d.jwtMutex.RUnlock()
@@ -69,9 +89,6 @@ func (d *Dgraph) GetContext(ctx context.Context) context.Context {
 	md := metadata.New(nil)
 	if len(d.jwt.AccessJwt) > 0 {
 		md.Append("accessJwt", d.jwt.AccessJwt)
-	}
-	if len(d.jwt.RefreshJwt) > 0 {
-		md.Append("refreshJwt", d.jwt.RefreshJwt)
 	}
 
 	return metadata.NewOutgoingContext(ctx, md)
