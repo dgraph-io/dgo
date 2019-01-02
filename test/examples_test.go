@@ -181,7 +181,7 @@ func ExampleTxn_Mutate() {
 		log.Fatal(err)
 	}
 
-	// Assigned uids for nodes which were created would be returned in the resp.AssignedUids map.
+	// Assigned uids for nodes which were created would be returned in the assigned.Uids map.
 	puid := assigned.Uids["blank-0"]
 	const q = `query Me($id: string){
 		me(func: uid($id)) {
@@ -374,7 +374,7 @@ func ExampleTxn_Query_unmarshal() {
 		log.Fatal(err)
 	}
 
-	// Assigned uids for nodes which were created would be returned in the resp.AssignedUids map.
+	// Assigned uids for nodes which were created would be returned in the assigned.Uids map.
 	puid := assigned.Uids["blank-0"]
 	variables := make(map[string]string)
 	variables["$id"] = puid
