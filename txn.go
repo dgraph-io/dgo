@@ -52,7 +52,6 @@ type Txn struct {
 	readOnly bool
 
 	dg *Dgraph
-	dc api.DgraphClient
 }
 
 func (txn *Txn) Sequencing(sequencing api.LinRead_Sequencing) {
@@ -63,7 +62,6 @@ func (txn *Txn) Sequencing(sequencing api.LinRead_Sequencing) {
 func (d *Dgraph) NewTxn() *Txn {
 	return &Txn{
 		dg:      d,
-		dc:      d.anyClient(),
 		context: &api.TxnContext{},
 	}
 }
@@ -94,7 +92,7 @@ func (txn *Txn) QueryWithVars(ctx context.Context, q string,
 		StartTs:  txn.context.StartTs,
 		ReadOnly: txn.readOnly,
 	}
-	resp, err := txn.dc.Query(ctx, req)
+	resp, err := txn.dg.query(ctx, req)
 	if err == nil {
 		if err := txn.mergeContext(resp.GetTxn()); err != nil {
 			return nil, err
@@ -139,7 +137,7 @@ func (txn *Txn) Mutate(ctx context.Context, mu *api.Mutation) (*api.Assigned, er
 
 	txn.mutated = true
 	mu.StartTs = txn.context.StartTs
-	ag, err := txn.dc.Mutate(ctx, mu)
+	ag, err := txn.dg.mutate(ctx, mu)
 	if err != nil {
 		// Since a mutation error occurred, the txn should no longer be used
 		// (some mutations could have applied but not others, but we don't know
@@ -181,7 +179,7 @@ func (txn *Txn) Commit(ctx context.Context) error {
 	if !txn.mutated {
 		return nil
 	}
-	_, err := txn.dc.CommitOrAbort(ctx, txn.context)
+	_, err := txn.dg.commitOrAbort(ctx, txn.context)
 	if s, ok := status.FromError(err); ok && s.Code() == codes.Aborted {
 		err = y.ErrAborted
 	}
@@ -207,6 +205,6 @@ func (txn *Txn) Discard(ctx context.Context) error {
 		return nil
 	}
 	txn.context.Aborted = true
-	_, err := txn.dc.CommitOrAbort(ctx, txn.context)
+	_, err := txn.dg.commitOrAbort(ctx, txn.context)
 	return err
 }

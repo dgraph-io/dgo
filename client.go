@@ -19,9 +19,14 @@ package dgo
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc/metadata"
 	"math/rand"
+	"strings"
 	"sync"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	"google.golang.org/grpc/metadata"
 
 	"github.com/dgraph-io/dgo/protos/api"
 )
@@ -48,6 +53,9 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 }
 
 func (d *Dgraph) Login(ctx context.Context, userid string, password string) error {
+	d.jwtMutex.Lock()
+	defer d.jwtMutex.Unlock()
+
 	dc := d.anyClient()
 	loginRequest := &api.LoginRequest{
 		Userid:   userid,
@@ -58,12 +66,13 @@ func (d *Dgraph) Login(ctx context.Context, userid string, password string) erro
 		return err
 	}
 
-	d.jwtMutex.Lock()
-	defer d.jwtMutex.Unlock()
 	return d.jwt.Unmarshal(resp.Json)
 }
 
-func (d *Dgraph) LoginWithRefreshJwt(ctx context.Context) error {
+func (d *Dgraph) loginWithRefreshJwt(ctx context.Context) error {
+	d.jwtMutex.Lock()
+	defer d.jwtMutex.Unlock()
+
 	if len(d.jwt.RefreshJwt) == 0 {
 		return fmt.Errorf("refresh jwt should not be empty")
 	}
@@ -82,11 +91,14 @@ func (d *Dgraph) LoginWithRefreshJwt(ctx context.Context) error {
 	return d.jwt.Unmarshal(resp.Json)
 }
 
-func (d *Dgraph) GetContext(ctx context.Context) context.Context {
+func (d *Dgraph) getContext(ctx context.Context) context.Context {
+	md, ok := metadata.FromOutgoingContext(ctx)
+	if !ok {
+		return ctx
+	}
+
 	d.jwtMutex.RLock()
 	defer d.jwtMutex.RUnlock()
-
-	md := metadata.New(nil)
 	if len(d.jwt.AccessJwt) > 0 {
 		md.Append("accessJwt", d.jwt.AccessJwt)
 	}
@@ -104,8 +116,87 @@ func (d *Dgraph) GetContext(ctx context.Context) context.Context {
 // 3. Drop the database.
 func (d *Dgraph) Alter(ctx context.Context, op *api.Operation) error {
 	dc := d.anyClient()
-	_, err := dc.Alter(ctx, op)
+
+	ctxWithJwt := d.getContext(ctx)
+	_, err := dc.Alter(ctxWithJwt, op)
+	st, ok := status.FromError(err)
+	if ok && st.Code() == codes.Unauthenticated &&
+		strings.Contains(err.Error(), "jwt token has expired") {
+		// try to login with the refreshJwt
+		if err = d.loginWithRefreshJwt(ctx); err != nil {
+			return fmt.Errorf("unauthenticated to alter and unable to login with "+
+				"refresh jwt: %v", err)
+		}
+
+		ctxWithJwt = d.getContext(ctx)
+		_, err = dc.Alter(ctxWithJwt, op)
+		return err
+	}
+
 	return err
+}
+
+// the query API should only be used within a Txn object
+func (d *Dgraph) query(ctx context.Context, op *api.Request) (*api.Response, error) {
+	dc := d.anyClient()
+
+	ctxWithJwt := d.getContext(ctx)
+	resp, err := dc.Query(ctxWithJwt, op)
+	st, ok := status.FromError(err)
+	if ok && st.Code() == codes.Unauthenticated &&
+		strings.Contains(err.Error(), "jwt token has expired") {
+		// try to login with the refreshJwt
+		if err = d.loginWithRefreshJwt(ctx); err != nil {
+			return nil, fmt.Errorf("unauthenticated to query and unable to login with "+
+				"refresh jwt: %v", err)
+		}
+
+		ctxWithJwt = d.getContext(ctx)
+		return dc.Query(ctxWithJwt, op)
+	}
+	return resp, err
+}
+
+// the mutate API should only be used within a Txn object
+func (d *Dgraph) mutate(ctx context.Context, mu *api.Mutation) (*api.Assigned, error) {
+	dc := d.anyClient()
+
+	ctxWithJwt := d.getContext(ctx)
+	assigned, err := dc.Mutate(ctxWithJwt, mu)
+	st, ok := status.FromError(err)
+	if ok && st.Code() == codes.Unauthenticated &&
+		strings.Contains(err.Error(), "jwt token has expired") {
+		// try to login with the refreshJwt
+		if err = d.loginWithRefreshJwt(ctx); err != nil {
+			return nil, fmt.Errorf("unauthenticated to mutate and unable to login with "+
+				"refresh jwt: %v", err)
+		}
+
+		ctxWithJwt = d.getContext(ctx)
+		return dc.Mutate(ctxWithJwt, mu)
+	}
+
+	return assigned, err
+}
+
+func (d *Dgraph) commitOrAbort(ctx context.Context, txn *api.TxnContext) (*api.TxnContext, error) {
+	dc := d.anyClient()
+
+	ctxWithJwt := d.getContext(ctx)
+	txnContext, err := dc.CommitOrAbort(ctxWithJwt, txn)
+	st, ok := status.FromError(err)
+	if ok && st.Code() == codes.Unauthenticated &&
+		strings.Contains(err.Error(), "jwt token has expired") {
+		// try to login with the refreshJwt
+		if err = d.loginWithRefreshJwt(ctx); err != nil {
+			return nil, fmt.Errorf("unauthenticated to commit or abort and "+
+				"unable to login with refresh jwt: %v", err)
+		}
+
+		ctxWithJwt = d.getContext(ctx)
+		return dc.CommitOrAbort(ctxWithJwt, txn)
+	}
+	return txnContext, err
 }
 
 func (d *Dgraph) anyClient() api.DgraphClient {

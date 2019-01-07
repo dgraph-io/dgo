@@ -17,6 +17,7 @@
 package test
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/dgraph-io/dgo"
@@ -26,8 +27,10 @@ import (
 
 type CloseFunc func()
 
-func GetDgraphClient() (*dgo.Dgraph, CloseFunc) {
-	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
+const DgraphAlphaPort = 9180
+
+func GetDgraphClient(alphaPort int) (*dgo.Dgraph, CloseFunc) {
+	conn, err := grpc.Dial(fmt.Sprintf("127.0.0.1:%d", alphaPort), grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
