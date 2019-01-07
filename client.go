@@ -23,12 +23,10 @@ import (
 	"strings"
 	"sync"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
-	"google.golang.org/grpc/metadata"
-
 	"github.com/dgraph-io/dgo/protos/api"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 // Dgraph is a transaction aware client to a set of dgraph server instances.
@@ -92,18 +90,19 @@ func (d *Dgraph) loginWithRefreshJwt(ctx context.Context) error {
 }
 
 func (d *Dgraph) getContext(ctx context.Context) context.Context {
-	md, ok := metadata.FromOutgoingContext(ctx)
-	if !ok {
-		return ctx
-	}
-
 	d.jwtMutex.RLock()
 	defer d.jwtMutex.RUnlock()
 	if len(d.jwt.AccessJwt) > 0 {
+		md, ok := metadata.FromOutgoingContext(ctx)
+		if !ok {
+			// no metadata key is in the context, add one
+			md = metadata.New(nil)
+		}
 		md.Append("accessJwt", d.jwt.AccessJwt)
+		return metadata.NewOutgoingContext(ctx, md)
 	}
 
-	return metadata.NewOutgoingContext(ctx, md)
+	return ctx
 }
 
 // By setting various fields of api.Operation, Alter can be used to do the
