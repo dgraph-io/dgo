@@ -25,12 +25,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-type CloseFunc func()
+type CancelFunc func()
 
 const DgraphAlphaPort = 9180
 
-func GetDgraphClient(alphaPort int) (*dgo.Dgraph, CloseFunc) {
-	conn, err := grpc.Dial(fmt.Sprintf("127.0.0.1:%d", alphaPort), grpc.WithInsecure())
+func GetDgraphClient() (*dgo.Dgraph, CancelFunc) {
+	conn, err := grpc.Dial(fmt.Sprintf("127.0.0.1:%d", DgraphAlphaPort), grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
