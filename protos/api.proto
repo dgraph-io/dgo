@@ -54,7 +54,7 @@ message Request {
 
 message Response {
 	bytes json = 1;
-	repeated SchemaNode schema = 2;
+	repeated SchemaNode schema = 2 [deprecated=true];
 	TxnContext txn = 3;
 	Latency latency = 12;
 }
