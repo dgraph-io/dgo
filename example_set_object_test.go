@@ -30,7 +30,7 @@ type Person struct {
 	Age      int        `json:"age,omitempty"`
 	Dob      *time.Time `json:"dob,omitempty"`
 	Married  bool       `json:"married,omitempty"`
-	Raw      []byte     `json:"raw_bytes",omitempty`
+	Raw      []byte     `json:"raw_bytes,omitempty"`
 	Friends  []Person   `json:"friend,omitempty"`
 	Location loc        `json:"loc,omitempty"`
 	School   []School   `json:"school,omitempty"`
