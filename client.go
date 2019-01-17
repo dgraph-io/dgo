@@ -123,7 +123,8 @@ func (d *Dgraph) Alter(ctx context.Context, op *api.Operation) error {
 	return err
 }
 
-// returns whether the operation should be tried
+// checkJwtExpiration returns whether the operation should be retried
+// and if so the updated context with refreshed access JWT
 func (d *Dgraph) checkJwtExpiration(ctx context.Context, err error) (bool, context.Context) {
 	if err == nil {
 		return false, nil
