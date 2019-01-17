@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package test
+package dgo_test
 
 import (
 	"context"
@@ -25,7 +25,24 @@ import (
 
 	"github.com/dgraph-io/dgo"
 	"github.com/dgraph-io/dgo/protos/api"
+	"google.golang.org/grpc"
 )
+
+type CancelFunc func()
+
+func GetDgraphClient() (*dgo.Dgraph, CancelFunc) {
+	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
+	if err != nil {
+		log.Fatal("While trying to dial gRPC")
+	}
+
+	dc := api.NewDgraphClient(conn)
+	return dgo.NewDgraphClient(dc), func() {
+		if err := conn.Close(); err != nil {
+			log.Printf("Error while closing connection:%v", err)
+		}
+	}
+}
 
 func ExampleDgraph_Alter_dropAll() {
 	dg, cancel := GetDgraphClient()
