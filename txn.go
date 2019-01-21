@@ -19,12 +19,11 @@ package dgo
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/dgraph-io/dgo/protos/api"
 	"github.com/dgraph-io/dgo/y"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -94,7 +93,17 @@ func (txn *Txn) QueryWithVars(ctx context.Context, q string,
 		StartTs:  txn.context.StartTs,
 		ReadOnly: txn.readOnly,
 	}
+	ctx = txn.dg.getContext(ctx)
 	resp, err := txn.dc.Query(ctx, req)
+	if isJwtExpired(err) {
+		err = txn.dg.retryLogin(ctx)
+		if err != nil {
+			return nil, err
+		}
+		ctx = txn.dg.getContext(ctx)
+		resp, err = txn.dc.Query(ctx, req)
+	}
+
 	if err == nil {
 		if err := txn.mergeContext(resp.GetTxn()); err != nil {
 			return nil, err
@@ -139,22 +148,22 @@ func (txn *Txn) Mutate(ctx context.Context, mu *api.Mutation) (*api.Assigned, er
 
 	txn.mutated = true
 	mu.StartTs = txn.context.StartTs
+	ctx = txn.dg.getContext(ctx)
 	ag, err := txn.dc.Mutate(ctx, mu)
-	if err != nil {
-		// Since a mutation error occurred, the txn should no longer be used
-		// (some mutations could have applied but not others, but we don't know
-		// which ones).  Discarding the transaction enforces that the user
-		// cannot use the txn further.
-		_ = txn.Discard(ctx) // Ignore error - user should see the original error.
-
-		// Transaction could be aborted(codes.Aborted) if CommitNow was true, or server could send a
-		// message that this mutation conflicts(codes.FailedPrecondition) with another transaction.
-		if s, ok := status.FromError(err); ok && s.Code() == codes.Aborted ||
-			s.Code() == codes.FailedPrecondition {
-			err = y.ErrAborted
+	if isJwtExpired(err) {
+		err = txn.dg.retryLogin(ctx)
+		if err != nil {
+			return nil, err
 		}
+		ctx = txn.dg.getContext(ctx)
+		ag, err = txn.dc.Mutate(ctx, mu)
+	}
+
+	if err != nil {
+		_ = txn.Discard(ctx) // Ignore error - user should see the original error.
 		return nil, err
 	}
+
 	if mu.CommitNow {
 		txn.finished = true
 	}
@@ -176,12 +185,8 @@ func (txn *Txn) Commit(ctx context.Context) error {
 	case txn.finished:
 		return ErrFinished
 	}
-	txn.finished = true
 
-	if !txn.mutated {
-		return nil
-	}
-	_, err := txn.dc.CommitOrAbort(ctx, txn.context)
+	err := txn.commitOrAbort(ctx)
 	if s, ok := status.FromError(err); ok && s.Code() == codes.Aborted {
 		err = y.ErrAborted
 	}
@@ -198,6 +203,14 @@ func (txn *Txn) Commit(ctx context.Context) error {
 // is unavailable. In these cases, the server will eventually do the
 // transaction clean up.
 func (txn *Txn) Discard(ctx context.Context) error {
+	err := txn.commitOrAbort(ctx)
+	if err != nil {
+		txn.context.Aborted = true
+	}
+	return err
+}
+
+func (txn *Txn) commitOrAbort(ctx context.Context) error {
 	if txn.finished {
 		return nil
 	}
@@ -206,7 +219,17 @@ func (txn *Txn) Discard(ctx context.Context) error {
 	if !txn.mutated {
 		return nil
 	}
-	txn.context.Aborted = true
+
+	ctx = txn.dg.getContext(ctx)
 	_, err := txn.dc.CommitOrAbort(ctx, txn.context)
+	if isJwtExpired(err) {
+		err = txn.dg.retryLogin(ctx)
+		if err != nil {
+			return err
+		}
+		ctx = txn.dg.getContext(ctx)
+		_, err = txn.dc.CommitOrAbort(ctx, txn.context)
+	}
+
 	return err
 }
