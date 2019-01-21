@@ -67,7 +67,7 @@ func (d *Dgraph) Login(ctx context.Context, userid string, password string) erro
 	return d.jwt.Unmarshal(resp.Json)
 }
 
-func (d *Dgraph) loginWithRefreshJwt(ctx context.Context) error {
+func (d *Dgraph) retryLogin(ctx context.Context) error {
 	d.jwtMutex.Lock()
 	defer d.jwtMutex.Unlock()
 
@@ -95,7 +95,7 @@ func (d *Dgraph) getContext(ctx context.Context) context.Context {
 			// no metadata key is in the context, add one
 			md = metadata.New(nil)
 		}
-		md.Append("accessJwt", d.jwt.AccessJwt)
+		md.Set("accessJwt", d.jwt.AccessJwt)
 		return metadata.NewOutgoingContext(ctx, md)
 	}
 
@@ -113,36 +113,30 @@ func (d *Dgraph) getContext(ctx context.Context) context.Context {
 func (d *Dgraph) Alter(ctx context.Context, op *api.Operation) error {
 	dc := d.anyClient()
 
-	ctxWithJwt := d.getContext(ctx)
-	_, err := dc.Alter(ctxWithJwt, op)
+	ctx = d.getContext(ctx)
+	_, err := dc.Alter(ctx, op)
 
-	retry, newCtx := d.checkJwtExpiration(ctx, err)
-	if retry {
-		_, err = dc.Alter(newCtx, op)
+	if isJwtExpired(err) {
+		err = d.retryLogin(ctx)
+		if err != nil {
+			return err
+		}
+		ctx = d.getContext(ctx)
+		_, err = dc.Alter(ctx, op)
 	}
+
 	return err
 }
 
-// checkJwtExpiration returns whether the operation should be retried
-// and if so the updated context with refreshed access JWT
-func (d *Dgraph) checkJwtExpiration(ctx context.Context, err error) (bool, context.Context) {
+// isJwtExpired returns true if the error indicates that the jwt has expired
+func isJwtExpired(err error) bool {
 	if err == nil {
-		return false, nil
+		return false
 	}
 
 	st, ok := status.FromError(err)
-	if ok && st.Code() == codes.Unauthenticated &&
-		strings.Contains(err.Error(), "Token is expired") {
-		// try to login with the refreshJwt
-		if e := d.loginWithRefreshJwt(ctx); e != nil {
-			return false, nil
-		}
-
-		return true, d.getContext(ctx)
-	}
-
-	// no need to retry if the err is not the type we expect
-	return false, nil
+	return ok && st.Code() == codes.Unauthenticated &&
+		strings.Contains(err.Error(), "Token is expired")
 }
 
 func (d *Dgraph) anyClient() api.DgraphClient {

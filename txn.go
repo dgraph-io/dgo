@@ -20,7 +20,10 @@ import (
 	"context"
 
 	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/dgraph-io/dgo/y"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -90,11 +93,15 @@ func (txn *Txn) QueryWithVars(ctx context.Context, q string,
 		StartTs:  txn.context.StartTs,
 		ReadOnly: txn.readOnly,
 	}
-	ctxWithJwt := txn.dg.getContext(ctx)
-	resp, err := txn.dc.Query(ctxWithJwt, req)
-	retry, newCtx := txn.dg.checkJwtExpiration(ctx, err)
-	if retry {
-		resp, err = txn.dc.Query(newCtx, req)
+	ctx = txn.dg.getContext(ctx)
+	resp, err := txn.dc.Query(ctx, req)
+	if isJwtExpired(err) {
+		err = txn.dg.retryLogin(ctx)
+		if err != nil {
+			return nil, err
+		}
+		ctx = txn.dg.getContext(ctx)
+		resp, err = txn.dc.Query(ctx, req)
 	}
 
 	if err == nil {
@@ -141,11 +148,15 @@ func (txn *Txn) Mutate(ctx context.Context, mu *api.Mutation) (*api.Assigned, er
 
 	txn.mutated = true
 	mu.StartTs = txn.context.StartTs
-	ctxWithJwt := txn.dg.getContext(ctx)
-	ag, err := txn.dc.Mutate(ctxWithJwt, mu)
-	retry, newCtx := txn.dg.checkJwtExpiration(ctx, err)
-	if retry {
-		ag, err = txn.dc.Mutate(newCtx, mu)
+	ctx = txn.dg.getContext(ctx)
+	ag, err := txn.dc.Mutate(ctx, mu)
+	if isJwtExpired(err) {
+		err = txn.dg.retryLogin(ctx)
+		if err != nil {
+			return nil, err
+		}
+		ctx = txn.dg.getContext(ctx)
+		ag, err = txn.dc.Mutate(ctx, mu)
 	}
 
 	if err != nil {
@@ -174,16 +185,10 @@ func (txn *Txn) Commit(ctx context.Context) error {
 	case txn.finished:
 		return ErrFinished
 	}
-	txn.finished = true
 
-	if !txn.mutated {
-		return nil
-	}
-	ctxWithJwt := txn.dg.getContext(ctx)
-	_, err := txn.dc.CommitOrAbort(ctxWithJwt, txn.context)
-	retry, newCtx := txn.dg.checkJwtExpiration(ctx, err)
-	if retry {
-		_, err = txn.dc.CommitOrAbort(newCtx, txn.context)
+	err := txn.commitOrAbort(ctx)
+	if s, ok := status.FromError(err); ok && s.Code() == codes.Aborted {
+		err = y.ErrAborted
 	}
 	return err
 }
@@ -198,6 +203,14 @@ func (txn *Txn) Commit(ctx context.Context) error {
 // is unavailable. In these cases, the server will eventually do the
 // transaction clean up.
 func (txn *Txn) Discard(ctx context.Context) error {
+	err := txn.commitOrAbort(ctx)
+	if err != nil {
+		txn.context.Aborted = true
+	}
+	return err
+}
+
+func (txn *Txn) commitOrAbort(ctx context.Context) error {
 	if txn.finished {
 		return nil
 	}
@@ -206,12 +219,17 @@ func (txn *Txn) Discard(ctx context.Context) error {
 	if !txn.mutated {
 		return nil
 	}
-	txn.context.Aborted = true
-	ctxWithJwt := txn.dg.getContext(ctx)
-	_, err := txn.dc.CommitOrAbort(ctxWithJwt, txn.context)
-	retry, newCtx := txn.dg.checkJwtExpiration(ctx, err)
-	if retry {
-		_, err = txn.dc.CommitOrAbort(newCtx, txn.context)
+
+	ctx = txn.dg.getContext(ctx)
+	_, err := txn.dc.CommitOrAbort(ctx, txn.context)
+	if isJwtExpired(err) {
+		err = txn.dg.retryLogin(ctx)
+		if err != nil {
+			return err
+		}
+		ctx = txn.dg.getContext(ctx)
+		_, err = txn.dc.CommitOrAbort(ctx, txn.context)
 	}
+
 	return err
 }
