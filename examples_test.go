@@ -30,7 +30,7 @@ import (
 
 type CancelFunc func()
 
-func GetDgraphClient() (*dgo.Dgraph, CancelFunc) {
+func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
 	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
@@ -45,7 +45,7 @@ func GetDgraphClient() (*dgo.Dgraph, CancelFunc) {
 }
 
 func ExampleDgraph_Alter_dropAll() {
-	dg, cancel := GetDgraphClient()
+	dg, cancel := getDgraphClient()
 	defer cancel()
 	op := api.Operation{
 		DropAll: true,
@@ -58,7 +58,7 @@ func ExampleDgraph_Alter_dropAll() {
 }
 
 func ExampleTxn_Query_variables() {
-	dg, cancel := GetDgraphClient()
+	dg, cancel := getDgraphClient()
 	defer cancel()
 	type Person struct {
 		Uid  string `json:"uid,omitempty"`
@@ -145,7 +145,7 @@ func ExampleTxn_Mutate() {
 		School   []School `json:"school,omitempty"`
 	}
 
-	dg, cancel := GetDgraphClient()
+	dg, cancel := getDgraphClient()
 	defer cancel()
 	// While setting an object if a struct has a Uid then its properties in the graph are updated
 	// else a new node is created.
@@ -242,7 +242,7 @@ func ExampleTxn_Mutate() {
 }
 
 func ExampleTxn_Mutate_bytes() {
-	dg, cancel := GetDgraphClient()
+	dg, cancel := getDgraphClient()
 	defer cancel()
 	type Person struct {
 		Uid   string `json:"uid,omitempty"`
@@ -321,7 +321,7 @@ func ExampleTxn_Query_unmarshal() {
 		School  []School `json:"school,omitempty"`
 	}
 
-	dg, cancel := GetDgraphClient()
+	dg, cancel := getDgraphClient()
 	defer cancel()
 	op := &api.Operation{}
 	op.Schema = `
@@ -431,7 +431,7 @@ func ExampleTxn_Query_unmarshal() {
 }
 
 func ExampleTxn_Mutate_facets() {
-	dg, cancel := GetDgraphClient()
+	dg, cancel := getDgraphClient()
 	defer cancel()
 	// Doing a dropAll isn't required by the user. We do it here so that we can verify that the
 	// example runs as expected.
@@ -547,7 +547,7 @@ func ExampleTxn_Mutate_facets() {
 }
 
 func ExampleTxn_Mutate_list() {
-	dg, cancel := GetDgraphClient()
+	dg, cancel := getDgraphClient()
 	defer cancel() // This example shows example for SetObject for predicates with list type.
 	type Person struct {
 		Uid         string   `json:"uid"`
@@ -616,7 +616,7 @@ func ExampleTxn_Mutate_list() {
 }
 
 func ExampleDeleteEdges() {
-	dg, cancel := GetDgraphClient()
+	dg, cancel := getDgraphClient()
 	defer cancel()
 	op := &api.Operation{}
 	op.Schema = `
@@ -730,7 +730,7 @@ func ExampleDeleteEdges() {
 }
 
 func ExampleTxn_Mutate_deleteNode() {
-	dg, cancel := GetDgraphClient()
+	dg, cancel := getDgraphClient()
 	defer cancel()
 	// In this test we check S * * deletion.
 	type Person struct {
@@ -862,7 +862,7 @@ func ExampleTxn_Mutate_deleteNode() {
 }
 
 func ExampleTxn_Mutate_deletePredicate() {
-	dg, cancel := GetDgraphClient()
+	dg, cancel := getDgraphClient()
 	defer cancel()
 	type Person struct {
 		Uid     string   `json:"uid,omitempty"`
