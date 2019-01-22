@@ -137,7 +137,7 @@ fmt.Println(string(resp.Json))
 
 When running a schema query, the schema response is found in the `Schema` field of `api.Response`.
 
-```
+```go
 q := `schema(pred: [name]) {
   type
   index
