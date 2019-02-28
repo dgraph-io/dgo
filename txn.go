@@ -59,16 +59,17 @@ func (txn *Txn) Sequencing(sequencing api.LinRead_Sequencing) {
 	// Sequencing is no longer used.
 }
 
-// BestEffort enables or disables best effort queries.
+// BestEffort enables or disables best effort in read-only queries.
 // Examples:
 //
-//   txn := NewTxn().BestEffort(true)
+//   txn := NewReadOnlyTxn()
+//   txn.BestEffort()
 //
-//   txn := NewReadOnlyTxn().BestEffort(false)
-//
-func (txn *Txn) BestEffort(v bool) *Txn {
-	txn.bestEffort = v
-	return txn
+func (txn *Txn) BestEffort() {
+	if !txn.readOnly {
+		panic("Best effort only works for read-only queries.")
+	}
+	txn.bestEffort = true
 }
 
 // NewTxn creates a new transaction.
