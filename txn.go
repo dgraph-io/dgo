@@ -46,9 +46,10 @@ var (
 type Txn struct {
 	context *api.TxnContext
 
-	finished bool
-	mutated  bool
-	readOnly bool
+	finished   bool
+	mutated    bool
+	readOnly   bool
+	bestEffort bool
 
 	dg *Dgraph
 	dc api.DgraphClient
@@ -56,6 +57,12 @@ type Txn struct {
 
 func (txn *Txn) Sequencing(sequencing api.LinRead_Sequencing) {
 	// Sequencing is no longer used.
+}
+
+// BestEffort enables or disables best effort queries.
+func (txn *Txn) BestEffort(v bool) *Txn {
+	txn.bestEffort = v
+	return txn
 }
 
 // NewTxn creates a new transaction.
@@ -88,10 +95,11 @@ func (txn *Txn) QueryWithVars(ctx context.Context, q string,
 		return nil, ErrFinished
 	}
 	req := &api.Request{
-		Query:    q,
-		Vars:     vars,
-		StartTs:  txn.context.StartTs,
-		ReadOnly: txn.readOnly,
+		Query:      q,
+		Vars:       vars,
+		StartTs:    txn.context.StartTs,
+		ReadOnly:   txn.readOnly,
+		BestEffort: txn.bestEffort,
 	}
 	ctx = txn.dg.getContext(ctx)
 	resp, err := txn.dc.Query(ctx, req)
