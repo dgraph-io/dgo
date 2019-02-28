@@ -60,6 +60,12 @@ func (txn *Txn) Sequencing(sequencing api.LinRead_Sequencing) {
 }
 
 // BestEffort enables or disables best effort queries.
+// Examples:
+//
+//   txn := NewTxn().BestEffort(true)
+//
+//   txn := NewReadOnlyTxn().BestEffort(false)
+//
 func (txn *Txn) BestEffort(v bool) *Txn {
 	txn.bestEffort = v
 	return txn
