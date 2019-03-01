@@ -59,15 +59,17 @@ func (txn *Txn) Sequencing(sequencing api.LinRead_Sequencing) {
 	// Sequencing is no longer used.
 }
 
-// BestEffort enables or disables best effort queries.
-// Examples:
+// BestEffort enables best effort in read-only queries. Using this flag will ask the
+// Dgraph Alpha to try to get timestamps from memory in a best effort to reduce the number of
+// outbound requests to Zero. This may yield improved latencies in read-bound datasets.
 //
-//   txn := NewTxn().BestEffort(true)
-//
-//   txn := NewReadOnlyTxn().BestEffort(false)
-//
-func (txn *Txn) BestEffort(v bool) *Txn {
-	txn.bestEffort = v
+// This method will panic if the transaction is not read-only.
+// Returns the transaction itself.
+func (txn *Txn) BestEffort() *Txn {
+	if !txn.readOnly {
+		panic("Best effort only works for read-only queries.")
+	}
+	txn.bestEffort = true
 	return txn
 }
 
