@@ -50,6 +50,7 @@ message Request {
 	uint64 start_ts = 13;
 	LinRead lin_read = 14;
 	bool read_only = 15;
+	bool best_effort = 16;
 }
 
 message Response {
