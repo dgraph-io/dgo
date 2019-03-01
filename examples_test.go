@@ -430,6 +430,21 @@ func ExampleTxn_Query_unmarshal() {
 	// Output: {"me":[{"name":"Alice","age":26,"raw_bytes":"cmF3X2J5dGVz","married":true,"friend":[{"name":"Bob","age":24}],"school":[{"name":"Crown Public School"}]}]}
 }
 
+func ExampleTxn_Query_besteffort() {
+	dg, cancel := getDgraphClient()
+	defer cancel()
+
+	// NOTE: Best effort only works with read-only queries.
+	txn := dg.NewReadOnlyTxn().BestEffort()
+	resp, err := txn.Query(context.Background(), `{ q(func: uid(0x1)) { uid } }`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(string(resp.Json))
+	// Output: {"q":[{"uid":"0x1"}]}
+}
+
 func ExampleTxn_Mutate_facets() {
 	dg, cancel := getDgraphClient()
 	defer cancel()
