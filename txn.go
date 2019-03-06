@@ -177,6 +177,11 @@ func (txn *Txn) Mutate(ctx context.Context, mu *api.Mutation) (*api.Assigned, er
 
 	if err != nil {
 		_ = txn.Discard(ctx) // Ignore error - user should see the original error.
+
+		// If the transaction was aborted, return the right error so the caller can handle it.
+		if s, ok := status.FromError(err); ok && s.Code() == codes.Aborted {
+			err = y.ErrAborted
+		}
 		return nil, err
 	}
 
