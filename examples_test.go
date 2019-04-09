@@ -63,9 +63,7 @@ func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
 func ExampleDgraph_Alter_dropAll() {
 	dg, cancel := getDgraphClient()
 	defer cancel()
-	op := api.Operation{
-		DropAll: true,
-	}
+	op := api.Operation{DropScope: &api.Operation_DropAll{true}}
 	ctx := context.Background()
 	if err := dg.Alter(ctx, &op); err != nil {
 		log.Fatal(err)
@@ -466,9 +464,7 @@ func ExampleTxn_Mutate_facets() {
 	defer cancel()
 	// Doing a dropAll isn't required by the user. We do it here so that we can verify that the
 	// example runs as expected.
-	op := api.Operation{
-		DropAll: true,
-	}
+	op := api.Operation{DropScope: &api.Operation_DropAll{true}}
 	ctx := context.Background()
 	if err := dg.Alter(ctx, &op); err != nil {
 		log.Fatal(err)
@@ -973,15 +969,13 @@ func ExampleTxn_Mutate_deletePredicate() {
 		log.Fatal(err)
 	}
 
-	op = &api.Operation{
-		DropAttr: "friend",
-	}
+	op = &api.Operation{DropScope: &api.Operation_DropAttr{"friend"}}
 	err = dg.Alter(ctx, op)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	op.DropAttr = "married"
+	op = &api.Operation{DropScope: &api.Operation_DropAttr{"married"}}
 	err = dg.Alter(ctx, op)
 	if err != nil {
 		log.Fatal(err)
