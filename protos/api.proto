@@ -82,9 +82,11 @@ message Mutation {
 
 message Operation {
 	string schema = 1;
-	string drop_attr = 2;
-	bool drop_all = 3;
-	bool drop_data = 4;
+	oneof drop_scope {
+		bool drop_all = 2;
+		bool drop_data = 3;
+    string drop_attr = 4;
+	}
 }
 
 // Worker services.
