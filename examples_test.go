@@ -21,27 +21,47 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/dgraph-io/dgo"
 	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/dgraph-io/dgraph/x"
 	"google.golang.org/grpc"
 )
 
-type CancelFunc func()
+// getDgraphClient creates a Dgraph client connection with Groot access.
+// Returns a Dgraph client instance and a cancel function to run after we close connection.
+func getDgraphClient() (*dgo.Dgraph, func()) {
+	var err error
 
-func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
 	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
 
 	dc := api.NewDgraphClient(conn)
-	return dgo.NewDgraphClient(dc), func() {
+	dg := dgo.NewDgraphClient(dc)
+
+	// Login with ACL Groot.
+	ctx := context.Background()
+	for {
+		// keep retrying until we succeed or receive a non-retriable error
+		err = dg.Login(ctx, x.GrootId, "password")
+		if err == nil || !strings.Contains(err.Error(), "Please retry") {
+			break
+		}
+		time.Sleep(time.Second)
+	}
+	x.CheckfNoTrace(err)
+
+	cancel := func() {
 		if err := conn.Close(); err != nil {
 			log.Printf("Error while closing connection:%v", err)
 		}
 	}
+
+	return dg, cancel
 }
 
 func ExampleDgraph_Alter_dropAll() {
