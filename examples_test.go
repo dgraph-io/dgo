@@ -26,7 +26,6 @@ import (
 
 	"github.com/dgraph-io/dgo"
 	"github.com/dgraph-io/dgo/protos/api"
-	"github.com/dgraph-io/dgraph/x"
 	"google.golang.org/grpc"
 )
 
@@ -47,13 +46,15 @@ func getDgraphClient() (*dgo.Dgraph, func()) {
 	ctx := context.Background()
 	for {
 		// keep retrying until we succeed or receive a non-retriable error
-		err = dg.Login(ctx, x.GrootId, "password")
+		err = dg.Login(ctx, "groot", "password")
 		if err == nil || !strings.Contains(err.Error(), "Please retry") {
 			break
 		}
 		time.Sleep(time.Second)
 	}
-	x.CheckfNoTrace(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	cancel := func() {
 		if err := conn.Close(); err != nil {
