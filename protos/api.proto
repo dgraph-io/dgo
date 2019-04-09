@@ -79,7 +79,6 @@ message Mutation {
 	bool ignore_index_conflict = 15; // this field is not parsed and used by the server anymore.
 }
 
-
 message Operation {
 	string schema = 1;
 	string drop_attr = 2;
