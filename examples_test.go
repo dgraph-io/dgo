@@ -702,7 +702,7 @@ func ExampleDeleteEdges() {
 		me(func: uid($alice)) {
 			name
 			age
-			loc
+			location
 			married
 			friends {
 				name
@@ -721,7 +721,7 @@ func ExampleDeleteEdges() {
 
 	// Now lets delete the friend and location edge from Alice
 	mu = &api.Mutation{}
-	dgo.DeleteEdges(mu, alice, "friends", "loc")
+	dgo.DeleteEdges(mu, alice, "friends", "location")
 
 	mu.CommitNow = true
 	_, err = dg.NewTxn().Mutate(ctx, mu)
