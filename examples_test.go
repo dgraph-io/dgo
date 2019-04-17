@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/dgraph-io/dgo"
@@ -37,7 +38,22 @@ func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
 	}
 
 	dc := api.NewDgraphClient(conn)
-	return dgo.NewDgraphClient(dc), func() {
+	dg := dgo.NewDgraphClient(dc)
+	ctx := context.Background()
+
+	for {
+        // keep retrying until we succeed or receive a non-retriable error
+        err = dg.Login(ctx, "groot", "password")
+        if err == nil || !strings.Contains(err.Error(), "Please retry") {
+            break
+        }
+        time.Sleep(time.Second)
+    }
+	if err != nil {
+		log.Fatalf("While trying to login %v", err.Error())
+	}
+
+	return dg, func() {
 		if err := conn.Close(); err != nil {
 			log.Printf("Error while closing connection:%v", err)
 		}
@@ -47,9 +63,7 @@ func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
 func ExampleDgraph_Alter_dropAll() {
 	dg, cancel := getDgraphClient()
 	defer cancel()
-	op := api.Operation{
-		DropAll: true,
-	}
+	op := api.Operation{DropAll: true}
 	ctx := context.Background()
 	if err := dg.Alter(ctx, &op); err != nil {
 		log.Fatal(err)
@@ -450,9 +464,7 @@ func ExampleTxn_Mutate_facets() {
 	defer cancel()
 	// Doing a dropAll isn't required by the user. We do it here so that we can verify that the
 	// example runs as expected.
-	op := api.Operation{
-		DropAll: true,
-	}
+	op := api.Operation{DropAll: true}
 	ctx := context.Background()
 	if err := dg.Alter(ctx, &op); err != nil {
 		log.Fatal(err)
@@ -957,15 +969,13 @@ func ExampleTxn_Mutate_deletePredicate() {
 		log.Fatal(err)
 	}
 
-	op = &api.Operation{
-		DropAttr: "friend",
-	}
+	op = &api.Operation{DropAttr: "friend"}
 	err = dg.Alter(ctx, op)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	op.DropAttr = "married"
+	op = &api.Operation{DropAttr: "married"}
 	err = dg.Alter(ctx, op)
 	if err != nil {
 		log.Fatal(err)
