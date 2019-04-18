@@ -93,7 +93,7 @@ message Operation {
 	}
 	DropOp drop_op = 4;
 
-  // If drop_op is ATTR or TYPE, this field holds the name of the predicate or
+  // If drop_op is ATTR or TYPE, drop_value holds the name of the predicate or
   // type to delete.
   string drop_value = 5;
 }
