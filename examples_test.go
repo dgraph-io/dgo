@@ -41,8 +41,10 @@ func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
 	dg := dgo.NewDgraphClient(dc)
 	ctx := context.Background()
 
+	// Perform login call. If the Dgraph cluster does not have ACL and
+	// enterprise features enabled, this call should be skipped.
 	for {
-        // keep retrying until we succeed or receive a non-retriable error
+        // Keep retrying until we succeed or receive a non-retriable error.
         err = dg.Login(ctx, "groot", "password")
         if err == nil || !strings.Contains(err.Error(), "Please retry") {
             break
