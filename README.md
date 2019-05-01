@@ -79,6 +79,12 @@ txn := dgraphClient.NewTxn()
 defer txn.Discard(ctx)
 ```
 
+Read-only transactions can be created by calling `c.NewReadOnlyTxn()`. Read-only
+transactions are useful to increase read speed because they can circumvent the
+usual consensus protocol. Read-only transactions cannot contain mutations and
+trying to call `txn.Commit()` will result in an error. Calling `txn.Discard()`
+will be a no-op.
+
 ### Run a mutation
 
 `txn.Mutate(ctx, mu)` runs a mutation. It takes in a `context.Context` and a
