@@ -71,6 +71,7 @@ message Mutation {
 	bytes delete_json = 2;
 	bytes set_nquads = 3;
 	bytes del_nquads = 4;
+	string query = 5;
 
 	repeated NQuad set = 10;
 	repeated NQuad del = 11;
