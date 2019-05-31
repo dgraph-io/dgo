@@ -768,12 +768,14 @@ func ExampleTxn_Mutate_deleteNode() {
 		Age     int       `json:"age,omitempty"`
 		Married bool      `json:"married,omitempty"`
 		Friends []*Person `json:"friend,omitempty"`
+		DgraphType string `json:"dgraph.type,omitempty"`
 	}
 
 	p := Person{
 		Name:    "Alice",
 		Age:     26,
 		Married: true,
+		DgraphType: "Person",
 		Friends: []*Person{&Person{
 			Name: "Bob",
 			Age:  24,
@@ -787,6 +789,12 @@ func ExampleTxn_Mutate_deleteNode() {
 	op.Schema = `
 		age: int .
 		married: bool .
+        type Person {
+          name: string
+          age: int
+          married: bool
+          friend: [uid]
+        }
 	`
 
 	ctx := context.Background()
@@ -998,4 +1006,51 @@ func ExampleTxn_Mutate_deletePredicate() {
 	// Alice should have no friends and only two attributes now.
 	fmt.Printf("Response after deletion: %+v\n", r)
 	// Output: Response after deletion: {Me:[{Uid: Name:Alice Age:26 Married:false Friends:[]}]}
+}
+
+func ExampleDiscardTxn() {
+	dg, cancel := getDgraphClient()
+	defer cancel()
+
+	ctx, toCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer toCancel()
+	err := dg.Alter(ctx, &api.Operation{
+		DropAll: true,
+	})
+	if err != nil {
+		log.Fatal("The drop all operation should have succeeded")
+	}
+
+	err = dg.Alter(ctx, &api.Operation{
+		Schema: `name: string @index(exact) .`,
+	})
+	if err != nil {
+		log.Fatal("The alter should have succeeded")
+	}
+
+	txn := dg.NewTxn()
+
+	_, err = txn.Mutate(ctx, &api.Mutation{
+		SetNquads: []byte(`_:a <name> "Alice" .`),
+	})
+	if err != nil {
+		log.Fatal("The mutation should have succeeded")
+	}
+	txn.Discard(ctx)
+
+	// now query the cluster and make sure that the data has made no effect
+	queryTxn := dg.NewReadOnlyTxn()
+	query := `
+    {
+      q (func: eq(name, "Alice")) {
+        name
+      }
+    }`
+	resp, err := queryTxn.Query(ctx, query)
+	if err != nil {
+		log.Fatal( "The query should have succeeded")
+	}
+
+	fmt.Printf(string(resp.Json))
+	// Output: {"q":[]}
 }
