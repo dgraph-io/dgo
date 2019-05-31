@@ -44,13 +44,13 @@ func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
 	// Perform login call. If the Dgraph cluster does not have ACL and
 	// enterprise features enabled, this call should be skipped.
 	for {
-        // Keep retrying until we succeed or receive a non-retriable error.
-        err = dg.Login(ctx, "groot", "password")
-        if err == nil || !strings.Contains(err.Error(), "Please retry") {
-            break
-        }
-        time.Sleep(time.Second)
-    }
+		// Keep retrying until we succeed or receive a non-retriable error.
+		err = dg.Login(ctx, "groot", "password")
+		if err == nil || !strings.Contains(err.Error(), "Please retry") {
+			break
+		}
+		time.Sleep(time.Second)
+	}
 	if err != nil {
 		log.Fatalf("While trying to login %v", err.Error())
 	}
@@ -763,18 +763,18 @@ func ExampleTxn_Mutate_deleteNode() {
 	defer cancel()
 	// In this test we check S * * deletion.
 	type Person struct {
-		Uid     string    `json:"uid,omitempty"`
-		Name    string    `json:"name,omitempty"`
-		Age     int       `json:"age,omitempty"`
-		Married bool      `json:"married,omitempty"`
-		Friends []*Person `json:"friend,omitempty"`
-		DgraphType string `json:"dgraph.type,omitempty"`
+		Uid        string    `json:"uid,omitempty"`
+		Name       string    `json:"name,omitempty"`
+		Age        int       `json:"age,omitempty"`
+		Married    bool      `json:"married,omitempty"`
+		Friends    []*Person `json:"friend,omitempty"`
+		DgraphType string    `json:"dgraph.type,omitempty"`
 	}
 
 	p := Person{
-		Name:    "Alice",
-		Age:     26,
-		Married: true,
+		Name:       "Alice",
+		Age:        26,
+		Married:    true,
 		DgraphType: "Person",
 		Friends: []*Person{&Person{
 			Name: "Bob",
@@ -1008,7 +1008,7 @@ func ExampleTxn_Mutate_deletePredicate() {
 	// Output: Response after deletion: {Me:[{Uid: Name:Alice Age:26 Married:false Friends:[]}]}
 }
 
-func ExampleDiscardTxn() {
+func ExampleTxn_Discard() {
 	dg, cancel := getDgraphClient()
 	defer cancel()
 
@@ -1048,7 +1048,7 @@ func ExampleDiscardTxn() {
     }`
 	resp, err := queryTxn.Query(ctx, query)
 	if err != nil {
-		log.Fatal( "The query should have succeeded")
+		log.Fatal("The query should have succeeded")
 	}
 
 	fmt.Printf(string(resp.Json))
