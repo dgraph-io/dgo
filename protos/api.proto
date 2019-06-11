@@ -80,11 +80,23 @@ message Mutation {
 	bool ignore_index_conflict = 15; // this field is not parsed and used by the server anymore.
 }
 
-
 message Operation {
 	string schema = 1;
 	string drop_attr = 2;
 	bool drop_all = 3;
+
+	enum DropOp {
+		NONE = 0;
+		ALL = 1;
+		DATA = 2;
+		ATTR = 3;
+		TYPE = 4;
+	}
+	DropOp drop_op = 4;
+
+	// If drop_op is ATTR or TYPE, drop_value holds the name of the predicate or
+	// type to delete.
+	string drop_value = 5;
 }
 
 // Worker services.
