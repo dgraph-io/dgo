@@ -166,7 +166,7 @@ func ExampleTxn_Mutate() {
 	// While setting an object if a struct has a Uid then its properties in the graph are updated
 	// else a new node is created.
 	// In the example below new nodes for Alice, Bob and Charlie and school are created (since they
-	// dont have a Uid).
+	// don't have a Uid).
 	p := Person{
 		Name:    "Alice",
 		Age:     26,
@@ -1029,7 +1029,6 @@ func ExampleTxn_Discard() {
 	}
 
 	txn := dg.NewTxn()
-
 	_, err = txn.Mutate(ctx, &api.Mutation{
 		SetNquads: []byte(`_:a <name> "Alice" .`),
 	})
@@ -1053,4 +1052,172 @@ func ExampleTxn_Discard() {
 
 	fmt.Printf(string(resp.Json))
 	// Output: {"q":[]}
+}
+
+func ExampleTxn_Mutate_upsert() {
+	dg, cancel := getDgraphClient()
+	defer cancel()
+
+	ctx, toCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer toCancel()
+	err := dg.Alter(ctx, &api.Operation{
+		DropAll: true,
+	})
+	if err != nil {
+		log.Fatal("The drop all operation should have succeeded")
+	}
+
+	op := &api.Operation{}
+	op.Schema = `
+		name: string .
+		email: string @index(exact) .
+	`
+	err = dg.Alter(ctx, op)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	m1 := `
+		_:n1 <name> "user" .
+		_:n1 <email> "user@dgraphO.io" .
+`
+	mu := &api.Mutation{
+		SetNquads: []byte(m1),
+		CommitNow: true,
+	}
+	if _, err := dg.NewTxn().Mutate(ctx, mu); err != nil {
+		log.Fatal(err)
+	}
+
+	mu.Query = `
+		query {
+  			me(func: eq(email, "user@dgraphO.io")) {
+	    		v as uid
+  			}
+		}
+	`
+	m2 := `uid(v) <email> "user@dgraph.io" .`
+	mu.SetNquads = []byte(m2)
+
+	// Update email only if matching uid found.
+	_, err = dg.NewTxn().Mutate(ctx, mu)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	query := `
+		{
+			me(func: eq(email, "user@dgraph.io")) {
+				name
+				email
+			}
+		}
+	`
+	resp, err := dg.NewTxn().Query(ctx, query)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// resp.Json contains the updated value.
+	fmt.Println(string(resp.Json))
+	// Output: {"me":[{"name":"user","email":"user@dgraph.io"}]}
+}
+
+func ExampleTxn_Mutate_upsertJSON() {
+	dg, cancel := getDgraphClient()
+	defer cancel()
+
+	ctx := context.Background()
+	if err := dg.Alter(ctx, &api.Operation{DropAll: true}); err != nil {
+		log.Fatal(err)
+	}
+
+	type Person struct {
+		Uid     string   `json:"uid,omitempty"`
+		Name    string   `json:"name,omitempty"`
+		Age     int      `json:"age,omitempty"`
+		Email   string   `json:"email,omitempty"`
+		Friends []Person `json:"friend,omitempty"`
+	}
+
+	op := &api.Operation{Schema: `email: string @index(exact) @upsert .`}
+	if err := dg.Alter(context.Background(), op); err != nil {
+		log.Fatal(err)
+	}
+
+	// Create and query the user using Upsert block
+	mu := &api.Mutation{CommitNow: true}
+	mu.Query = `
+		{
+			me(func: eq(email, "user@dgraph.io")) {
+				...fragmentA
+			}
+		}
+
+		fragment fragmentA {
+			v as uid
+		}
+	`
+	pb, err := json.Marshal(Person{Uid: "uid(v)", Name: "Wrong", Email: "user@dgraph.io"})
+	if err != nil {
+		log.Fatal(err)
+	}
+	mu.SetJson = pb
+	if _, err := dg.NewTxn().Mutate(ctx, mu); err != nil {
+		log.Fatal(err)
+	}
+
+	// Fix the name and add age
+	pb, err = json.Marshal(Person{Uid: "uid(v)", Name: "user", Age: 35})
+	if err != nil {
+		log.Fatal(err)
+	}
+	mu.SetJson = pb
+	if _, err := dg.NewTxn().Mutate(ctx, mu); err != nil {
+		log.Fatal(err)
+	}
+
+	q := `
+  		{
+			Me(func: has(email)) {
+				age
+				name
+				email
+			}
+		}
+	`
+	queryTxn := dg.NewReadOnlyTxn()
+	resp, err := queryTxn.Query(ctx, q)
+	if err != nil {
+		log.Fatal("The query should have succeeded")
+	}
+
+	type Root struct {
+		Me []Person `json:"me"`
+	}
+	var r Root
+	if err := json.Unmarshal(resp.Json, &r); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(resp.Json))
+
+	// Delete the user now
+	mu.SetJson = nil
+	dgo.DeleteEdges(mu, "uid(v)", "age", "name", "email")
+	if _, err := dg.NewTxn().Mutate(ctx, mu); err != nil {
+		log.Fatal(err)
+	}
+
+	queryTxn = dg.NewReadOnlyTxn()
+	resp, err = queryTxn.Query(ctx, q)
+	if err != nil {
+		log.Fatal("The query should have succeeded")
+	}
+	if err := json.Unmarshal(resp.Json, &r); err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(string(resp.Json))
+	// Output: {"Me":[{"age":35,"name":"user","email":"user@dgraph.io"}]}
+	// {"Me":[]}
 }
