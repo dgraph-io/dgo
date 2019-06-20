@@ -1060,10 +1060,9 @@ func ExampleTxn_Mutate_upsert() {
 
 	ctx, toCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer toCancel()
-	err := dg.Alter(ctx, &api.Operation{
-		DropAll: true,
-	})
-	if err != nil {
+
+	// Warn: Cleaning up the database
+	if err := dg.Alter(ctx, &api.Operation{DropAll: true}); err != nil {
 		log.Fatal("The drop all operation should have succeeded")
 	}
 
@@ -1072,8 +1071,7 @@ func ExampleTxn_Mutate_upsert() {
 		name: string .
 		email: string @index(exact) .
 	`
-	err = dg.Alter(ctx, op)
-	if err != nil {
+	if err := dg.Alter(ctx, op); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1100,8 +1098,7 @@ func ExampleTxn_Mutate_upsert() {
 	mu.SetNquads = []byte(m2)
 
 	// Update email only if matching uid found.
-	_, err = dg.NewTxn().Mutate(ctx, mu)
-	if err != nil {
+	if _, err := dg.NewTxn().Mutate(ctx, mu); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1127,6 +1124,7 @@ func ExampleTxn_Mutate_upsertJSON() {
 	dg, cancel := getDgraphClient()
 	defer cancel()
 
+	// Warn: Cleaning up the database
 	ctx := context.Background()
 	if err := dg.Alter(ctx, &api.Operation{DropAll: true}); err != nil {
 		log.Fatal(err)
@@ -1186,8 +1184,7 @@ func ExampleTxn_Mutate_upsertJSON() {
 			}
 		}
 	`
-	queryTxn := dg.NewReadOnlyTxn()
-	resp, err := queryTxn.Query(ctx, q)
+	resp, err := dg.NewReadOnlyTxn().Query(ctx, q)
 	if err != nil {
 		log.Fatal("The query should have succeeded")
 	}
@@ -1208,8 +1205,7 @@ func ExampleTxn_Mutate_upsertJSON() {
 		log.Fatal(err)
 	}
 
-	queryTxn = dg.NewReadOnlyTxn()
-	resp, err = queryTxn.Query(ctx, q)
+	resp, err = dg.NewReadOnlyTxn().Query(ctx, q)
 	if err != nil {
 		log.Fatal("The query should have succeeded")
 	}
