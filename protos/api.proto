@@ -72,6 +72,7 @@ message Mutation {
 	bytes set_nquads = 3;
 	bytes del_nquads = 4;
 	string query = 5;
+	string cond = 6;
 
 	repeated NQuad set = 10;
 	repeated NQuad del = 11;
