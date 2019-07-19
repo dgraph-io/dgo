@@ -133,6 +133,7 @@ message Latency {
 	uint64 parsing_ns = 1;
 	uint64 processing_ns = 2;
 	uint64 encoding_ns = 3;
+  uint64 transport_ns = 4;
 }
 
 message NQuad {
