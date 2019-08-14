@@ -37,33 +37,28 @@ option java_outer_classname = "DgraphProto";
 service Dgraph {
 	rpc Login (LoginRequest)       returns (Response) {}
 	rpc Query (Request)            returns (Response) {}
-	rpc Mutate (Mutation)          returns (Assigned) {}
 	rpc Alter (Operation)          returns (Payload) {}
 	rpc CommitOrAbort (TxnContext) returns (TxnContext) {}
 	rpc CheckVersion(Check)        returns (Version) {}
 }
 
 message Request {
-	string query = 1;
-	map<string, string> vars = 2; // Support for GraphQL like variables.
+	uint64 start_ts = 1;
 
-	uint64 start_ts = 13;
-	LinRead lin_read = 14;
-	bool read_only = 15;
-	bool best_effort = 16;
+	string query = 4;
+	map<string, string> vars = 5; // Support for GraphQL like variables.
+	bool read_only = 6;
+	bool best_effort = 7;
+
+	repeated Mutation mutations = 12;
+	bool commit_now = 13;
 }
 
 message Response {
 	bytes json = 1;
-	repeated SchemaNode schema = 2 [deprecated=true];
-	TxnContext txn = 3;
-	Latency latency = 12;
-}
-
-message Assigned {
-	map<string, string> uids = 1;
-	TxnContext context = 2;
-	Latency latency = 12;
+	TxnContext txn = 2;
+	Latency latency = 3;
+	map<string, string> uids = 12;
 }
 
 message Mutation {
@@ -71,14 +66,14 @@ message Mutation {
 	bytes delete_json = 2;
 	bytes set_nquads = 3;
 	bytes del_nquads = 4;
-	string query = 5;
-	string cond = 6;
+	repeated NQuad set = 5;
+	repeated NQuad del = 6;
 
-	repeated NQuad set = 10;
-	repeated NQuad del = 11;
-	uint64 start_ts = 13;
+	// This is being used for upserts.
+	string cond = 9;
+
+	// This field is a duplicate of the one in Request and placed here for convenience.
 	bool commit_now = 14;
-	bool ignore_index_conflict = 15; // this field is not parsed and used by the server anymore.
 }
 
 message Operation {
@@ -111,23 +106,12 @@ message TxnContext {
 	bool aborted = 3;
 	repeated string keys = 4;  // List of keys to be used for conflict detection.
 	repeated string preds = 5; // List of predicates involved in this transaction.
-	LinRead lin_read = 13;
 }
 
 message Check {}
 
 message Version {
 	string tag = 1;
-}
-
-message LinRead {
-	enum Sequencing {
-		CLIENT_SIDE = 0;
-		SERVER_SIDE = 1;
-	}
-
-	map<uint32, uint64> ids = 1;
-	Sequencing sequencing = 2;
 }
 
 message Latency {
@@ -177,18 +161,6 @@ message Facet {
 	ValType val_type = 3;
 	repeated string tokens = 4; // tokens of value.
 	string alias = 5; // not stored, only used for query.
-}
-
-message SchemaNode {
-	string predicate = 1;
-	string type = 2;
-	bool index = 3;
-	repeated string tokenizer = 4;
-	bool reverse = 5;
-	bool count = 6;
-	bool list = 7;
-	bool upsert = 8;
-	bool lang = 9;
 }
 
 message LoginRequest {
