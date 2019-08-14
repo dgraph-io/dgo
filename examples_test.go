@@ -168,6 +168,7 @@ func ExampleTxn_Mutate() {
 	// In the example below new nodes for Alice, Bob and Charlie and school are created (since they
 	// don't have a Uid).
 	p := Person{
+		Uid:     "_:alice",
 		Name:    "Alice",
 		Age:     26,
 		Married: true,
@@ -214,7 +215,7 @@ func ExampleTxn_Mutate() {
 	}
 
 	// Assigned uids for nodes which were created would be returned in the assigned.Uids map.
-	puid := assigned.Uids["blank-0"]
+	puid := assigned.Uids["alice"]
 	const q = `query Me($id: string){
 		me(func: uid($id)) {
 			name
@@ -352,6 +353,7 @@ func ExampleTxn_Query_unmarshal() {
 	}
 
 	p := Person{
+		Uid:  "_:bob",
 		Name: "Bob",
 		Age:  24,
 	}
@@ -370,13 +372,14 @@ func ExampleTxn_Query_unmarshal() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	bob := assigned.Uids["blank-0"]
+	bob := assigned.Uids["bob"]
 
 	// While setting an object if a struct has a Uid then its properties in the graph are updated
 	// else a new node is created.
 	// In the example below new nodes for Alice and Charlie and school are created (since they dont
 	// have a Uid).  Alice is also connected via the friend edge to an existing node Bob.
 	p = Person{
+		Uid:     "_:alice",
 		Name:    "Alice",
 		Age:     26,
 		Married: true,
@@ -407,7 +410,7 @@ func ExampleTxn_Query_unmarshal() {
 	}
 
 	// Assigned uids for nodes which were created would be returned in the assigned.Uids map.
-	puid := assigned.Uids["blank-0"]
+	puid := assigned.Uids["alice"]
 	variables := make(map[string]string)
 	variables["$id"] = puid
 	const q = `query Me($id: string){
@@ -489,6 +492,7 @@ func ExampleTxn_Mutate_facets() {
 	}
 
 	type Person struct {
+		Uid        string   `json:"uid,omitempty"`
 		Name       string   `json:"name,omitempty"`
 		NameOrigin string   `json:"name|origin,omitempty"`
 		Friends    []Person `json:"friend,omitempty"`
@@ -504,6 +508,7 @@ func ExampleTxn_Mutate_facets() {
 
 	ti := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	p := Person{
+		Uid:        "_:alice",
 		Name:       "Alice",
 		NameOrigin: "Indonesia",
 		Friends: []Person{
@@ -539,7 +544,7 @@ func ExampleTxn_Mutate_facets() {
 		log.Fatal(err)
 	}
 
-	auid := assigned.Uids["blank-0"]
+	auid := assigned.Uids["alice"]
 	variables := make(map[string]string)
 	variables["$id"] = auid
 
@@ -572,7 +577,7 @@ func ExampleTxn_Mutate_facets() {
 	}
 
 	fmt.Printf("Me: %+v\n", r.Me)
-	// Output: Me: [{Name:Alice NameOrigin:Indonesia Friends:[{Name:Bob NameOrigin: Friends:[] Since:2009-11-10 23:00:00 +0000 UTC Family:yes Age:13 Close:true School:[]}] Since:0001-01-01 00:00:00 +0000 UTC Family: Age:0 Close:false School:[{Name:Wellington School Since:2009-11-10 23:00:00 +0000 UTC}]}]
+	// Output: Me: [{Uid: Name:Alice NameOrigin:Indonesia Friends:[{Uid: Name:Bob NameOrigin: Friends:[] Since:2009-11-10 23:00:00 +0000 UTC Family:yes Age:13 Close:true School:[]}] Since:0001-01-01 00:00:00 +0000 UTC Family: Age:0 Close:false School:[{Name:Wellington School Since:2009-11-10 23:00:00 +0000 UTC}]}]
 }
 
 func ExampleTxn_Mutate_list() {
@@ -678,6 +683,7 @@ func ExampleDeleteEdges() {
 
 	// Lets add some data first.
 	p := Person{
+		Uid:      "_:alice",
 		Name:     "Alice",
 		Age:      26,
 		Married:  true,
@@ -702,13 +708,12 @@ func ExampleDeleteEdges() {
 
 	mu.SetJson = pb
 	mu.CommitNow = true
-	mu.IgnoreIndexConflict = true
 	assigned, err := dg.NewTxn().Mutate(ctx, mu)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	alice := assigned.Uids["blank-0"]
+	alice := assigned.Uids["alice"]
 
 	variables := make(map[string]string)
 	variables["$alice"] = alice
@@ -772,14 +777,17 @@ func ExampleTxn_Mutate_deleteNode() {
 	}
 
 	p := Person{
+		Uid:        "_:alice",
 		Name:       "Alice",
 		Age:        26,
 		Married:    true,
 		DgraphType: "Person",
 		Friends: []*Person{&Person{
+			Uid:  "_:bob",
 			Name: "Bob",
 			Age:  24,
 		}, &Person{
+			Uid:  "_:charlie",
 			Name: "Charlie",
 			Age:  29,
 		}},
@@ -817,9 +825,9 @@ func ExampleTxn_Mutate_deleteNode() {
 		log.Fatal(err)
 	}
 
-	alice := assigned.Uids["blank-0"]
-	bob := assigned.Uids["blank-1"]
-	charlie := assigned.Uids["blank-2"]
+	alice := assigned.Uids["alice"]
+	bob := assigned.Uids["bob"]
+	charlie := assigned.Uids["charlie"]
 
 	variables := make(map[string]string)
 	variables["$alice"] = alice
@@ -910,6 +918,7 @@ func ExampleTxn_Mutate_deletePredicate() {
 	}
 
 	p := Person{
+		Uid:     "_:alice",
 		Name:    "Alice",
 		Age:     26,
 		Married: true,
@@ -948,7 +957,7 @@ func ExampleTxn_Mutate_deletePredicate() {
 		log.Fatal(err)
 	}
 
-	alice := assigned.Uids["blank-0"]
+	alice := assigned.Uids["alice"]
 
 	variables := make(map[string]string)
 	variables["$id"] = alice
@@ -1087,7 +1096,8 @@ func ExampleTxn_Mutate_upsert() {
 		log.Fatal(err)
 	}
 
-	mu.Query = `
+	req := &api.Request{CommitNow: true}
+	req.Query = `
 		query {
   			me(func: eq(email, "user@dgraphO.io")) {
 	    		v as uid
@@ -1096,9 +1106,10 @@ func ExampleTxn_Mutate_upsert() {
 	`
 	m2 := `uid(v) <email> "user@dgraph.io" .`
 	mu.SetNquads = []byte(m2)
+	req.Mutations = []*api.Mutation{mu}
 
 	// Update email only if matching uid found.
-	if _, err := dg.NewTxn().Mutate(ctx, mu); err != nil {
+	if _, err := dg.NewTxn().Do(ctx, req); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1144,8 +1155,8 @@ func ExampleTxn_Mutate_upsertJSON() {
 	}
 
 	// Create and query the user using Upsert block
-	mu := &api.Mutation{CommitNow: true}
-	mu.Query = `
+	req := &api.Request{CommitNow: true}
+	req.Query = `
 		{
 			me(func: eq(email, "user@dgraph.io")) {
 				...fragmentA
@@ -1160,8 +1171,9 @@ func ExampleTxn_Mutate_upsertJSON() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	mu.SetJson = pb
-	if _, err := dg.NewTxn().Mutate(ctx, mu); err != nil {
+	mu := &api.Mutation{SetJson: pb}
+	req.Mutations = []*api.Mutation{mu}
+	if _, err := dg.NewTxn().Do(ctx, req); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1171,7 +1183,8 @@ func ExampleTxn_Mutate_upsertJSON() {
 		log.Fatal(err)
 	}
 	mu.SetJson = pb
-	if _, err := dg.NewTxn().Mutate(ctx, mu); err != nil {
+	req.Mutations = []*api.Mutation{mu}
+	if _, err := dg.NewTxn().Do(ctx, req); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1201,7 +1214,8 @@ func ExampleTxn_Mutate_upsertJSON() {
 	// Delete the user now
 	mu.SetJson = nil
 	dgo.DeleteEdges(mu, "uid(v)", "age", "name", "email")
-	if _, err := dg.NewTxn().Mutate(ctx, mu); err != nil {
+	req.Mutations = []*api.Mutation{mu}
+	if _, err := dg.NewTxn().Do(ctx, req); err != nil {
 		log.Fatal(err)
 	}
 
