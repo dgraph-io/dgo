@@ -1086,7 +1086,7 @@ func ExampleTxn_Mutate_upsert() {
 		log.Fatal(err)
 	}
 
-	mu.Query = `
+	query := `
 		query {
   			me(func: eq(email, "user@dgraphO.io")) {
 	    		v as uid
@@ -1097,11 +1097,11 @@ func ExampleTxn_Mutate_upsert() {
 	mu.SetNquads = []byte(m2)
 
 	// Update email only if matching uid found.
-	if _, err := dg.NewTxn().Mutate(ctx, mu); err != nil {
+	if _, err := dg.NewTxn().Upsert(ctx, query, nil, true, mu); err != nil {
 		log.Fatal(err)
 	}
 
-	query := `
+	query = `
 		{
 			me(func: eq(email, "user@dgraph.io")) {
 				name
@@ -1144,7 +1144,7 @@ func ExampleTxn_Mutate_upsertJSON() {
 
 	// Create and query the user using Upsert block
 	mu := &api.Mutation{CommitNow: true}
-	mu.Query = `
+	query := `
 		{
 			me(func: eq(email, "user@dgraph.io")) {
 				...fragmentA
@@ -1170,7 +1170,7 @@ func ExampleTxn_Mutate_upsertJSON() {
 		log.Fatal(err)
 	}
 	mu.SetJson = pb
-	if _, err := dg.NewTxn().Mutate(ctx, mu); err != nil {
+	if _, err := dg.NewTxn().Upsert(ctx, query, nil, true, mu); err != nil {
 		log.Fatal(err)
 	}
 
