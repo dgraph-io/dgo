@@ -55,10 +55,6 @@ type Txn struct {
 	dc api.DgraphClient
 }
 
-func (txn *Txn) Sequencing(sequencing api.LinRead_Sequencing) {
-	// Sequencing is no longer used.
-}
-
 // BestEffort enables best effort in read-only queries. Using this flag will ask the
 // Dgraph Alpha to try to get timestamps from memory in a best effort to reduce the number of
 // outbound requests to Zero. This may yield improved latencies in read-bound datasets.
@@ -154,25 +150,30 @@ func (txn *Txn) mergeContext(src *api.TxnContext) error {
 //
 // If the mutation fails, then the transaction is discarded and all future
 // operations on it will fail.
-func (txn *Txn) Mutate(ctx context.Context, mu *api.Mutation) (*api.Assigned, error) {
+func (txn *Txn) Mutate(ctx context.Context, mu *api.Mutation) (*api.Response, error) {
 	switch {
 	case txn.readOnly:
 		return nil, ErrReadOnly
 	case txn.finished:
 		return nil, ErrFinished
 	}
-
 	txn.mutated = true
-	mu.StartTs = txn.context.StartTs
+
+	req := &api.Request{
+		StartTs:   txn.context.StartTs,
+		Mutations: []*api.Mutation{mu},
+		CommitNow: mu.CommitNow,
+	}
+
 	ctx = txn.dg.getContext(ctx)
-	ag, err := txn.dc.Mutate(ctx, mu)
+	resp, err := txn.dc.Query(ctx, req)
 	if isJwtExpired(err) {
 		err = txn.dg.retryLogin(ctx)
 		if err != nil {
 			return nil, err
 		}
 		ctx = txn.dg.getContext(ctx)
-		ag, err = txn.dc.Mutate(ctx, mu)
+		resp, err = txn.dc.Query(ctx, req)
 	}
 
 	if err != nil {
@@ -185,11 +186,11 @@ func (txn *Txn) Mutate(ctx context.Context, mu *api.Mutation) (*api.Assigned, er
 		return nil, err
 	}
 
-	if mu.CommitNow {
+	if req.CommitNow {
 		txn.finished = true
 	}
-	err = txn.mergeContext(ag.Context)
-	return ag, err
+	err = txn.mergeContext(resp.GetTxn())
+	return resp, err
 }
 
 // Commit commits any mutations that have been made in the transaction. Once
