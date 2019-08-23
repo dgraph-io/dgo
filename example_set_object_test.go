@@ -30,14 +30,14 @@ type Person struct {
 	Age      int        `json:"age,omitempty"`
 	Dob      *time.Time `json:"dob,omitempty"`
 	Married  bool       `json:"married,omitempty"`
-	Raw      []byte     `json:"raw_bytes",omitempty`
+	Raw      []byte     `json:"raw_bytes,omitempty"`
 	Friends  []Person   `json:"friend,omitempty"`
 	Location loc        `json:"loc,omitempty"`
 	School   []School   `json:"school,omitempty"`
 }
 
 func Example_setObject() {
-	conn, err := grpc.Dial("127.0.0.1:9080", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
@@ -102,7 +102,7 @@ func Example_setObject() {
 		log.Fatal(err)
 	}
 
-	// Assigned uids for nodes which were created would be returned in the resp.AssignedUids map.
+	// Assigned uids for nodes which were created would be returned in the assigned.Uids map.
 	variables := map[string]string{"$id": assigned.Uids["blank-0"]}
 	q := `query Me($id: string){
 		me(func: uid($id)) {

@@ -19,6 +19,7 @@ to understand how to run and work with Dgraph.
   - [Run a mutation](#run-a-mutation)
   - [Run a query](#run-a-query)
   - [Commit a transaction](#commit-a-transaction)
+  - [Setting Metadata Headers](#setting-metadata-headers)
 - [Development](#development)
   - [Running tests](#running-tests)
 
@@ -78,13 +79,29 @@ txn := dgraphClient.NewTxn()
 defer txn.Discard(ctx)
 ```
 
+Read-only transactions can be created by calling `c.NewReadOnlyTxn()`. Read-only
+transactions are useful to increase read speed because they can circumvent the
+usual consensus protocol. Read-only transactions cannot contain mutations and
+trying to call `txn.Commit()` will result in an error. Calling `txn.Discard()`
+will be a no-op.
+
 ### Run a mutation
 
-`txn.Mutate(ctx, mu)` runs a mutation. It takes in a `context.Context` and a `*api.Mutation`
-object. You can set the data using JSON or RDF N-Quad format.
+`txn.Mutate(ctx, mu)` runs a mutation. It takes in a `context.Context` and a
+`*api.Mutation` object. You can set the data using JSON or RDF N-Quad format.
 
-We define a Person struct to represent a Person and marshal an instance of it to use with `Mutation`
-object.
+To use JSON, use the fields SetJson and DeleteJson, which accept a string
+representing the nodes to be added or removed respectively (either as a JSON map
+or a list). To use RDF, use the fields SetNquads and DeleteNquads, which accept
+a string representing the valid RDF triples (one per line) to added or removed
+respectively. This protobuf object also contains the Set and Del fields which
+accept a list of RDF triples that have already been parsed into our internal
+format. As such, these fields are mainly used internally and users should use
+the SetNquads and DeleteNquads instead if they are planning on using RDF.
+
+We define a Person struct to represent a Person and marshal an instance of it to
+use with `Mutation` object.
+
 ```go
 type Person struct {
   Uid  string `json:"uid,omitempty"`
@@ -110,10 +127,11 @@ if err != nil {
 }
 ```
 
-For a more complete example, see [GoDoc](https://godoc.org/github.com/dgraph-io/dgo#example-package--SetObject).
+For a more complete example, see
+[GoDoc](https://godoc.org/github.com/dgraph-io/dgo#example-package--SetObject).
 
-Sometimes, you only want to commit a mutation, without querying anything further.
-In such cases, you can use `mu.CommitNow = true` to indicate that the
+Sometimes, you only want to commit a mutation, without querying anything
+further. In such cases, you can use `mu.CommitNow = true` to indicate that the
 mutation must be immediately committed.
 
 ### Run a query
@@ -134,6 +152,24 @@ resp, err := txn.QueryWithVars(ctx, q, map[string]string{"$a": "Alice"})
 fmt.Println(string(resp.Json))
 ```
 
+When running a schema query, the schema response is found in the `Schema` field of `api.Response`.
+
+```go
+q := `schema(pred: [name]) {
+  type
+  index
+  reverse
+  tokenizer
+  list
+  count
+  upsert
+  lang
+}`
+
+resp, err := txn.Query(ctx, q)
+fmt.Println(resp.Schema)
+```
+
 ### Commit a transaction
 
 A transaction can be committed using the `txn.Commit(ctx)` method. If your transaction
@@ -152,6 +188,17 @@ err := txn.Commit(ctx)
 if err == y.ErrAborted {
   // Retry or handle error
 }
+```
+
+### Setting Metadata Headers
+Metadata headers such as authentication tokens can be set through the context of gRPC methods. Below is an example of how to set a header named "auth-token".
+```go
+// The following piece of code shows how one can set metadata with
+// auth-token, to allow Alter operation, if the server requires it.
+md := metadata.New(nil)
+md.Append("auth-token", "the-auth-token-value")
+ctx := metadata.NewOutgoingContext(context.Background(), md)
+dg.Alter(ctx, &op)
 ```
 
 ## Development
