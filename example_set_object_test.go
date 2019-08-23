@@ -52,6 +52,7 @@ func Example_setObject() {
 	// In the example below new nodes for Alice, Bob and Charlie and school are created (since they
 	// dont have a Uid).
 	p := Person{
+		Uid:     "_:alice",
 		Name:    "Alice",
 		Age:     26,
 		Married: true,
@@ -103,9 +104,9 @@ func Example_setObject() {
 	}
 
 	// Assigned uids for nodes which were created would be returned in the assigned.Uids map.
-	variables := map[string]string{"$id": assigned.Uids["blank-0"]}
-	q := `query Me($id: string){
-		me(func: uid($id)) {
+	variables := map[string]string{"$id1": assigned.Uids["alice"]}
+	q := `query Me($id1: string){
+		me(func: uid($id1)) {
 			name
 			dob
 			age
