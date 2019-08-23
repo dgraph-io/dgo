@@ -27,6 +27,8 @@ to understand how to run and work with Dgraph.
 
 **Note that, dgo 1.0.0 works with dgraph 1.0.x only**
 
+**Note that, dgo 2.0.0 works with dgraph 1.1.x only**
+
 ```sh
 go get -u -v github.com/dgraph-io/dgo
 ```
