@@ -70,9 +70,6 @@ func (d *Dgraph) NewReadOnlyTxn() *Txn {
 	return txn
 }
 
-// Sequencing is no longer used
-func (txn *Txn) Sequencing(sequencing api.LinRead_Sequencing) {}
-
 // BestEffort enables best effort in read-only queries. This will ask the Dgraph Alpha
 // to try to get timestamps from memory in a best effort to reduce the number of outbound
 // requests to Zero. This may yield improved latencies in read-bound datasets.
@@ -100,10 +97,6 @@ func (txn *Txn) Query(ctx context.Context, q string) (*api.Response, error) {
 func (txn *Txn) QueryWithVars(ctx context.Context, q string, vars map[string]string) (
 	*api.Response, error) {
 
-	if txn.finished {
-		return nil, ErrFinished
-	}
-
 	req := &api.Request{
 		Query:      q,
 		Vars:       vars,
@@ -111,25 +104,7 @@ func (txn *Txn) QueryWithVars(ctx context.Context, q string, vars map[string]str
 		ReadOnly:   txn.readOnly,
 		BestEffort: txn.bestEffort,
 	}
-	ctx = txn.dg.getContext(ctx)
-	resp, err := txn.dc.Query(ctx, req)
-
-	if isJwtExpired(err) {
-		err = txn.dg.retryLogin(ctx)
-		if err != nil {
-			return nil, err
-		}
-		ctx = txn.dg.getContext(ctx)
-		resp, err = txn.dc.Query(ctx, req)
-	}
-
-	if err == nil {
-		if err := txn.mergeContext(resp.GetTxn()); err != nil {
-			return nil, err
-		}
-	}
-
-	return resp, err
+	return txn.Do(ctx, req)
 }
 
 // Mutate allows data stored on Dgraph instances to be modified.
@@ -140,27 +115,42 @@ func (txn *Txn) QueryWithVars(ctx context.Context, q string, vars map[string]str
 // being committed. In this case, an explicit call to Commit doesn't
 // need to be made subsequently.
 //
-// If the mutation fails, then the transaction is discarded and all future
-// operations on it will fail.
-func (txn *Txn) Mutate(ctx context.Context, mu *api.Mutation) (*api.Assigned, error) {
-	switch {
-	case txn.readOnly:
-		return nil, ErrReadOnly
-	case txn.finished:
+// If the mutation fails, then the transaction is discarded and all
+// future operations on it will fail.
+func (txn *Txn) Mutate(ctx context.Context, mu *api.Mutation) (*api.Response, error) {
+	req := &api.Request{
+		StartTs:   txn.context.StartTs,
+		Mutations: []*api.Mutation{mu},
+		CommitNow: mu.CommitNow,
+	}
+	return txn.Do(ctx, req)
+}
+
+// Do executes a query followed by one or more than one mutations.
+func (txn *Txn) Do(ctx context.Context, req *api.Request) (*api.Response, error) {
+	if txn.finished {
 		return nil, ErrFinished
 	}
 
-	txn.mutated = true
-	mu.StartTs = txn.context.StartTs
+	if len(req.Mutations) > 0 {
+		if txn.readOnly {
+			return nil, ErrReadOnly
+		}
+		txn.mutated = true
+	}
+
 	ctx = txn.dg.getContext(ctx)
-	ag, err := txn.dc.Mutate(ctx, mu)
+	req.StartTs = txn.context.StartTs
+	resp, err := txn.dc.Query(ctx, req)
+
 	if isJwtExpired(err) {
 		err = txn.dg.retryLogin(ctx)
 		if err != nil {
 			return nil, err
 		}
+
 		ctx = txn.dg.getContext(ctx)
-		ag, err = txn.dc.Mutate(ctx, mu)
+		resp, err = txn.dc.Query(ctx, req)
 	}
 
 	if err != nil {
@@ -176,11 +166,12 @@ func (txn *Txn) Mutate(ctx context.Context, mu *api.Mutation) (*api.Assigned, er
 		return nil, err
 	}
 
-	if mu.CommitNow {
+	if req.CommitNow {
 		txn.finished = true
 	}
-	err = txn.mergeContext(ag.Context)
-	return ag, err
+
+	err = txn.mergeContext(resp.GetTxn())
+	return resp, err
 }
 
 // Commit commits any mutations that have been made in the transaction.

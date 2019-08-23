@@ -708,7 +708,6 @@ func ExampleDeleteEdges() {
 
 	mu.SetJson = pb
 	mu.CommitNow = true
-	mu.IgnoreIndexConflict = true
 	assigned, err := dg.NewTxn().Mutate(ctx, mu)
 	if err != nil {
 		log.Fatal(err)
@@ -1097,7 +1096,8 @@ func ExampleTxn_Mutate_upsert() {
 		log.Fatal(err)
 	}
 
-	mu.Query = `
+	req := &api.Request{CommitNow: true}
+	req.Query = `
 		query {
   			me(func: eq(email, "user@dgraphO.io")) {
 	    		v as uid
@@ -1106,9 +1106,10 @@ func ExampleTxn_Mutate_upsert() {
 	`
 	m2 := `uid(v) <email> "user@dgraph.io" .`
 	mu.SetNquads = []byte(m2)
+	req.Mutations = []*api.Mutation{mu}
 
 	// Update email only if matching uid found.
-	if _, err := dg.NewTxn().Mutate(ctx, mu); err != nil {
+	if _, err := dg.NewTxn().Do(ctx, req); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1154,8 +1155,8 @@ func ExampleTxn_Mutate_upsertJSON() {
 	}
 
 	// Create and query the user using Upsert block
-	mu := &api.Mutation{CommitNow: true}
-	mu.Query = `
+	req := &api.Request{CommitNow: true}
+	req.Query = `
 		{
 			me(func: eq(email, "user@dgraph.io")) {
 				...fragmentA
@@ -1170,8 +1171,9 @@ func ExampleTxn_Mutate_upsertJSON() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	mu.SetJson = pb
-	if _, err := dg.NewTxn().Mutate(ctx, mu); err != nil {
+	mu := &api.Mutation{SetJson: pb}
+	req.Mutations = []*api.Mutation{mu}
+	if _, err := dg.NewTxn().Do(ctx, req); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1181,7 +1183,8 @@ func ExampleTxn_Mutate_upsertJSON() {
 		log.Fatal(err)
 	}
 	mu.SetJson = pb
-	if _, err := dg.NewTxn().Mutate(ctx, mu); err != nil {
+	req.Mutations = []*api.Mutation{mu}
+	if _, err := dg.NewTxn().Do(ctx, req); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1211,7 +1214,8 @@ func ExampleTxn_Mutate_upsertJSON() {
 	// Delete the user now
 	mu.SetJson = nil
 	dgo.DeleteEdges(mu, "uid(v)", "age", "name", "email")
-	if _, err := dg.NewTxn().Mutate(ctx, mu); err != nil {
+	req.Mutations = []*api.Mutation{mu}
+	if _, err := dg.NewTxn().Do(ctx, req); err != nil {
 		log.Fatal(err)
 	}
 
