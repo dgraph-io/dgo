@@ -11,7 +11,8 @@ to understand how to run and work with Dgraph.
 
 ## Table of contents
 
-- [Install](#install)
+- [Breaking API Change](#breaking-api-change)
+- [Import](#import)
 - [Using a client](#using-a-client)
   - [Create a client](#create-a-client)
   - [Alter the database](#alter-the-database)
@@ -23,14 +24,28 @@ to understand how to run and work with Dgraph.
 - [Development](#development)
   - [Running tests](#running-tests)
 
-## Install
 
-**Note, dgo 1.0.0 works with dgraph 1.0.x only**
+## Breaking API Change
 
-**Note, dgo 2.0.0 works with dgraph 1.1.x only**
+Function `Mutate` returns `*api.Assigned` in dgo `1.0.x` which is updated to
+return `*api.Response` in dgo `2.0.x`.
 
-```sh
-go get -u -v github.com/dgraph-io/dgo
+## Import
+
+### For dgo 1.0.x
+
+**Note, dgo 1.0.x works with dgraph 1.0.x only**
+
+```go
+import "github.com/dgraph-io/dgo"
+```
+
+### For dgo 2.0.x
+
+**Note, dgo 2.0.x works with dgraph 1.1.x only**
+
+```go
+import "github.com/dgraph-io/dgo/v2"
 ```
 
 ## Using a client
@@ -125,7 +140,7 @@ if err != nil {
 mu := &api.Mutation{
   SetJson: pb,
 }
-assigned, err := txn.Mutate(ctx, mu)
+resp, err := txn.Mutate(ctx, mu)
 if err != nil {
   log.Fatal(err)
 }
@@ -137,6 +152,20 @@ For a more complete example, see
 Sometimes, you only want to commit a mutation, without querying anything
 further. In such cases, you can use `mu.CommitNow = true` to indicate that the
 mutation must be immediately committed.
+
+Mutation can be run using `txn.Do` as well.
+
+```go
+mu := &api.Mutation{
+  SetJson: pb,
+}
+req := &api.Request{CommitNow: true}
+req.Mutations = []*api.Mutation{mu}
+resp, err := txn.Do(ctx, req)
+if err != nil {
+  log.Fatal(err)
+}
+```
 
 ### Run a query
 
@@ -172,6 +201,42 @@ q := `schema(pred: [name]) {
 
 resp, err := txn.Query(ctx, q)
 fmt.Println(resp.Schema)
+```
+
+You can also use `txn.Do` function to run the query.
+
+```go
+req := &api.Request{
+  Query: q,
+  Vars: map[string]string{"$a": "Alice"},
+}
+resp, err := txn.Do(ctx, req)
+if err != nil {
+  log.Fatal(err)
+}
+fmt.Println(string(resp.Json))
+```
+
+### Run an Upsert
+
+```go
+
+req := &api.Request{CommitNow: true}
+req.Query = `
+  query {
+      user as var(func: eq(email, "wrong_email@dgraph.io"))
+  }
+`
+mut := `uid(user) <email> "correct_email@dgraph.io" .`
+mu := &api.Mutation{
+  SetNquads: []byte(mut),
+}
+req.Mutations = []*api.Mutation{mu}
+
+// Update email only if matching uid found.
+if _, err := dg.NewTxn().Do(ctx, req); err != nil {
+  log.Fatal(err)
+}
 ```
 
 ### Commit a transaction
