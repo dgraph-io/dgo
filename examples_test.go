@@ -590,6 +590,7 @@ func ExampleTxn_Mutate_list() {
 	}
 
 	p := Person{
+		Uid:         "_:person",
 		Address:     []string{"Redfern", "Riley Street"},
 		PhoneNumber: []int64{9876, 123},
 	}
@@ -618,7 +619,7 @@ func ExampleTxn_Mutate_list() {
 		log.Fatal(err)
 	}
 
-	variables := map[string]string{"$id": assigned.Uids["blank-0"]}
+	variables := map[string]string{"$id": assigned.Uids["person"]}
 	const q = `
 	query Me($id: string){
 		me(func: uid($id)) {
