@@ -31,7 +31,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestConditionalUpsertExample0JSON(t *testing.T) {
+func TestCondUpsertCorrectingName(t *testing.T) {
 	dg, cancel := getDgraphClient()
 	defer cancel()
 
@@ -44,7 +44,7 @@ func TestConditionalUpsertExample0JSON(t *testing.T) {
 	err = dg.Alter(ctx, op)
 	require.NoError(t, err)
 
-	// Mutation with wrong name
+	// Erroneously, mutation with wrong name "wrong"
 	q1 := `
 {
   me(func: eq(email, "email@company.io")) {
@@ -89,7 +89,7 @@ func TestConditionalUpsertExample0JSON(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, string(resp.Json), "Wrong")
 
-	// mutation with correct name
+	// Fixing the name in the database, mutation with correct name
 	q3 := q1
 	m3 := `
 [
@@ -172,7 +172,7 @@ func TestUpsertMultiValueEdge(t *testing.T) {
 
 	populateCompanyData(t, dg)
 
-	// All employees of company1 now works with all employees of company2
+	// All employees of company1 now work with all employees of company2
 	q1 := `
 {
   c1 as var(func: eq(works_for, "company1"))
@@ -483,11 +483,15 @@ _:user3 <branch> "Fuller Street, San Francisco" .
 	resp, err := dg.NewTxn().Do(ctx, req)
 	require.NoError(t, err)
 
-	var m map[string][]map[string]string
-	err = json.Unmarshal(resp.Json, &m)
+	var res1, res2 struct {
+		Q []struct {
+			Branch string
+		}
+	}
+	err = json.Unmarshal(resp.Json, &res1)
 	require.NoError(t, err)
-	for _, v := range m["q"] {
-		require.Equal(t, "Fuller Street, SF", v["branch"])
+	for _, v := range res1.Q {
+		require.Equal(t, "Fuller Street, SF", v.Branch)
 	}
 
 	// Bulk Delete: delete everyone's branch
@@ -507,10 +511,9 @@ _:user3 <branch> "Fuller Street, San Francisco" .
 	resp, err = dg.NewTxn().Do(ctx, req)
 	require.NoError(t, err)
 
-	m = make(map[string][]map[string]string)
-	err = json.Unmarshal(resp.Json, &m)
+	err = json.Unmarshal(resp.Json, &res2)
 	require.NoError(t, err)
-	for _, v := range m["q"] {
-		require.Nil(t, v["branch"])
+	for _, v := range res2.Q {
+		require.Nil(t, v.Branch)
 	}
 }

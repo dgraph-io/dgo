@@ -11,46 +11,36 @@ to understand how to run and work with Dgraph.
 
 ## Table of contents
 
-- [Breaking API Change](#breaking-api-change)
 - [Import](#import)
 - [Using a client](#using-a-client)
-  - [Create a client](#create-a-client)
-  - [Alter the database](#alter-the-database)
-  - [Create a transaction](#create-a-transaction)
-  - [Run a mutation](#run-a-mutation)
-  - [Run a query](#run-a-query)
-  - [Commit a transaction](#commit-a-transaction)
+  - [Creating a client](#creating-a-client)
+  - [Altering the database](#altering-the-database)
+  - [Creating a transaction](#creating-a-transaction)
+  - [Running a mutation](#running-a-mutation)
+  - [Running a query](#running-a-query)
+  - [Running an Upsert: Query + Mutation](#running-an-upsert-query--mutation)
+  - [Committing a transaction](#committing-a-transaction)
   - [Setting Metadata Headers](#setting-metadata-headers)
 - [Development](#development)
   - [Running tests](#running-tests)
 
-
-## Breaking API Change
-
-Function `Mutate` returns `*api.Assigned` in dgo `1.0.x` which is updated to
-return `*api.Response` in dgo `2.0.x`.
-
 ## Import
 
-### For dgo 1.0.x
+Depending on the version of Dgraph that you are connecting to, you will have to
+use a different version of this client and their corresponding import paths.
 
-**Note, dgo 1.0.x works with dgraph 1.0.x only**
+| Dgraph version | dgo version |        dgo import path        |
+|:--------------:|:-----------:|:-----------------------------:|
+|  dgraph 1.0.X  |  dgo 1.X.Y  |   "github.com/dgraph-io/dgo"  |
+|  dgraph 1.1.X  |  dgo 2.X.Y  | "github.com/dgraph-io/dgo/v2" |
 
-```go
-import "github.com/dgraph-io/dgo"
-```
-
-### For dgo 2.0.x
-
-**Note, dgo 2.0.x works with dgraph 1.1.x only**
-
-```go
-import "github.com/dgraph-io/dgo/v2"
-```
+Note: One of the most important API breakages from dgo v1 to v2 is in
+the function `dgo.Txn.Mutate`. This function returns an `*api.Assigned`
+value in v1 but an `*api.Response` in v2.
 
 ## Using a client
 
-### Create a client
+### Creating a client
 
 `dgraphClient` object can be initialised by passing it a list of `api.DgraphClient` clients as
 variadic arguments. Connecting to multiple Dgraph servers in the same cluster allows for better
@@ -67,7 +57,7 @@ defer conn.Close()
 dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 ```
 
-### Alter the database
+### Altering the database
 
 To set the schema, create an instance of `api.Operation` and use the `Alter` endpoint.
 
@@ -84,7 +74,7 @@ err := dgraphClient.Alter(ctx, op)
 slate, without bringing the instance down. `DropAttr` is used to drop all the data
 related to a predicate.
 
-### Create a transaction
+### Creating a transaction
 
 To create a transaction, call `dgraphClient.NewTxn()`, which returns a `*dgo.Txn` object. This
 operation incurs no network overhead.
@@ -104,7 +94,7 @@ usual consensus protocol. Read-only transactions cannot contain mutations and
 trying to call `txn.Commit()` will result in an error. Calling `txn.Discard()`
 will be a no-op.
 
-### Run a mutation
+### Running a mutation
 
 `txn.Mutate(ctx, mu)` runs a mutation. It takes in a `context.Context` and a
 `*api.Mutation` object. You can set the data using JSON or RDF N-Quad format.
@@ -140,7 +130,7 @@ if err != nil {
 mu := &api.Mutation{
   SetJson: pb,
 }
-resp, err := txn.Mutate(ctx, mu)
+res, err := txn.Mutate(ctx, mu)
 if err != nil {
   log.Fatal(err)
 }
@@ -159,21 +149,21 @@ Mutation can be run using `txn.Do` as well.
 mu := &api.Mutation{
   SetJson: pb,
 }
-req := &api.Request{CommitNow: true}
-req.Mutations = []*api.Mutation{mu}
-resp, err := txn.Do(ctx, req)
+req := &api.Request{CommitNow:true, Mutations: []*api.Mutation{mu}}
+res, err := txn.Do(ctx, req)
 if err != nil {
   log.Fatal(err)
 }
 ```
 
-### Run a query
+### Running a query
 
 You can run a query by calling `txn.Query(ctx, q)`. You will need to pass in a GraphQL+- query string. If
 you want to pass an additional map of any variables that you might want to set in the query, call
 `txn.QueryWithVars(ctx, q, vars)` with the variables map as third argument.
 
 Let's run the following query with a variable $a:
+
 ```go
 q := `query all($a: string) {
     all(func: eq(name, $a)) {
@@ -181,8 +171,8 @@ q := `query all($a: string) {
     }
   }`
 
-resp, err := txn.QueryWithVars(ctx, q, map[string]string{"$a": "Alice"})
-fmt.Println(string(resp.Json))
+res, err := txn.QueryWithVars(ctx, q, map[string]string{"$a": "Alice"})
+fmt.Printf("%s\n", res.Json)
 ```
 
 When running a schema query, the schema response is found in the `Schema` field of `api.Response`.
@@ -199,8 +189,8 @@ q := `schema(pred: [name]) {
   lang
 }`
 
-resp, err := txn.Query(ctx, q)
-fmt.Println(resp.Schema)
+res, err := txn.Query(ctx, q)
+fmt.Println(res.Schema)
 ```
 
 You can also use `txn.Do` function to run the query.
@@ -210,28 +200,29 @@ req := &api.Request{
   Query: q,
   Vars: map[string]string{"$a": "Alice"},
 }
-resp, err := txn.Do(ctx, req)
+res, err := txn.Do(ctx, req)
 if err != nil {
   log.Fatal(err)
 }
-fmt.Println(string(resp.Json))
+fmt.Printf("%s\n", res.Json)
 ```
 
-### Run an Upsert
+### Running an Upsert: Query + Mutation
 
 ```go
-
-req := &api.Request{CommitNow: true}
-req.Query = `
+query = `
   query {
       user as var(func: eq(email, "wrong_email@dgraph.io"))
-  }
-`
-mut := `uid(user) <email> "correct_email@dgraph.io" .`
+  }`
 mu := &api.Mutation{
-  SetNquads: []byte(mut),
+  SetNquads: []byte(`uid(user) <email> "correct_email@dgraph.io" .`),
 }
-req.Mutations = []*api.Mutation{mu}
+req := &api.Request{
+  Query: query,
+  Mutations: []*api.Mutation{mu},
+  CommitNow:true,
+}
+
 
 // Update email only if matching uid found.
 if _, err := dg.NewTxn().Do(ctx, req); err != nil {
@@ -239,7 +230,7 @@ if _, err := dg.NewTxn().Do(ctx, req); err != nil {
 }
 ```
 
-### Commit a transaction
+### Committing a transaction
 
 A transaction can be committed using the `txn.Commit(ctx)` method. If your transaction
 consisted solely of calls to `txn.Query` or `txn.QueryWithVars`, and no calls to
