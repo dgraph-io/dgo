@@ -93,7 +93,7 @@ func Example_setObject() {
 			name: string
 			age: int
 			married: bool
-			Friends: [Person]
+			Friend: [Person]
 			loc: Loc
 		  }
 
