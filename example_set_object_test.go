@@ -20,7 +20,7 @@ type School struct {
 type loc struct {
 	Type   string    `json:"type,omitempty"`
 	Coords []float64 `json:"coordinates,omitempty"`
-	DType  string    `json:"dgraph.type,omitempty"`
+	//	DType  string    `json:"dgraph.type,omitempty"`
 }
 
 // If omitempty is not set, then edges with empty values (0 for int/float, "" for string, false
@@ -63,7 +63,7 @@ func Example_setObject() {
 		Location: loc{
 			Type:   "Point",
 			Coords: []float64{1.1, 2},
-			DType:  "Location",
+			//		DType:  "Location",
 		},
 		Dob: &dob,
 		Raw: []byte("raw_bytes"),
@@ -95,13 +95,14 @@ func Example_setObject() {
 			age: int
 			married: bool
 			Friends: [Person]
+			loc: Loc
 		  }
 
 		type Institution {
 			name: string
 		  }
 
-		  type Location {
+		  type Loc {
 			type: string
 			coords: float
 		  }

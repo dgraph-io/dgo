@@ -153,7 +153,7 @@ func ExampleTxn_Mutate() {
 	type loc struct {
 		Type   string    `json:"type,omitempty"`
 		Coords []float64 `json:"coordinates,omitempty"`
-		DType  string    `json:"dgraph.type,omitempty"`
+		//	DType  string    `json:"dgraph.type,omitempty"`
 	}
 
 	// If omitempty is not set, then edges with empty values (0 for int/float, "" for string, false
@@ -186,7 +186,7 @@ func ExampleTxn_Mutate() {
 		Location: loc{
 			Type:   "Point",
 			Coords: []float64{1.1, 2},
-			DType:  "Location",
+			//	DType:  "Location",
 		},
 		Raw: []byte("raw_bytes"),
 		Friends: []Person{{
