@@ -115,13 +115,13 @@ use with `Mutation` object.
 type Person struct {
   Uid  string `json:"uid,omitempty"`
   Name string `json:"name,omitempty"`
-  DgraphType string     `json:"dgraph.type,omitempty"`
+  DType string     `json:"dgraph.type,omitempty"`
 }
 
 p := Person{
   Uid:  "_:alice",
   Name: "Alice",
-  DgraphType: "Person",
+  DType: "Person",
 }
 
 pb, err := json.Marshal(p)

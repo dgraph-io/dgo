@@ -13,30 +13,30 @@ import (
 )
 
 type School struct {
-	Name       string `json:"name,omitempty"`
-	DgraphType string `json:"dgraph.type,omitempty"`
+	Name  string `json:"name,omitempty"`
+	DType string `json:"dgraph.type,omitempty"`
 }
 
 type loc struct {
-	Type       string    `json:"type,omitempty"`
-	Coords     []float64 `json:"coordinates,omitempty"`
-	DgraphType string    `json:"dgraph.type,omitempty"`
+	Type   string    `json:"type,omitempty"`
+	Coords []float64 `json:"coordinates,omitempty"`
+	DType  string    `json:"dgraph.type,omitempty"`
 }
 
 // If omitempty is not set, then edges with empty values (0 for int/float, "" for string, false
 // for bool) would be created for values not specified explicitly.
 
 type Person struct {
-	Uid        string     `json:"uid,omitempty"`
-	Name       string     `json:"name,omitempty"`
-	Age        int        `json:"age,omitempty"`
-	Dob        *time.Time `json:"dob,omitempty"`
-	Married    bool       `json:"married,omitempty"`
-	Raw        []byte     `json:"raw_bytes,omitempty"`
-	Friends    []Person   `json:"friend,omitempty"`
-	Location   loc        `json:"loc,omitempty"`
-	School     []School   `json:"school,omitempty"`
-	DgraphType string     `json:"dgraph.type,omitempty"`
+	Uid      string     `json:"uid,omitempty"`
+	Name     string     `json:"name,omitempty"`
+	Age      int        `json:"age,omitempty"`
+	Dob      *time.Time `json:"dob,omitempty"`
+	Married  bool       `json:"married,omitempty"`
+	Raw      []byte     `json:"raw_bytes,omitempty"`
+	Friends  []Person   `json:"friend,omitempty"`
+	Location loc        `json:"loc,omitempty"`
+	School   []School   `json:"school,omitempty"`
+	DType    string     `json:"dgraph.type,omitempty"`
 }
 
 func Example_setObject() {
@@ -55,30 +55,30 @@ func Example_setObject() {
 	// In the example below new nodes for Alice, Bob and Charlie and school are created (since they
 	// dont have a Uid).
 	p := Person{
-		Uid:        "_:alice",
-		Name:       "Alice",
-		Age:        26,
-		Married:    true,
-		DgraphType: "Person",
+		Uid:     "_:alice",
+		Name:    "Alice",
+		Age:     26,
+		Married: true,
+		DType:   "Person",
 		Location: loc{
-			Type:       "Point",
-			Coords:     []float64{1.1, 2},
-			DgraphType: "Location",
+			Type:   "Point",
+			Coords: []float64{1.1, 2},
+			DType:  "Location",
 		},
 		Dob: &dob,
 		Raw: []byte("raw_bytes"),
 		Friends: []Person{{
-			Name:       "Bob",
-			Age:        24,
-			DgraphType: "Person",
+			Name:  "Bob",
+			Age:   24,
+			DType: "Person",
 		}, {
-			Name:       "Charlie",
-			Age:        29,
-			DgraphType: "Person",
+			Name:  "Charlie",
+			Age:   29,
+			DType: "Person",
 		}},
 		School: []School{{
-			Name:       "Crown Public School",
-			DgraphType: "Institution",
+			Name:  "Crown Public School",
+			DType: "Institution",
 		}},
 	}
 
