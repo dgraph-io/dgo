@@ -122,6 +122,7 @@ func ExampleTxn_Query_variables() {
 	q := `query Alice($a: string){
 		me(func: eq(name, $a)) {
 			name
+			dgraph.type
 		}
 	}`
 
@@ -253,12 +254,15 @@ func ExampleTxn_Mutate() {
 			loc
 			raw_bytes
 			married
+			dgraph.type
 			friend @filter(eq(name, "Bob")) {
 				name
 				age
+				dgraph.type
 			}
 			school {
 				name
+				dgraph.type
 			}
 		}
 	}`
@@ -339,6 +343,7 @@ func ExampleTxn_Mutate_bytes() {
 	q(func: eq(name, "Alice-new")) {
 		name
 		bytes
+		dgraph.type
 	}
 }`
 
@@ -476,12 +481,15 @@ func ExampleTxn_Query_unmarshal() {
 			loc
 			raw_bytes
 			married
+			dgraph.type
 			friend @filter(eq(name, "Bob")) {
 				name
 				age
+				dgraph.type
 			}
 			school {
 				name
+				dgraph.type
 			}
 		}
 	}`
@@ -630,7 +638,8 @@ func ExampleTxn_Mutate_facets() {
 
 	const q = `query Me($id: string){
         me(func: uid($id)) {
-            name @facets
+			name @facets
+			dgraph.type
 			friend @filter(eq(name, "Bob")) @facets {
 				name
 				dgraph.type
@@ -1252,6 +1261,7 @@ func ExampleTxn_Mutate_upsert() {
 			me(func: eq(email, "user@dgraph.io")) {
 				name
 				email
+				dgraph.type
 			}
 		}
 	`

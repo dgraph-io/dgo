@@ -138,12 +138,15 @@ func Example_setObject() {
 			loc
 			raw_bytes
 			married
+			dgraph.type
 			friend @filter(eq(name, "Bob")){
 				name
 				age
+				dgraph.type
 			}
 			school {
 				name
+				dgraph.type
 			}
 		}
 	}`
