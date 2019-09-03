@@ -153,7 +153,6 @@ func ExampleTxn_Mutate() {
 	type loc struct {
 		Type   string    `json:"type,omitempty"`
 		Coords []float64 `json:"coordinates,omitempty"`
-		//	DType  string    `json:"dgraph.type,omitempty"`
 	}
 
 	// If omitempty is not set, then edges with empty values (0 for int/float, "" for string, false
@@ -186,7 +185,6 @@ func ExampleTxn_Mutate() {
 		Location: loc{
 			Type:   "Point",
 			Coords: []float64{1.1, 2},
-			//	DType:  "Location",
 		},
 		Raw: []byte("raw_bytes"),
 		Friends: []Person{{
@@ -634,10 +632,12 @@ func ExampleTxn_Mutate_facets() {
         me(func: uid($id)) {
             name @facets
 			friend @filter(eq(name, "Bob")) @facets {
-                name
+				name
+				dgraph.type
             }
             school @facets {
-                name
+				name
+				dgraph.type
             }
 
         }
@@ -715,6 +715,7 @@ func ExampleTxn_Mutate_list() {
 		me(func: uid($id)) {
 			address
 			phone_number
+			dgraph.type
 		}
 	}
 	`
@@ -832,12 +833,15 @@ func ExampleDeleteEdges() {
 			age
 			location
 			married
+			dgraph.type
 			friends {
 				name
 				age
+				dgraph.type
 			}
 			schools {
 				name@en
+				dgraph.type
 			}
 		}
 	}`
@@ -949,21 +953,25 @@ func ExampleTxn_Mutate_deleteNode() {
 			name
 			age
 			married
+			dgraph.type
 			friend {
 				uid
 				name
 				age
+				dgraph.type
 			}
 		}
 
 		me2(func: uid($bob)) {
 			name
 			age
+			dgraph.type
 		}
 
 		me3(func: uid($charlie)) {
 			name
 			age
+			dgraph.type
 		}
 	}`
 
@@ -1089,10 +1097,12 @@ func ExampleTxn_Mutate_deletePredicate() {
 			name
 			age
 			married
+			dgraph.type
 			friend {
 				uid
 				name
 				age
+				dgraph.type
 			}
 		}
 	}`
@@ -1174,7 +1184,8 @@ func ExampleTxn_Discard() {
 	query := `
     {
       q (func: eq(name, "Alice")) {
-        name
+		name
+		dgraph.type
       }
     }`
 	resp, err := queryTxn.Query(ctx, query)
@@ -1318,6 +1329,7 @@ func ExampleTxn_Mutate_upsertJSON() {
 				age
 				name
 				email
+				dgraph.type
 			}
 		}
 	`

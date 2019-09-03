@@ -20,7 +20,6 @@ type School struct {
 type loc struct {
 	Type   string    `json:"type,omitempty"`
 	Coords []float64 `json:"coordinates,omitempty"`
-	//	DType  string    `json:"dgraph.type,omitempty"`
 }
 
 // If omitempty is not set, then edges with empty values (0 for int/float, "" for string, false
