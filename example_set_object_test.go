@@ -82,28 +82,28 @@ func Example_setObject() {
 
 	op := &api.Operation{}
 	op.Schema = `
-		name: string @index(exact) .
-		age: int .
-		married: bool .
-		loc: geo .
-		dob: datetime .
+  name: string @index(exact) .
+  age: int .
+  married: bool .
+  loc: geo .
+  dob: datetime .
 
-	    type Person {
-			name: string
-			age: int
-			married: bool
-			Friend: [Person]
-			loc: Loc
-		  }
+  type Person {
+    name: string
+    age: int
+    married: bool
+    Friend: [Person]
+    loc: Loc
+  }
 
-		type Institution {
-			name: string
-		  }
+  type Institution {
+    name: string
+  }
 
-		  type Loc {
-			type: string
-			coords: float
-		  }
+  type Loc {
+    type: string
+    coords: float
+  }
 
 	`
 
