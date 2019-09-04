@@ -13,8 +13,8 @@ import (
 )
 
 type School struct {
-	Name  string `json:"name,omitempty"`
-	DType string `json:"dgraph.type,omitempty"`
+	Name  string   `json:"name,omitempty"`
+	DType []string `json:"dgraph.type,omitempty"`
 }
 
 type loc struct {
@@ -35,7 +35,7 @@ type Person struct {
 	Friends  []Person   `json:"friend,omitempty"`
 	Location loc        `json:"loc,omitempty"`
 	School   []School   `json:"school,omitempty"`
-	DType    string     `json:"dgraph.type,omitempty"`
+	DType    []string   `json:"dgraph.type,omitempty"`
 }
 
 func Example_setObject() {
@@ -58,26 +58,25 @@ func Example_setObject() {
 		Name:    "Alice",
 		Age:     26,
 		Married: true,
-		DType:   "Person",
+		DType:   []string{"Person"},
 		Location: loc{
 			Type:   "Point",
 			Coords: []float64{1.1, 2},
-			//		DType:  "Location",
 		},
 		Dob: &dob,
 		Raw: []byte("raw_bytes"),
 		Friends: []Person{{
 			Name:  "Bob",
 			Age:   24,
-			DType: "Person",
+			DType: []string{"Person"},
 		}, {
 			Name:  "Charlie",
 			Age:   29,
-			DType: "Person",
+			DType: []string{"Person"},
 		}},
 		School: []School{{
 			Name:  "Crown Public School",
-			DType: "Institution",
+			DType: []string{"Institution"},
 		}},
 	}
 
@@ -165,10 +164,11 @@ func Example_setObject() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	// fmt.Printf("Me: %+v\n", r.Me)
 	// R.Me would be same as the person that we set above.
 
 	fmt.Println(string(resp.Json))
-	// Output: {"me":[{"name":"Alice","dob":"1980-01-01T23:00:00Z","age":26,"loc":{"type":"Point","coordinates":[1.1,2]},"raw_bytes":"cmF3X2J5dGVz","married":true,"friend":[{"name":"Bob","age":24}],"school":[{"name":"Crown Public School"}]}]}
+	// Output: {"me":[{"name":"Alice","dob":"1980-01-01T23:00:00Z","age":26,"loc":{"type":"Point","coordinates":[1.1,2]},"raw_bytes":"cmF3X2J5dGVz","married":true,"dgraph.type":["Person"],"friend":[{"name":"Bob","age":24,"dgraph.type":["Person"]}],"school":[{"name":"Crown Public School","dgraph.type":["Institution"]}]}]}
 
 }

@@ -113,15 +113,15 @@ use with `Mutation` object.
 
 ```go
 type Person struct {
-  Uid  string `json:"uid,omitempty"`
-  Name string `json:"name,omitempty"`
-  DType string     `json:"dgraph.type,omitempty"`
+  Uid  string  `json:"uid,omitempty"`
+  Name string  `json:"name,omitempty"`
+  DType []string `json:"dgraph.type,omitempty"`
 }
 
 p := Person{
   Uid:  "_:alice",
   Name: "Alice",
-  DType: "Person",
+  DType: []string{"Person"},
 }
 
 pb, err := json.Marshal(p)
