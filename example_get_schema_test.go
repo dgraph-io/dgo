@@ -42,8 +42,7 @@ func Example_getSchema() {
    age: int .
    married: bool .
    loc: geo .
-   dob: datetime .
-	`
+   dob: datetime .`
 
 	ctx := context.Background()
 	err = dg.Alter(ctx, op)

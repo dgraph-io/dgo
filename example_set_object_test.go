@@ -103,9 +103,7 @@ func Example_setObject() {
   type Loc {
     type: string
     coords: float
-  }
-
-	`
+  }`
 
 	ctx := context.Background()
 	err = dg.Alter(ctx, op)

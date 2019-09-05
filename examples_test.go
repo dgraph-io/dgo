@@ -88,9 +88,7 @@ func ExampleTxn_Query_variables() {
 
 	type Person {
 	  name: string
-	}
-
-	`
+	}`
 
 	ctx := context.Background()
 	err := dg.Alter(ctx, op)
@@ -205,8 +203,8 @@ func ExampleTxn_Mutate() {
 
 	op := &api.Operation{}
 	op.Schema = `
-	age: int .
-	married: bool .
+  age: int .
+  married: bool .
 
   type Person {
     name: string
@@ -223,9 +221,7 @@ func ExampleTxn_Mutate() {
 
   type Institution {
     name: string
-  }
-
-	`
+  }`
 
 	ctx := context.Background()
 	if err := dg.Alter(ctx, op); err != nil {
@@ -305,14 +301,12 @@ func ExampleTxn_Mutate_bytes() {
 
 	op := &api.Operation{}
 	op.Schema = `
-	name: string @index(exact) .
+  name: string @index(exact) .
 
-	type Person {
-	  name: string
-	  bytes: string
-	}
-
-	`
+  type Person {
+    name: string
+    bytes: string
+  }`
 
 	ctx := context.Background()
 	err := dg.Alter(ctx, op)
@@ -390,7 +384,7 @@ func ExampleTxn_Query_unmarshal() {
 	op.Schema = `
  age: int .
  married: bool .
-	
+
   type Person {
     name: string
     age: int
@@ -542,26 +536,24 @@ func ExampleTxn_Mutate_facets() {
 
 	op = api.Operation{}
 	op.Schema = `
-	name: string @index(exact) .
+  name: string @index(exact) .
 
-	type Person {
-	  name: string
-	  age: int
-	  married: bool
-	  NameOrigin: string
-	  Since: string
-	  Family: string
-	  Age: int
-	  Close: bool
-	  Friends: [Person]
-	}
-  
-	type Institution {
-	  name: string
-	  Since: string
-	}
+  type Person {
+    name: string
+    age: int
+    married: bool
+    NameOrigin: string
+    Since: string
+    Family: string
+    Age: int
+    Close: bool
+    Friends: [Person]
+  }
 
-	`
+  type Institution {
+    name: string
+    Since: string
+  }`
 
 	err := dg.Alter(ctx, &op)
 	if err != nil {
@@ -691,15 +683,14 @@ func ExampleTxn_Mutate_list() {
 
 	op := &api.Operation{}
 	op.Schema = `
-	address: [string] .
-	phone_number: [int] .
-	
-	  type Person {
-		Address: [string]
-		phone_number: [int]
-	  }
+  address: [string] .
+  phone_number: [int] .
 
-	`
+  type Person {
+    Address: [string]
+    phone_number: [int]
+  }`
+
 	ctx := context.Background()
 	err := dg.Alter(ctx, op)
 	if err != nil {
@@ -756,23 +747,21 @@ func ExampleDeleteEdges() {
 	defer cancel()
 	op := &api.Operation{}
 	op.Schema = `
-	age: int .
-	married: bool .
-	name: string @lang .
-	location: string .
-		
-	  type Person {
-		name: string
-		age: int
-		married: bool
-		Friends: [Person]
-	  }
-	
-	  type Institution {
-		name: string
-	  }
+  age: int .
+  married: bool .
+  name: string @lang .
+  location: string .
 
-		`
+  type Person {
+    name: string
+    age: int
+    married: bool
+    Friends: [Person]
+  }
+
+  type Institution {
+    name: string
+  }`
 
 	ctx := context.Background()
 	err := dg.Alter(ctx, op)
@@ -920,16 +909,15 @@ func ExampleTxn_Mutate_deleteNode() {
 
 	op := &api.Operation{}
 	op.Schema = `
-	age: int .
-	married: bool .
-	
-	  type Person {
-		name: string
-		age: int
-		married: bool
-		friends: [Person]
-	  }
-	`
+  age: int .
+  married: bool .
+
+  type Person {
+    name: string
+    age: int
+    married: bool
+    friends: [Person]
+  }`
 
 	ctx := context.Background()
 	err := dg.Alter(ctx, op)
@@ -1067,17 +1055,15 @@ func ExampleTxn_Mutate_deletePredicate() {
 
 	op := &api.Operation{}
 	op.Schema = `
-	age: int .
-	married: bool .
-	
-		type Person {
-		name: string
-		age: int
-		married: bool
-		friends: [Person]
-	  }
+  age: int .
+  married: bool .
 
-	`
+  type Person {
+    name: string
+    age: int
+    married: bool
+    friends: [Person]
+  }`
 
 	ctx := context.Background()
 	err := dg.Alter(ctx, op)
@@ -1223,8 +1209,7 @@ func ExampleTxn_Mutate_upsert() {
 	op := &api.Operation{}
 	op.Schema = `
 	name: string .
-	email: string @index(exact) .
-	`
+	email: string @index(exact) .`
 	if err := dg.Alter(ctx, op); err != nil {
 		log.Fatal(err)
 	}

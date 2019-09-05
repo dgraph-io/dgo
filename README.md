@@ -113,28 +113,28 @@ use with `Mutation` object.
 
 ```go
 type Person struct {
-  Uid  string  `json:"uid,omitempty"`
-  Name string  `json:"name,omitempty"`
-  DType []string `json:"dgraph.type,omitempty"`
+	Uid   string   `json:"uid,omitempty"`
+	Name  string   `json:"name,omitempty"`
+	DType []string `json:"dgraph.type,omitempty"`
 }
 
 p := Person{
-  Uid:  "_:alice",
-  Name: "Alice",
-  DType: []string{"Person"},
+	Uid:   "_:alice",
+	Name:  "Alice",
+	DType: []string{"Person"},
 }
 
 pb, err := json.Marshal(p)
 if err != nil {
-  log.Fatal(err)
+	log.Fatal(err)
 }
 
 mu := &api.Mutation{
-  SetJson: pb,
+	SetJson: pb,
 }
 res, err := txn.Mutate(ctx, mu)
 if err != nil {
-  log.Fatal(err)
+	log.Fatal(err)
 }
 ```
 
