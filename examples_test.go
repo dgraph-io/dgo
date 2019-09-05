@@ -77,13 +77,18 @@ func ExampleTxn_Query_variables() {
 	dg, cancel := getDgraphClient()
 	defer cancel()
 	type Person struct {
-		Uid  string `json:"uid,omitempty"`
-		Name string `json:"name,omitempty"`
+		Uid   string   `json:"uid,omitempty"`
+		Name  string   `json:"name,omitempty"`
+		DType []string `json:"dgraph.type,omitempty"`
 	}
 
 	op := &api.Operation{}
 	op.Schema = `
 		name: string @index(exact) .
+
+		type Person {
+			name: string
+		}
 	`
 
 	ctx := context.Background()
@@ -93,7 +98,8 @@ func ExampleTxn_Query_variables() {
 	}
 
 	p := Person{
-		Name: "Alice",
+		Name:  "Alice",
+		DType: []string{"Person"},
 	}
 
 	mu := &api.Mutation{
@@ -112,11 +118,14 @@ func ExampleTxn_Query_variables() {
 
 	variables := make(map[string]string)
 	variables["$a"] = "Alice"
-	q := `query Alice($a: string){
-		me(func: eq(name, $a)) {
-			name
+	q := `
+		query Alice($a: string){
+			me(func: eq(name, $a)) {
+				name
+				dgraph.type
+			}
 		}
-	}`
+	`
 
 	resp, err := dg.NewTxn().QueryWithVars(ctx, q, variables)
 	if err != nil {
@@ -134,12 +143,13 @@ func ExampleTxn_Query_variables() {
 	}
 
 	fmt.Println(string(resp.Json))
-	// Output: {"me":[{"name":"Alice"}]}
+	// Output: {"me":[{"name":"Alice","dgraph.type":["Person"]}]}
 }
 
 func ExampleTxn_Mutate() {
 	type School struct {
-		Name string `json:"name,omitempty"`
+		Name  string   `json:"name,omitempty"`
+		DType []string `json:"dgraph.type,omitempty"`
 	}
 
 	type loc struct {
@@ -156,9 +166,10 @@ func ExampleTxn_Mutate() {
 		Age      int      `json:"age,omitempty"`
 		Married  bool     `json:"married,omitempty"`
 		Raw      []byte   `json:"raw_bytes,omitempty"`
-		Friends  []Person `json:"friend,omitempty"`
+		Friends  []Person `json:"friends,omitempty"`
 		Location loc      `json:"loc,omitempty"`
 		School   []School `json:"school,omitempty"`
+		DType    []string `json:"dgraph.type,omitempty"`
 	}
 
 	dg, cancel := getDgraphClient()
@@ -172,20 +183,24 @@ func ExampleTxn_Mutate() {
 		Name:    "Alice",
 		Age:     26,
 		Married: true,
+		DType:   []string{"Person"},
 		Location: loc{
 			Type:   "Point",
 			Coords: []float64{1.1, 2},
 		},
 		Raw: []byte("raw_bytes"),
 		Friends: []Person{{
-			Name: "Bob",
-			Age:  24,
+			Name:  "Bob",
+			Age:   24,
+			DType: []string{"Person"},
 		}, {
-			Name: "Charlie",
-			Age:  29,
+			Name:  "Charlie",
+			Age:   29,
+			DType: []string{"Person"},
 		}},
 		School: []School{{
-			Name: "Crown Public School",
+			Name:  "Crown Public School",
+			DType: []string{"Institution"},
 		}},
 	}
 
@@ -193,6 +208,23 @@ func ExampleTxn_Mutate() {
 	op.Schema = `
 		age: int .
 		married: bool .
+
+		type Person {
+			name: string
+			age: int
+			married: bool
+			Friends: [Person]
+			loc: [Loc]
+		}
+
+		type Loc {
+			type: string
+			coords: float
+		}
+
+		type Institution {
+			name: string
+		}
 	`
 
 	ctx := context.Background()
@@ -216,22 +248,27 @@ func ExampleTxn_Mutate() {
 
 	// Assigned uids for nodes which were created would be returned in the assigned.Uids map.
 	puid := assigned.Uids["alice"]
-	const q = `query Me($id: string){
-		me(func: uid($id)) {
-			name
-			age
-			loc
-			raw_bytes
-			married
-			friend @filter(eq(name, "Bob")) {
+	const q = `
+		query Me($id: string){
+			me(func: uid($id)) {
 				name
 				age
-			}
-			school {
-				name
+				loc
+				raw_bytes
+				married
+				dgraph.type
+				friends @filter(eq(name, "Bob")) {
+					name
+					age
+					dgraph.type
+				}
+				school {
+					name
+					dgraph.type
+				}
 			}
 		}
-	}`
+	`
 
 	variables := make(map[string]string)
 	variables["$id"] = puid
@@ -250,11 +287,8 @@ func ExampleTxn_Mutate() {
 		log.Fatal(err)
 	}
 
-	// R.Me would be same as the person that we set above.
-	// fmt.Printf("Me: %+v\n", r.Me)
-
 	fmt.Println(string(resp.Json))
-	// Output: {"me":[{"name":"Alice","age":26,"loc":{"type":"Point","coordinates":[1.1,2]},"raw_bytes":"cmF3X2J5dGVz","married":true,"friend":[{"name":"Bob","age":24}],"school":[{"name":"Crown Public School"}]}]}
+	// Output: {"me":[{"name":"Alice","age":26,"loc":{"type":"Point","coordinates":[1.1,2]},"raw_bytes":"cmF3X2J5dGVz","married":true,"dgraph.type":["Person"],"friends":[{"name":"Bob","age":24,"dgraph.type":["Person"]}],"school":[{"name":"Crown Public School","dgraph.type":["Institution"]}]}]}
 
 }
 
@@ -262,14 +296,20 @@ func ExampleTxn_Mutate_bytes() {
 	dg, cancel := getDgraphClient()
 	defer cancel()
 	type Person struct {
-		Uid   string `json:"uid,omitempty"`
-		Name  string `json:"name,omitempty"`
-		Bytes []byte `json:"bytes,omitempty"`
+		Uid   string   `json:"uid,omitempty"`
+		Name  string   `json:"name,omitempty"`
+		Bytes []byte   `json:"bytes,omitempty"`
+		DType []string `json:"dgraph.type,omitempty"`
 	}
 
 	op := &api.Operation{}
 	op.Schema = `
 		name: string @index(exact) .
+
+		type Person {
+			name: string
+			bytes: string
+		}
 	`
 
 	ctx := context.Background()
@@ -280,6 +320,7 @@ func ExampleTxn_Mutate_bytes() {
 
 	p := Person{
 		Name:  "Alice-new",
+		DType: []string{"Person"},
 		Bytes: []byte("raw_bytes"),
 	}
 
@@ -297,12 +338,15 @@ func ExampleTxn_Mutate_bytes() {
 		log.Fatal(err)
 	}
 
-	q := `{
-	q(func: eq(name, "Alice-new")) {
-		name
-		bytes
-	}
-}`
+	q := `
+		{
+			q(func: eq(name, "Alice-new")) {
+				name
+				bytes
+				dgraph.type
+			}
+		}
+	`
 
 	resp, err := dg.NewTxn().Query(ctx, q)
 	if err != nil {
@@ -320,12 +364,13 @@ func ExampleTxn_Mutate_bytes() {
 	}
 	fmt.Printf("Me: %+v\n", r.Me)
 
-	// Output: Me: [{Uid: Name:Alice-new Bytes:[114 97 119 95 98 121 116 101 115]}]
+	// Output: Me: [{Uid: Name:Alice-new Bytes:[114 97 119 95 98 121 116 101 115] DType:[Person]}]
 }
 
 func ExampleTxn_Query_unmarshal() {
 	type School struct {
-		Name string `json:"name,omitempty"`
+		Name  string   `json:"name,omitempty"`
+		DType []string `json:"dgraph.type,omitempty"`
 	}
 
 	type Person struct {
@@ -334,8 +379,9 @@ func ExampleTxn_Query_unmarshal() {
 		Age     int      `json:"age,omitempty"`
 		Married bool     `json:"married,omitempty"`
 		Raw     []byte   `json:"raw_bytes,omitempty"`
-		Friends []Person `json:"friend,omitempty"`
+		Friends []Person `json:"friends,omitempty"`
 		School  []School `json:"school,omitempty"`
+		DType   []string `json:"dgraph.type,omitempty"`
 	}
 
 	dg, cancel := getDgraphClient()
@@ -344,6 +390,17 @@ func ExampleTxn_Query_unmarshal() {
 	op.Schema = `
 		age: int .
 		married: bool .
+
+		type Person {
+			name: string
+			age: int
+			married: bool
+			Friends: [Person]
+		}
+
+		type Institution {
+			name: string
+		}
 	`
 
 	ctx := context.Background()
@@ -353,9 +410,10 @@ func ExampleTxn_Query_unmarshal() {
 	}
 
 	p := Person{
-		Uid:  "_:bob",
-		Name: "Bob",
-		Age:  24,
+		Uid:   "_:bob",
+		Name:  "Bob",
+		Age:   24,
+		DType: []string{"Person"},
 	}
 
 	txn := dg.NewTxn()
@@ -383,15 +441,18 @@ func ExampleTxn_Query_unmarshal() {
 		Name:    "Alice",
 		Age:     26,
 		Married: true,
+		DType:   []string{"Person"},
 		Raw:     []byte("raw_bytes"),
 		Friends: []Person{{
 			Uid: bob,
 		}, {
-			Name: "Charlie",
-			Age:  29,
+			Name:  "Charlie",
+			Age:   29,
+			DType: []string{"Person"},
 		}},
 		School: []School{{
-			Name: "Crown Public School",
+			Name:  "Crown Public School",
+			DType: []string{"Institution"},
 		}},
 	}
 
@@ -413,22 +474,27 @@ func ExampleTxn_Query_unmarshal() {
 	puid := assigned.Uids["alice"]
 	variables := make(map[string]string)
 	variables["$id"] = puid
-	const q = `query Me($id: string){
-		me(func: uid($id)) {
-			name
-			age
-			loc
-			raw_bytes
-			married
-			friend @filter(eq(name, "Bob")) {
+	const q = `
+		query Me($id: string){
+			me(func: uid($id)) {
 				name
 				age
-			}
-			school {
-				name
+				loc
+				raw_bytes
+				married
+				dgraph.type
+				friends @filter(eq(name, "Bob")) {
+					name
+					age
+					dgraph.type
+				}
+				school {
+					name
+					dgraph.type
+				}
 			}
 		}
-	}`
+	`
 
 	resp, err := dg.NewTxn().QueryWithVars(ctx, q, variables)
 	if err != nil {
@@ -446,7 +512,7 @@ func ExampleTxn_Query_unmarshal() {
 	}
 
 	fmt.Println(string(resp.Json))
-	// Output: {"me":[{"name":"Alice","age":26,"raw_bytes":"cmF3X2J5dGVz","married":true,"friend":[{"name":"Bob","age":24}],"school":[{"name":"Crown Public School"}]}]}
+	// Output: {"me":[{"name":"Alice","age":26,"raw_bytes":"cmF3X2J5dGVz","married":true,"dgraph.type":["Person"],"friends":[{"name":"Bob","age":24,"dgraph.type":["Person"]}],"school":[{"name":"Crown Public School","dgraph.type":["Institution"]}]}]}
 }
 
 func ExampleTxn_Query_besteffort() {
@@ -478,6 +544,23 @@ func ExampleTxn_Mutate_facets() {
 	op = api.Operation{}
 	op.Schema = `
 		name: string @index(exact) .
+
+		type Person {
+			name: string
+			age: int
+			married: bool
+			NameOrigin: string
+			Since: string
+			Family: string
+			Age: int
+			Close: bool
+			Friends: [Person]
+		}
+
+		type Institution {
+			name: string
+			Since: string
+		}
 	`
 
 	err := dg.Alter(ctx, &op)
@@ -489,21 +572,23 @@ func ExampleTxn_Mutate_facets() {
 	type School struct {
 		Name  string    `json:"name,omitempty"`
 		Since time.Time `json:"school|since,omitempty"`
+		DType []string  `json:"dgraph.type,omitempty"`
 	}
 
 	type Person struct {
 		Uid        string   `json:"uid,omitempty"`
 		Name       string   `json:"name,omitempty"`
 		NameOrigin string   `json:"name|origin,omitempty"`
-		Friends    []Person `json:"friend,omitempty"`
+		Friends    []Person `json:"friends,omitempty"`
 
 		// These are facets on the friend edge.
-		Since  time.Time `json:"friend|since,omitempty"`
-		Family string    `json:"friend|family,omitempty"`
-		Age    float64   `json:"friend|age,omitempty"`
-		Close  bool      `json:"friend|close,omitempty"`
+		Since  time.Time `json:"friends|since,omitempty"`
+		Family string    `json:"friends|family,omitempty"`
+		Age    float64   `json:"friends|age,omitempty"`
+		Close  bool      `json:"friends|close,omitempty"`
 
 		School []School `json:"school,omitempty"`
+		DType  []string `json:"dgraph.type,omitempty"`
 	}
 
 	ti := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
@@ -511,6 +596,7 @@ func ExampleTxn_Mutate_facets() {
 		Uid:        "_:alice",
 		Name:       "Alice",
 		NameOrigin: "Indonesia",
+		DType:      []string{"Person"},
 		Friends: []Person{
 			Person{
 				Name:   "Bob",
@@ -518,16 +604,19 @@ func ExampleTxn_Mutate_facets() {
 				Family: "yes",
 				Age:    13,
 				Close:  true,
+				DType:  []string{"Person"},
 			},
 			Person{
 				Name:   "Charlie",
 				Family: "maybe",
 				Age:    16,
+				DType:  []string{"Person"},
 			},
 		},
 		School: []School{School{
 			Name:  "Wellington School",
 			Since: ti,
+			DType: []string{"Institution"},
 		}},
 	}
 
@@ -548,18 +637,23 @@ func ExampleTxn_Mutate_facets() {
 	variables := make(map[string]string)
 	variables["$id"] = auid
 
-	const q = `query Me($id: string){
-        me(func: uid($id)) {
-            name @facets
-			friend @filter(eq(name, "Bob")) @facets {
-                name
-            }
-            school @facets {
-                name
-            }
+	const q = `
+		query Me($id: string){
+			me(func: uid($id)) {
+				name @facets
+				dgraph.type
+				friends @filter(eq(name, "Bob")) @facets {
+					name
+					dgraph.type
+				}
+				school @facets {
+					name
+					dgraph.type
+				}
 
-        }
-    }`
+			}
+		}
+	`
 
 	resp, err := dg.NewTxn().QueryWithVars(ctx, q, variables)
 	if err != nil {
@@ -577,7 +671,7 @@ func ExampleTxn_Mutate_facets() {
 	}
 
 	fmt.Printf("Me: %+v\n", r.Me)
-	// Output: Me: [{Uid: Name:Alice NameOrigin:Indonesia Friends:[{Uid: Name:Bob NameOrigin: Friends:[] Since:2009-11-10 23:00:00 +0000 UTC Family:yes Age:13 Close:true School:[]}] Since:0001-01-01 00:00:00 +0000 UTC Family: Age:0 Close:false School:[{Name:Wellington School Since:2009-11-10 23:00:00 +0000 UTC}]}]
+	// Output: Me: [{Uid: Name:Alice NameOrigin:Indonesia Friends:[{Uid: Name:Bob NameOrigin: Friends:[] Since:2009-11-10 23:00:00 +0000 UTC Family:yes Age:13 Close:true School:[] DType:[Person]}] Since:0001-01-01 00:00:00 +0000 UTC Family: Age:0 Close:false School:[{Name:Wellington School Since:2009-11-10 23:00:00 +0000 UTC DType:[Institution]}] DType:[Person]}]
 }
 
 func ExampleTxn_Mutate_list() {
@@ -587,19 +681,27 @@ func ExampleTxn_Mutate_list() {
 		Uid         string   `json:"uid"`
 		Address     []string `json:"address"`
 		PhoneNumber []int64  `json:"phone_number"`
+		DType       []string `json:"dgraph.type,omitempty"`
 	}
 
 	p := Person{
 		Uid:         "_:person",
 		Address:     []string{"Redfern", "Riley Street"},
 		PhoneNumber: []int64{9876, 123},
+		DType:       []string{"Person"},
 	}
 
 	op := &api.Operation{}
 	op.Schema = `
 		address: [string] .
 		phone_number: [int] .
+
+		type Person {
+			Address: [string]
+			phone_number: [int]
+		}
 	`
+
 	ctx := context.Background()
 	err := dg.Alter(ctx, op)
 	if err != nil {
@@ -621,12 +723,13 @@ func ExampleTxn_Mutate_list() {
 
 	variables := map[string]string{"$id": assigned.Uids["person"]}
 	const q = `
-	query Me($id: string){
-		me(func: uid($id)) {
-			address
-			phone_number
+		query Me($id: string){
+			me(func: uid($id)) {
+				address
+				phone_number
+				dgraph.type
+			}
 		}
-	}
 	`
 
 	resp, err := dg.NewTxn().QueryWithVars(ctx, q, variables)
@@ -655,11 +758,22 @@ func ExampleDeleteEdges() {
 	defer cancel()
 	op := &api.Operation{}
 	op.Schema = `
-			age: int .
-			married: bool .
-			name: string @lang .
-			location: string .
-		`
+		age: int .
+		married: bool .
+		name: string @lang .
+		location: string .
+
+		type Person {
+			name: string
+			age: int
+			married: bool
+			Friends: [Person]
+		}
+
+		type Institution {
+			name: string
+		}
+	`
 
 	ctx := context.Background()
 	err := dg.Alter(ctx, op)
@@ -668,8 +782,9 @@ func ExampleDeleteEdges() {
 	}
 
 	type School struct {
-		Uid  string `json:"uid"`
-		Name string `json:"name@en,omitempty"`
+		Uid   string   `json:"uid"`
+		Name  string   `json:"name@en,omitempty"`
+		DType []string `json:"dgraph.type,omitempty"`
 	}
 
 	type Person struct {
@@ -680,6 +795,7 @@ func ExampleDeleteEdges() {
 		Friends  []Person  `json:"friends,omitempty"`
 		Location string    `json:"location,omitempty"`
 		Schools  []*School `json:"schools,omitempty"`
+		DType    []string  `json:"dgraph.type,omitempty"`
 	}
 
 	// Lets add some data first.
@@ -688,16 +804,20 @@ func ExampleDeleteEdges() {
 		Name:     "Alice",
 		Age:      26,
 		Married:  true,
+		DType:    []string{"Person"},
 		Location: "Riley Street",
 		Friends: []Person{{
-			Name: "Bob",
-			Age:  24,
+			Name:  "Bob",
+			Age:   24,
+			DType: []string{"Person"},
 		}, {
-			Name: "Charlie",
-			Age:  29,
+			Name:  "Charlie",
+			Age:   29,
+			DType: []string{"Person"},
 		}},
 		Schools: []*School{&School{
-			Name: "Crown Public School",
+			Name:  "Crown Public School",
+			DType: []string{"Institution"},
 		}},
 	}
 
@@ -718,21 +838,26 @@ func ExampleDeleteEdges() {
 
 	variables := make(map[string]string)
 	variables["$alice"] = alice
-	const q = `query Me($alice: string){
-		me(func: uid($alice)) {
-			name
-			age
-			location
-			married
-			friends {
+	const q = `
+		query Me($alice: string){
+			me(func: uid($alice)) {
 				name
 				age
-			}
-			schools {
-				name@en
+				location
+				married
+				dgraph.type
+				friends {
+					name
+					age
+					dgraph.type
+				}
+				schools {
+					name@en
+					dgraph.type
+				}
 			}
 		}
-	}`
+	`
 
 	resp, err := dg.NewTxn().QueryWithVars(ctx, q, variables)
 	if err != nil {
@@ -761,7 +886,7 @@ func ExampleDeleteEdges() {
 	var r Root
 	err = json.Unmarshal(resp.Json, &r)
 	fmt.Println(string(resp.Json))
-	// Output: {"me":[{"name":"Alice","age":26,"married":true,"schools":[{"name@en":"Crown Public School"}]}]}
+	// Output: {"me":[{"name":"Alice","age":26,"married":true,"dgraph.type":["Person"],"schools":[{"name@en":"Crown Public School","dgraph.type":["Institution"]}]}]}
 }
 
 func ExampleTxn_Mutate_deleteNode() {
@@ -769,28 +894,30 @@ func ExampleTxn_Mutate_deleteNode() {
 	defer cancel()
 	// In this test we check S * * deletion.
 	type Person struct {
-		Uid        string    `json:"uid,omitempty"`
-		Name       string    `json:"name,omitempty"`
-		Age        int       `json:"age,omitempty"`
-		Married    bool      `json:"married,omitempty"`
-		Friends    []*Person `json:"friend,omitempty"`
-		DgraphType string    `json:"dgraph.type,omitempty"`
+		Uid     string    `json:"uid,omitempty"`
+		Name    string    `json:"name,omitempty"`
+		Age     int       `json:"age,omitempty"`
+		Married bool      `json:"married,omitempty"`
+		Friends []*Person `json:"friends,omitempty"`
+		DType   []string  `json:"dgraph.type,omitempty"`
 	}
 
 	p := Person{
-		Uid:        "_:alice",
-		Name:       "Alice",
-		Age:        26,
-		Married:    true,
-		DgraphType: "Person",
+		Uid:     "_:alice",
+		Name:    "Alice",
+		Age:     26,
+		Married: true,
+		DType:   []string{"Person"},
 		Friends: []*Person{&Person{
-			Uid:  "_:bob",
-			Name: "Bob",
-			Age:  24,
+			Uid:   "_:bob",
+			Name:  "Bob",
+			Age:   24,
+			DType: []string{"Person"},
 		}, &Person{
-			Uid:  "_:charlie",
-			Name: "Charlie",
-			Age:  29,
+			Uid:   "_:charlie",
+			Name:  "Charlie",
+			Age:   29,
+			DType: []string{"Person"},
 		}},
 	}
 
@@ -798,12 +925,13 @@ func ExampleTxn_Mutate_deleteNode() {
 	op.Schema = `
 		age: int .
 		married: bool .
-        type Person {
-          name: string
-          age: int
-          married: bool
-          friend: [uid]
-        }
+
+		type Person {
+			name: string
+			age: int
+			married: bool
+			friends: [Person]
+		}
 	`
 
 	ctx := context.Background()
@@ -834,28 +962,34 @@ func ExampleTxn_Mutate_deleteNode() {
 	variables["$alice"] = alice
 	variables["$bob"] = bob
 	variables["$charlie"] = charlie
-	const q = `query Me($alice: string, $bob: string, $charlie: string){
-		me(func: uid($alice)) {
-			name
-			age
-			married
-			friend {
-				uid
+	const q = `
+		query Me($alice: string, $bob: string, $charlie: string){
+			me(func: uid($alice)) {
 				name
 				age
+				married
+				dgraph.type
+				friends {
+					uid
+					name
+					age
+					dgraph.type
+				}
+			}
+
+			me2(func: uid($bob)) {
+				name
+				age
+				dgraph.type
+			}
+
+			me3(func: uid($charlie)) {
+				name
+				age
+				dgraph.type
 			}
 		}
-
-		me2(func: uid($bob)) {
-			name
-			age
-		}
-
-		me3(func: uid($charlie)) {
-			name
-			age
-		}
-	}`
+	`
 
 	resp, err := dg.NewTxn().QueryWithVars(ctx, q, variables)
 	if err != nil {
@@ -904,7 +1038,7 @@ func ExampleTxn_Mutate_deleteNode() {
 		log.Fatal(err)
 	}
 	fmt.Printf("Resp after deleting node: %+v\n", string(resp.Json))
-	// Output: Resp after deleting node: {"me":[],"me2":[{"name":"Bob","age":24}],"me3":[{"name":"Charlie","age":29}]}
+	// Output: Resp after deleting node: {"me":[],"me2":[{"name":"Bob","age":24,"dgraph.type":["Person"]}],"me3":[{"name":"Charlie","age":29,"dgraph.type":["Person"]}]}
 }
 
 func ExampleTxn_Mutate_deletePredicate() {
@@ -915,7 +1049,8 @@ func ExampleTxn_Mutate_deletePredicate() {
 		Name    string   `json:"name,omitempty"`
 		Age     int      `json:"age,omitempty"`
 		Married bool     `json:"married,omitempty"`
-		Friends []Person `json:"friend,omitempty"`
+		Friends []Person `json:"friends,omitempty"`
+		DType   []string `json:"dgraph.type,omitempty"`
 	}
 
 	p := Person{
@@ -923,12 +1058,15 @@ func ExampleTxn_Mutate_deletePredicate() {
 		Name:    "Alice",
 		Age:     26,
 		Married: true,
+		DType:   []string{"Person"},
 		Friends: []Person{Person{
-			Name: "Bob",
-			Age:  24,
+			Name:  "Bob",
+			Age:   24,
+			DType: []string{"Person"},
 		}, Person{
-			Name: "Charlie",
-			Age:  29,
+			Name:  "Charlie",
+			Age:   29,
+			DType: []string{"Person"},
 		}},
 	}
 
@@ -936,6 +1074,13 @@ func ExampleTxn_Mutate_deletePredicate() {
 	op.Schema = `
 		age: int .
 		married: bool .
+
+		type Person {
+			name: string
+			age: int
+			married: bool
+			friends: [Person]
+		}
 	`
 
 	ctx := context.Background()
@@ -962,18 +1107,22 @@ func ExampleTxn_Mutate_deletePredicate() {
 
 	variables := make(map[string]string)
 	variables["$id"] = alice
-	const q = `query Me($id: string){
-		me(func: uid($id)) {
-			name
-			age
-			married
-			friend {
-				uid
+	const q = `
+		query Me($id: string){
+			me(func: uid($id)) {
 				name
 				age
+				married
+				dgraph.type
+				friends {
+					uid
+					name
+					age
+					dgraph.type
+				}
 			}
 		}
-	}`
+	`
 
 	resp, err := dg.NewTxn().QueryWithVars(ctx, q, variables)
 	if err != nil {
@@ -989,7 +1138,7 @@ func ExampleTxn_Mutate_deletePredicate() {
 		log.Fatal(err)
 	}
 
-	op = &api.Operation{DropAttr: "friend"}
+	op = &api.Operation{DropAttr: "friends"}
 	err = dg.Alter(ctx, op)
 	if err != nil {
 		log.Fatal(err)
@@ -1015,7 +1164,7 @@ func ExampleTxn_Mutate_deletePredicate() {
 
 	// Alice should have no friends and only two attributes now.
 	fmt.Printf("Response after deletion: %+v\n", r)
-	// Output: Response after deletion: {Me:[{Uid: Name:Alice Age:26 Married:false Friends:[]}]}
+	// Output: Response after deletion: {Me:[{Uid: Name:Alice Age:26 Married:false Friends:[] DType:[Person]}]}
 }
 
 func ExampleTxn_Discard() {
@@ -1050,11 +1199,13 @@ func ExampleTxn_Discard() {
 	// now query the cluster and make sure that the data has made no effect
 	queryTxn := dg.NewReadOnlyTxn()
 	query := `
-    {
-      q (func: eq(name, "Alice")) {
-        name
-      }
-    }`
+		{
+			q (func: eq(name, "Alice")) {
+				name
+				dgraph.type
+			}
+		}
+	`
 	resp, err := queryTxn.Query(ctx, query)
 	if err != nil {
 		log.Fatal("The query should have succeeded")
@@ -1079,8 +1230,7 @@ func ExampleTxn_Mutate_upsert() {
 	op := &api.Operation{}
 	op.Schema = `
 		name: string .
-		email: string @index(exact) .
-	`
+		email: string @index(exact) .`
 	if err := dg.Alter(ctx, op); err != nil {
 		log.Fatal(err)
 	}
@@ -1088,7 +1238,7 @@ func ExampleTxn_Mutate_upsert() {
 	m1 := `
 		_:n1 <name> "user" .
 		_:n1 <email> "user@dgraphO.io" .
-`
+	`
 	mu := &api.Mutation{
 		SetNquads: []byte(m1),
 		CommitNow: true,
@@ -1119,6 +1269,7 @@ func ExampleTxn_Mutate_upsert() {
 			me(func: eq(email, "user@dgraph.io")) {
 				name
 				email
+				dgraph.type
 			}
 		}
 	`
@@ -1147,7 +1298,8 @@ func ExampleTxn_Mutate_upsertJSON() {
 		Name    string   `json:"name,omitempty"`
 		Age     int      `json:"age,omitempty"`
 		Email   string   `json:"email,omitempty"`
-		Friends []Person `json:"friend,omitempty"`
+		Friends []Person `json:"friends,omitempty"`
+		DType   []string `json:"dgraph.type,omitempty"`
 	}
 
 	op := &api.Operation{Schema: `email: string @index(exact) @upsert .`}
@@ -1195,6 +1347,7 @@ func ExampleTxn_Mutate_upsertJSON() {
 				age
 				name
 				email
+				dgraph.type
 			}
 		}
 	`
