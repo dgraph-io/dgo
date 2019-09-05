@@ -82,28 +82,29 @@ func Example_setObject() {
 
 	op := &api.Operation{}
 	op.Schema = `
-  name: string @index(exact) .
-  age: int .
-  married: bool .
-  loc: geo .
-  dob: datetime .
+		name: string @index(exact) .
+		age: int .
+		married: bool .
+		loc: geo .
+		dob: datetime .
 
-  type Person {
-    name: string
-    age: int
-    married: bool
-    Friend: [Person]
-    loc: Loc
-  }
+		type Person {
+			name: string
+			age: int
+			married: bool
+			Friend: [Person]
+			loc: Loc
+		}
 
-  type Institution {
-    name: string
-  }
+		type Institution {
+			name: string
+		}
 
-  type Loc {
-    type: string
-    coords: float
-  }`
+		type Loc {
+			type: string
+			coords: float
+		}
+	`
 
 	ctx := context.Background()
 	err = dg.Alter(ctx, op)
@@ -163,10 +164,45 @@ func Example_setObject() {
 		log.Fatal(err)
 	}
 
-	// fmt.Printf("Me: %+v\n", r.Me)
-	// R.Me would be same as the person that we set above.
-
-	fmt.Println(string(resp.Json))
-	// Output: {"me":[{"name":"Alice","dob":"1980-01-01T23:00:00Z","age":26,"loc":{"type":"Point","coordinates":[1.1,2]},"raw_bytes":"cmF3X2J5dGVz","married":true,"dgraph.type":["Person"],"friend":[{"name":"Bob","age":24,"dgraph.type":["Person"]}],"school":[{"name":"Crown Public School","dgraph.type":["Institution"]}]}]}
-
+	b, _ := json.MarshalIndent(r, "", "\t")
+	fmt.Printf("%s\n", b)
+	// Output: {
+	// 	"me": [
+	// 		{
+	// 			"name": "Alice",
+	// 			"age": 26,
+	// 			"dob": "1980-01-01T23:00:00Z",
+	// 			"married": true,
+	// 			"raw_bytes": "cmF3X2J5dGVz",
+	// 			"friend": [
+	// 				{
+	// 					"name": "Bob",
+	// 					"age": 24,
+	// 					"loc": {},
+	// 					"dgraph.type": [
+	// 						"Person"
+	// 					]
+	// 				}
+	// 			],
+	// 			"loc": {
+	// 				"type": "Point",
+	// 				"coordinates": [
+	// 					1.1,
+	// 					2
+	// 				]
+	// 			},
+	// 			"school": [
+	// 				{
+	// 					"name": "Crown Public School",
+	// 					"dgraph.type": [
+	// 						"Institution"
+	// 					]
+	// 				}
+	// 			],
+	// 			"dgraph.type": [
+	// 				"Person"
+	// 			]
+	// 		}
+	// 	]
+	// }
 }

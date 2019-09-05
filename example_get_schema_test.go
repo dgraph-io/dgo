@@ -38,11 +38,12 @@ func Example_getSchema() {
 
 	op := &api.Operation{}
 	op.Schema = `
-   name: string @index(exact) .
-   age: int .
-   married: bool .
-   loc: geo .
-   dob: datetime .`
+		name: string @index(exact) .
+		age: int .
+		married: bool .
+		loc: geo .
+		dob: datetime .
+	`
 
 	ctx := context.Background()
 	err = dg.Alter(ctx, op)
