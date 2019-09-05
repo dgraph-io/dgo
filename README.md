@@ -209,6 +209,13 @@ fmt.Printf("%s\n", res.Json)
 
 ### Running an Upsert: Query + Mutation
 
+The `txn.doRequest` function allows you to run upserts consisting of one query and
+one mutation. Variables can be defined in the query and used in the mutation.
+You could also use txn.doRequest to perform a query followed by a mutation.
+
+To know more about upsert, we highly recommend going through the docs
+at https://docs.dgraph.io/mutations/#upsert-block.
+
 ```go
 query = `
   query {
