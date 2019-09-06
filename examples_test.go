@@ -174,10 +174,10 @@ func ExampleTxn_Mutate() {
 
 	dg, cancel := getDgraphClient()
 	defer cancel()
-	// While setting an object if a struct has a Uid then its properties in the graph are updated
-	// else a new node is created.
-	// In the example below new nodes for Alice, Bob and Charlie and school are created (since they
-	// don't have a Uid).
+	// While setting an object if a struct has a Uid then its properties in the
+	// graph are updated else a new node is created.
+	// In the example below new nodes for Alice, Bob and Charlie and school
+	// are created (since they don't have a Uid).
 	p := Person{
 		Uid:     "_:alice",
 		Name:    "Alice",
@@ -241,13 +241,13 @@ func ExampleTxn_Mutate() {
 	}
 
 	mu.SetJson = pb
-	assigned, err := dg.NewTxn().Mutate(ctx, mu)
+	response, err := dg.NewTxn().Mutate(ctx, mu)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Assigned uids for nodes which were created would be returned in the assigned.Uids map.
-	puid := assigned.Uids["alice"]
+	// Assigned uids for nodes which were created would be returned in the response.Uids map.
+	puid := response.Uids["alice"]
 	const q = `
 		query Me($id: string){
 			me(func: uid($id)) {
@@ -287,8 +287,46 @@ func ExampleTxn_Mutate() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(string(resp.Json))
-	// Output: {"me":[{"name":"Alice","age":26,"loc":{"type":"Point","coordinates":[1.1,2]},"raw_bytes":"cmF3X2J5dGVz","married":true,"dgraph.type":["Person"],"friends":[{"name":"Bob","age":24,"dgraph.type":["Person"]}],"school":[{"name":"Crown Public School","dgraph.type":["Institution"]}]}]}
+	out, _ := json.MarshalIndent(r, "", "\t")
+	fmt.Printf("%s\n", out)
+	// Output: {
+	// 	"me": [
+	// 		{
+	// 			"name": "Alice",
+	// 			"age": 26,
+	// 			"married": true,
+	// 			"raw_bytes": "cmF3X2J5dGVz",
+	// 			"friends": [
+	// 				{
+	// 					"name": "Bob",
+	// 					"age": 24,
+	// 					"loc": {},
+	// 					"dgraph.type": [
+	// 						"Person"
+	// 					]
+	// 				}
+	// 			],
+	// 			"loc": {
+	// 				"type": "Point",
+	// 				"coordinates": [
+	// 					1.1,
+	// 					2
+	// 				]
+	// 			},
+	// 			"school": [
+	// 				{
+	// 					"name": "Crown Public School",
+	// 					"dgraph.type": [
+	// 						"Institution"
+	// 					]
+	// 				}
+	// 			],
+	// 			"dgraph.type": [
+	// 				"Person"
+	// 			]
+	// 		}
+	// 	]
+	// }
 
 }
 
@@ -363,7 +401,6 @@ func ExampleTxn_Mutate_bytes() {
 		log.Fatal(err)
 	}
 	fmt.Printf("Me: %+v\n", r.Me)
-
 	// Output: Me: [{Uid: Name:Alice-new Bytes:[114 97 119 95 98 121 116 101 115] DType:[Person]}]
 }
 
@@ -426,16 +463,17 @@ func ExampleTxn_Query_unmarshal() {
 		CommitNow: true,
 		SetJson:   pb,
 	}
-	assigned, err := txn.Mutate(ctx, mu)
+	response, err := txn.Mutate(ctx, mu)
 	if err != nil {
 		log.Fatal(err)
 	}
-	bob := assigned.Uids["bob"]
+	bob := response.Uids["bob"]
 
-	// While setting an object if a struct has a Uid then its properties in the graph are updated
-	// else a new node is created.
-	// In the example below new nodes for Alice and Charlie and school are created (since they dont
-	// have a Uid).  Alice is also connected via the friend edge to an existing node Bob.
+	// While setting an object if a struct has a Uid then its properties
+	// in the graph are updated else a new node is created.
+	// In the example below new nodes for Alice and Charlie and school are created
+	// (since they dont have a Uid).  Alice is also connected via the friend edge
+	// to an existing node Bob.
 	p = Person{
 		Uid:     "_:alice",
 		Name:    "Alice",
@@ -465,13 +503,13 @@ func ExampleTxn_Query_unmarshal() {
 
 	mu.SetJson = pb
 	mu.CommitNow = true
-	assigned, err = txn.Mutate(ctx, mu)
+	response, err = txn.Mutate(ctx, mu)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Assigned uids for nodes which were created would be returned in the assigned.Uids map.
-	puid := assigned.Uids["alice"]
+	// Assigned uids for nodes which were created would be returned in the response.Uids map.
+	puid := response.Uids["alice"]
 	variables := make(map[string]string)
 	variables["$id"] = puid
 	const q = `
@@ -511,8 +549,38 @@ func ExampleTxn_Query_unmarshal() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(string(resp.Json))
-	// Output: {"me":[{"name":"Alice","age":26,"raw_bytes":"cmF3X2J5dGVz","married":true,"dgraph.type":["Person"],"friends":[{"name":"Bob","age":24,"dgraph.type":["Person"]}],"school":[{"name":"Crown Public School","dgraph.type":["Institution"]}]}]}
+	out, _ := json.MarshalIndent(r, "", "\t")
+	fmt.Printf("%s\n", out)
+	// Output: {
+	// 	"me": [
+	// 		{
+	// 			"name": "Alice",
+	// 			"age": 26,
+	// 			"married": true,
+	// 			"raw_bytes": "cmF3X2J5dGVz",
+	// 			"friends": [
+	// 				{
+	// 					"name": "Bob",
+	// 					"age": 24,
+	// 					"dgraph.type": [
+	// 						"Person"
+	// 					]
+	// 				}
+	// 			],
+	// 			"school": [
+	// 				{
+	// 					"name": "Crown Public School",
+	// 					"dgraph.type": [
+	// 						"Institution"
+	// 					]
+	// 				}
+	// 			],
+	// 			"dgraph.type": [
+	// 				"Person"
+	// 			]
+	// 		}
+	// 	]
+	// }
 }
 
 func ExampleTxn_Query_besteffort() {
@@ -533,8 +601,8 @@ func ExampleTxn_Query_besteffort() {
 func ExampleTxn_Mutate_facets() {
 	dg, cancel := getDgraphClient()
 	defer cancel()
-	// Doing a dropAll isn't required by the user. We do it here so that we can verify that the
-	// example runs as expected.
+	// Doing a dropAll isn't required by the user. We do it here so that
+	// we can verify that the example runs as expected.
 	op := api.Operation{DropAll: true}
 	ctx := context.Background()
 	if err := dg.Alter(ctx, &op); err != nil {
@@ -628,12 +696,12 @@ func ExampleTxn_Mutate_facets() {
 
 	mu.SetJson = pb
 	mu.CommitNow = true
-	assigned, err := dg.NewTxn().Mutate(ctx, mu)
+	response, err := dg.NewTxn().Mutate(ctx, mu)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	auid := assigned.Uids["alice"]
+	auid := response.Uids["alice"]
 	variables := make(map[string]string)
 	variables["$id"] = auid
 
@@ -670,8 +738,39 @@ func ExampleTxn_Mutate_facets() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Me: %+v\n", r.Me)
-	// Output: Me: [{Uid: Name:Alice NameOrigin:Indonesia Friends:[{Uid: Name:Bob NameOrigin: Friends:[] Since:2009-11-10 23:00:00 +0000 UTC Family:yes Age:13 Close:true School:[] DType:[Person]}] Since:0001-01-01 00:00:00 +0000 UTC Family: Age:0 Close:false School:[{Name:Wellington School Since:2009-11-10 23:00:00 +0000 UTC DType:[Institution]}] DType:[Person]}]
+	out, _ := json.MarshalIndent(r.Me, "", "\t")
+	fmt.Printf("%s\n", out)
+	// Output: [
+	// 	{
+	// 		"name": "Alice",
+	// 		"name|origin": "Indonesia",
+	// 		"friends": [
+	// 			{
+	// 				"name": "Bob",
+	// 				"friends|since": "2009-11-10T23:00:00Z",
+	// 				"friends|family": "yes",
+	// 				"friends|age": 13,
+	// 				"friends|close": true,
+	// 				"dgraph.type": [
+	// 					"Person"
+	// 				]
+	// 			}
+	// 		],
+	// 		"friends|since": "0001-01-01T00:00:00Z",
+	// 		"school": [
+	// 			{
+	// 				"name": "Wellington School",
+	// 				"school|since": "2009-11-10T23:00:00Z",
+	// 				"dgraph.type": [
+	// 					"Institution"
+	// 				]
+	// 			}
+	// 		],
+	// 		"dgraph.type": [
+	// 			"Person"
+	// 		]
+	// 	}
+	// ]
 }
 
 func ExampleTxn_Mutate_list() {
@@ -716,12 +815,12 @@ func ExampleTxn_Mutate_list() {
 
 	mu.SetJson = pb
 	mu.CommitNow = true
-	assigned, err := dg.NewTxn().Mutate(ctx, mu)
+	response, err := dg.NewTxn().Mutate(ctx, mu)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	variables := map[string]string{"$id": assigned.Uids["person"]}
+	variables := map[string]string{"$id": response.Uids["person"]}
 	const q = `
 		query Me($id: string){
 			me(func: uid($id)) {
@@ -829,12 +928,12 @@ func ExampleDeleteEdges() {
 
 	mu.SetJson = pb
 	mu.CommitNow = true
-	assigned, err := dg.NewTxn().Mutate(ctx, mu)
+	response, err := dg.NewTxn().Mutate(ctx, mu)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	alice := assigned.Uids["alice"]
+	alice := response.Uids["alice"]
 
 	variables := make(map[string]string)
 	variables["$alice"] = alice
@@ -885,8 +984,27 @@ func ExampleDeleteEdges() {
 
 	var r Root
 	err = json.Unmarshal(resp.Json, &r)
-	fmt.Println(string(resp.Json))
-	// Output: {"me":[{"name":"Alice","age":26,"married":true,"dgraph.type":["Person"],"schools":[{"name@en":"Crown Public School","dgraph.type":["Institution"]}]}]}
+	out, _ := json.MarshalIndent(r.Me, "", "\t")
+	fmt.Printf("%s\n", out)
+	// Output: [
+	// 	{
+	// 		"name": "Alice",
+	// 		"age": 26,
+	// 		"married": true,
+	// 		"schools": [
+	// 			{
+	// 				"uid": "",
+	// 				"name@en": "Crown Public School",
+	// 				"dgraph.type": [
+	// 					"Institution"
+	// 				]
+	// 			}
+	// 		],
+	// 		"dgraph.type": [
+	// 			"Person"
+	// 		]
+	// 	}
+	// ]
 }
 
 func ExampleTxn_Mutate_deleteNode() {
@@ -949,14 +1067,14 @@ func ExampleTxn_Mutate_deleteNode() {
 	}
 
 	mu.SetJson = pb
-	assigned, err := dg.NewTxn().Mutate(ctx, mu)
+	response, err := dg.NewTxn().Mutate(ctx, mu)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	alice := assigned.Uids["alice"]
-	bob := assigned.Uids["bob"]
-	charlie := assigned.Uids["charlie"]
+	alice := response.Uids["alice"]
+	bob := response.Uids["bob"]
+	charlie := response.Uids["charlie"]
 
 	variables := make(map[string]string)
 	variables["$alice"] = alice
@@ -1005,12 +1123,12 @@ func ExampleTxn_Mutate_deleteNode() {
 	var r Root
 	err = json.Unmarshal(resp.Json, &r)
 
-	// Now lets try to delete Alice. This won't delete Bob and Charlie but just remove the
-	// connection between Alice and them.
+	// Now lets try to delete Alice. This won't delete Bob and Charlie
+	// but just remove the connection between Alice and them.
 
-	// The JSON for deleting a node should be of the form {"uid": "0x123"}. If you wanted to
-	// delete multiple nodes you could supply an array of objects like [{"uid": "0x321"}, {"uid":
-	// "0x123"}] to DeleteJson.
+	// The JSON for deleting a node should be of the form {"uid": "0x123"}.
+	// If you wanted to delete multiple nodes you could supply an array of objects
+	// like [{"uid": "0x321"}, {"uid": "0x123"}] to DeleteJson.
 
 	d := map[string]string{"uid": alice}
 	pb, err = json.Marshal(d)
@@ -1037,8 +1155,30 @@ func ExampleTxn_Mutate_deleteNode() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Resp after deleting node: %+v\n", string(resp.Json))
-	// Output: Resp after deleting node: {"me":[],"me2":[{"name":"Bob","age":24,"dgraph.type":["Person"]}],"me3":[{"name":"Charlie","age":29,"dgraph.type":["Person"]}]}
+
+	out, _ := json.MarshalIndent(r, "", "\t")
+	fmt.Printf("%s\n", out)
+	// Output: {
+	// 	"me": [],
+	// 	"me2": [
+	// 		{
+	// 			"name": "Bob",
+	// 			"age": 24,
+	// 			"dgraph.type": [
+	// 				"Person"
+	// 			]
+	// 		}
+	// 	],
+	// 	"me3": [
+	// 		{
+	// 			"name": "Charlie",
+	// 			"age": 29,
+	// 			"dgraph.type": [
+	// 				"Person"
+	// 			]
+	// 		}
+	// 	]
+	// }
 }
 
 func ExampleTxn_Mutate_deletePredicate() {
@@ -1098,12 +1238,12 @@ func ExampleTxn_Mutate_deletePredicate() {
 	}
 
 	mu.SetJson = pb
-	assigned, err := dg.NewTxn().Mutate(ctx, mu)
+	response, err := dg.NewTxn().Mutate(ctx, mu)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	alice := assigned.Uids["alice"]
+	alice := response.Uids["alice"]
 
 	variables := make(map[string]string)
 	variables["$id"] = alice
@@ -1163,8 +1303,8 @@ func ExampleTxn_Mutate_deletePredicate() {
 	}
 
 	// Alice should have no friends and only two attributes now.
-	fmt.Printf("Response after deletion: %+v\n", r)
-	// Output: Response after deletion: {Me:[{Uid: Name:Alice Age:26 Married:false Friends:[] DType:[Person]}]}
+	fmt.Printf("%+v\n", r)
+	// Output: {Me:[{Uid: Name:Alice Age:26 Married:false Friends:[] DType:[Person]}]}
 }
 
 func ExampleTxn_Discard() {

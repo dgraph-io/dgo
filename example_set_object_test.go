@@ -121,13 +121,13 @@ func Example_setObject() {
 	}
 
 	mu.SetJson = pb
-	assigned, err := dg.NewTxn().Mutate(ctx, mu)
+	response, err := dg.NewTxn().Mutate(ctx, mu)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Assigned uids for nodes which were created would be returned in the assigned.Uids map.
-	variables := map[string]string{"$id1": assigned.Uids["alice"]}
+	// Assigned uids for nodes which were created would be returned in the response.Uids map.
+	variables := map[string]string{"$id1": response.Uids["alice"]}
 	q := `query Me($id1: string){
 		me(func: uid($id1)) {
 			name
@@ -164,8 +164,8 @@ func Example_setObject() {
 		log.Fatal(err)
 	}
 
-	b, _ := json.MarshalIndent(r, "", "\t")
-	fmt.Printf("%s\n", b)
+	out, _ := json.MarshalIndent(r, "", "\t")
+	fmt.Printf("%s\n", out)
 	// Output: {
 	// 	"me": [
 	// 		{
