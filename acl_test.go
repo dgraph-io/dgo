@@ -95,7 +95,7 @@ func createGroupACLs(t *testing.T, groupname string) {
 	require.NoError(t, err, "unable to grant modify access to group: %s", groupname)
 }
 
-func linkUserWithGroup(t *testing.T, username, groupname string) {
+func addUserToGroup(t *testing.T, username, groupname string) {
 	linkCmd := exec.Command("dgraph", "acl", "mod", "-a", dgraphAddress, "-u", username,
 		"--group_list", groupname, "-x", grootpassword)
 	_, err := linkCmd.CombinedOutput()
@@ -113,7 +113,7 @@ func query(t *testing.T, dg *dgo.Dgraph, shouldFail bool) {
 
 	_, err := dg.NewReadOnlyTxn().Query(context.Background(), q)
 	if (err != nil && !shouldFail) || (err == nil && shouldFail) {
-		t.Logf("result did not matching for query")
+		t.Logf("result did not match for query")
 		t.FailNow()
 	}
 }
@@ -125,7 +125,7 @@ func mutation(t *testing.T, dg *dgo.Dgraph, shouldFail bool) {
 
 	_, err := dg.NewTxn().Mutate(context.Background(), mu)
 	if (err != nil && !shouldFail) || (err == nil && shouldFail) {
-		t.Logf("result did not matching for mutation")
+		t.Logf("result did not match for mutation")
 		t.FailNow()
 	}
 }
@@ -137,7 +137,7 @@ func changeSchema(t *testing.T, dg *dgo.Dgraph, shouldFail bool) {
 
 	err := dg.Alter(context.Background(), op)
 	if (err != nil && !shouldFail) || (err == nil && shouldFail) {
-		t.Logf("result did not matching for schema change")
+		t.Logf("result did not match for schema change")
 		t.FailNow()
 	}
 }
@@ -167,14 +167,14 @@ func TestACLs(t *testing.T) {
 
 	// Create dev group and link user to it. Everything should pass now.
 	createGroupACLs(t, devgroup)
-	linkUserWithGroup(t, username, devgroup)
+	addUserToGroup(t, username, devgroup)
 	time.Sleep(6 * time.Second)
 	query(t, dg, false)
 	mutation(t, dg, false)
 	changeSchema(t, dg, false)
 
 	// Remove user from dev group, everything should fail now.
-	linkUserWithGroup(t, username, "")
+	addUserToGroup(t, username, "")
 	time.Sleep(6 * time.Second)
 	query(t, dg, true)
 	mutation(t, dg, true)
