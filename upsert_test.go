@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-// Package dgo is used to interact with a Dgraph server. Queries, mutations,
-// and most other types of admin tasks can be run from the client.
-
 package dgo_test
 
 import (
@@ -516,4 +513,69 @@ _:user3 <branch> "Fuller Street, San Francisco" .
 	for _, v := range res2.Q {
 		require.Nil(t, v.Branch)
 	}
+}
+
+func TestBulkDelete(t *testing.T) {
+	dg, cancel := getDgraphClient()
+	defer cancel()
+
+	ctx := context.Background()
+	err := dg.Alter(ctx, &api.Operation{DropAll: true})
+	require.NoError(t, err)
+
+	op := &api.Operation{}
+	op.Schema = `email: string @index(exact) .
+	name: string @index(exact) .`
+	err = dg.Alter(ctx, op)
+	require.NoError(t, err)
+
+	// Insert 2 users.
+	mu1 := &api.Mutation{
+		SetNquads: []byte(`
+		_:alice <name> "alice" .
+		_:alice <email> "alice@company1.io" .
+		_:bob <name> "bob" .
+		_:bob <email> "bob@company1.io" .`),
+	}
+	req1 := &api.Request{
+		Mutations: []*api.Mutation{mu1},
+		CommitNow: true,
+	}
+	_, err = dg.NewTxn().Do(context.Background(), req1)
+	require.NoError(t, err, "unable to load data")
+
+	// Delete all data for user alice.
+	q2 := `{
+		v as var(func: eq(name, "alice"))
+	}`
+	mu2 := &api.Mutation{
+		DelNquads: []byte(`
+		uid(v) <name> * .
+		uid(v) <email> * .`),
+	}
+	req2 := &api.Request{
+		CommitNow: true,
+		Query:     q2,
+		Mutations: []*api.Mutation{mu2},
+	}
+	_, err = dg.NewTxn().Do(context.Background(), req2)
+	require.NoError(t, err, "unable to perform delete")
+
+	// Get record with email.
+	q3 := `{
+	q(func: has(email)) {
+		email
+	}
+	}`
+	req3 := &api.Request{Query: q3}
+	res, err := dg.NewTxn().Do(context.Background(), req3)
+	require.NoError(t, err, "unable to query after bulk delete")
+
+	var res1 struct {
+		Q []struct {
+			Email string `json:"email"`
+		} `json:"q"`
+	}
+	require.NoError(t, json.Unmarshal(res.Json, &res1))
+	require.Equal(t, res1.Q[0].Email, "bob@company1.io")
 }
