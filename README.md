@@ -253,7 +253,7 @@ query = `
       user as var(func: eq(email, "wrong_email@dgraph.io"))
   }`
 mu := &api.Mutation{
-  Cond: `@if(eq(len(user), 1))`,
+  Cond: `@if(eq(len(user), 1))`, // Only mutate if "wrong_email@dgraph.io" belongs to single user.
   SetNquads: []byte(`uid(user) <email> "correct_email@dgraph.io" .`),
 }
 req := &api.Request{
