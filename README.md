@@ -233,7 +233,6 @@ req := &api.Request{
   CommitNow:true,
 }
 
-
 // Update email only if matching uid found.
 if _, err := dg.NewTxn().Do(ctx, req); err != nil {
   log.Fatal(err)
@@ -262,7 +261,6 @@ req := &api.Request{
   Mutations: []*api.Mutation{mu},
   CommitNow:true,
 }
-
 
 // Update email only if exactly one matching uid is found.
 if _, err := dg.NewTxn().Do(ctx, req); err != nil {
