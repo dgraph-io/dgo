@@ -58,6 +58,7 @@ message Response {
 	bytes json = 1;
 	TxnContext txn = 2;
 	Latency latency = 3;
+	Metrics metrics = 4;
 	map<string, string> uids = 12;
 }
 
@@ -119,6 +120,10 @@ message Latency {
 	uint64 processing_ns = 2;
 	uint64 encoding_ns = 3;
 	uint64 assign_timestamp_ns = 4;
+}
+
+message Metrics {
+	map<string, string> processed_uids = 1;
 }
 
 message NQuad {
