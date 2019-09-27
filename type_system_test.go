@@ -53,7 +53,7 @@ func addType(t *testing.T, dg *dgo.Dgraph, newType string) {
 	require.NoError(t, err, "error while creating type: %s", newType)
 }
 
-func initialiseDBTypeSystem(t *testing.T, dg *dgo.Dgraph) {
+func initializeDBTypeSystem(t *testing.T, dg *dgo.Dgraph) {
 	op := &api.Operation{
 		Schema: `
 		email: string @index(exact) .
@@ -87,7 +87,7 @@ func TestNoType(t *testing.T) {
 	err := dg.Alter(ctx, &api.Operation{DropAll: true})
 	require.NoError(t, err)
 
-	initialiseDBTypeSystem(t, dg)
+	initializeDBTypeSystem(t, dg)
 
 	q := `{
 		q(func: eq(name, "%s")) {
@@ -116,7 +116,7 @@ func TestSingleType(t *testing.T) {
 	err := dg.Alter(ctx, &api.Operation{DropAll: true})
 	require.NoError(t, err)
 
-	initialiseDBTypeSystem(t, dg)
+	initializeDBTypeSystem(t, dg)
 	addType(t, dg, personType)
 
 	// Update type of user to person.
@@ -224,7 +224,7 @@ func TestMultipleType(t *testing.T) {
 	err := dg.Alter(ctx, &api.Operation{DropAll: true})
 	require.NoError(t, err)
 
-	initialiseDBTypeSystem(t, dg)
+	initializeDBTypeSystem(t, dg)
 	addType(t, dg, personType)
 	addType(t, dg, empType)
 

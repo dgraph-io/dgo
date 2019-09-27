@@ -43,7 +43,7 @@ value in v1 but an `*api.Response` in v2.
 
 ### Creating a client
 
-`dgraphClient` object can be initialised by passing it a list of `api.DgraphClient` clients as
+`dgraphClient` object can be initialized by passing it a list of `api.DgraphClient` clients as
 variadic arguments. Connecting to multiple Dgraph servers in the same cluster allows for better
 distribution of workload.
 
