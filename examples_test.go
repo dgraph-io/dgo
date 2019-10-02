@@ -222,11 +222,6 @@ func ExampleTxn_Mutate() {
 			loc
 		  }
 
-		type Location {
-			type
-			coords
-		}
-
 		type Institution {
 			name
 		}
