@@ -54,10 +54,15 @@ message Request {
 	bool commit_now = 13;
 }
 
+message Uids {
+	repeated string uids = 1;
+}
+
 message Response {
 	bytes json = 1;
 	TxnContext txn = 2;
 	Latency latency = 3;
+	map<string, Uids> mutated = 4;
 	map<string, string> uids = 12;
 }
 
