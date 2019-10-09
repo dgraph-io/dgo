@@ -123,7 +123,7 @@ message Latency {
 }
 
 message Metrics {
-	map<string, string> processed_uids = 1;
+	map<string, uint64> processed_uids = 1;
 }
 
 message NQuad {
