@@ -87,6 +87,9 @@ func Example_setObject() {
 		married: bool .
 		loc: geo .
 		dob: datetime .
+		Friend: [uid] .
+		type: string .
+		coords: float .
 
 		type Person {
 			name: string
