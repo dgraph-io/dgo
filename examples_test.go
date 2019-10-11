@@ -213,6 +213,7 @@ func ExampleTxn_Mutate() {
 		loc: geo .
 		type: string .
 		coords: float .
+		Friends: [uid] .
 
 		type Person {
 			name
@@ -872,6 +873,7 @@ func ExampleDeleteEdges() {
 		married: bool .
 		name: string @lang .
 		location: string .
+		Friends: [uid] .
 
 		type Person {
 			name
@@ -1058,6 +1060,7 @@ func ExampleTxn_Mutate_deleteNode() {
 	op.Schema = `
 		age: int .
 		married: bool .
+		friends: [uid] .
 
 		type Person {
 			name: string
