@@ -43,7 +43,7 @@ value in v1 but an `*api.Response` in v2.
 
 ### Creating a client
 
-`dgraphClient` object can be initialised by passing it a list of `api.DgraphClient` clients as
+`dgraphClient` object can be initialized by passing it a list of `api.DgraphClient` clients as
 variadic arguments. Connecting to multiple Dgraph servers in the same cluster allows for better
 distribution of workload.
 
@@ -212,9 +212,9 @@ fmt.Printf("%s\n", res.Json)
 
 ### Running an Upsert: Query + Mutation
 
-The `txn.doRequest` function allows you to run upserts consisting of one query and
+The `txn.Do` function allows you to run upserts consisting of one query and
 one mutation. Variables can be defined in the query and used in the mutation.
-You could also use `txn.doRequest` to perform a query followed by a mutation.
+You could also use `txn.Do` to perform a query followed by a mutation.
 
 To know more about upsert, we highly recommend going through the docs
 at https://docs.dgraph.io/mutations/#upsert-block.

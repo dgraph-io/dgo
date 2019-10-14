@@ -24,7 +24,6 @@ import (
 
 	"github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
-	"github.com/dgraph-io/dgo/v2/y"
 )
 
 func TestTxnErrFinished(t *testing.T) {
@@ -113,5 +112,5 @@ func TestTxnErrAborted(t *testing.T) {
 	require.NoError(t, err2)
 
 	err = txn1.Commit(ctx1)
-	require.Error(t, txn2.Commit(ctx2), y.ErrAborted, "2nd transaction should have aborted")
+	require.Error(t, txn2.Commit(ctx2), dgo.ErrAborted, "2nd transaction should have aborted")
 }

@@ -42,7 +42,7 @@ var (
 	dgraphAddress = "127.0.0.1:9180"
 )
 
-func initialiseDBACLs(t *testing.T, dg *dgo.Dgraph) {
+func initializeDBACLs(t *testing.T, dg *dgo.Dgraph) {
 	// Clean up DB.
 	op := &api.Operation{}
 	op.DropAll = true
@@ -146,7 +146,7 @@ func TestACLs(t *testing.T) {
 	dg, cancel := getDgraphClient()
 	defer cancel()
 
-	initialiseDBACLs(t, dg)
+	initializeDBACLs(t, dg)
 
 	resetUser(t)
 	time.Sleep(5 * time.Second)
