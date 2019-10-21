@@ -65,6 +65,8 @@ message Response {
 	// Vars contains a map of variable name => [ uids...] used in mutations. It tells
 	// the user about which uids were updated/deleted as part of an upsert operation.
 	map<string, Uids> vars = 4;
+	// Metrics contains all metrics related to the query.
+	Metrics metrics = 5;
 	// uids contains a mapping of blank_node => uid for the node. It only returns uids
 	// that were created as part of a mutation.
 	map<string, string> uids = 12;
@@ -128,6 +130,11 @@ message Latency {
 	uint64 processing_ns = 2;
 	uint64 encoding_ns = 3;
 	uint64 assign_timestamp_ns = 4;
+}
+
+message Metrics {
+	// num_uids is the map of number of uids processed by each attribute.
+	map<string, uint64> num_uids = 1;
 }
 
 message NQuad {
