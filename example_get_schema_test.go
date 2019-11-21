@@ -21,20 +21,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
-	"google.golang.org/grpc"
 )
 
 func Example_getSchema() {
-	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal("While trying to dial gRPC")
-	}
-	defer conn.Close()
-
-	dc := api.NewDgraphClient(conn)
-	dg := dgo.NewDgraphClient(dc)
+	dg, cancel := getDgraphClient()
+	defer cancel()
 
 	op := &api.Operation{}
 	op.Schema = `
@@ -46,7 +38,7 @@ func Example_getSchema() {
 	`
 
 	ctx := context.Background()
-	err = dg.Alter(ctx, op)
+	err := dg.Alter(ctx, op)
 	if err != nil {
 		log.Fatal(err)
 	}
