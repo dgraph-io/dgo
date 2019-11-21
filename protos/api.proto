@@ -63,7 +63,7 @@ message Response {
 	TxnContext txn = 2;
 	Latency latency = 3;
 	// Metrics contains all metrics related to the query.
-	Metrics metrics = 5;
+	Metrics metrics = 4;
 	// uids contains a mapping of blank_node => uid for the node. It only returns uids
 	// that were created as part of a mutation.
 	map<string, string> uids = 12;
