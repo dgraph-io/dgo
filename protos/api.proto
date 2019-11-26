@@ -82,6 +82,14 @@ message Mutation {
 
 	// This field is a duplicate of the one in Request and placed here for convenience.
 	bool commit_now = 14;
+
+	// The name of the predicates that should be created as single (non-list)
+	// predicates if they don't exist in the schema.
+	repeated string forced_single_preds = 15;
+
+	// The name of the predicates that should be created as list predicates
+	// if they don't exist in the schema.
+	repeated string forced_list_preds = 16;
 }
 
 message Operation {
