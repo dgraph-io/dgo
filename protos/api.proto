@@ -35,11 +35,30 @@ option java_outer_classname = "DgraphProto";
 
 // Graph response.
 service Dgraph {
-	rpc Login (LoginRequest)       returns (Response) {}
-	rpc Query (Request)            returns (Response) {}
-	rpc Alter (Operation)          returns (Payload) {}
-	rpc CommitOrAbort (TxnContext) returns (TxnContext) {}
-	rpc CheckVersion(Check)        returns (Version) {}
+	rpc Login (LoginRequest)          returns (Response) {}
+	rpc Query (Request)               returns (Response) {}
+	rpc Alter (Operation)             returns (Payload) {}
+	rpc CommitOrAbort (TxnContext)    returns (TxnContext) {}
+	rpc CheckVersion(Check)           returns (Version) {}
+	rpc Subscriber(SubscriberRequest) returns (SubscriberResponse) {}
+}
+
+
+message Prefix {
+	bytes prefix = 1;
+}
+
+message SubscriberRequest {
+	repeated Prefix prefixs = 1;
+}
+
+message SubscriberUpdates {
+	Prefix prefix = 1;
+	bytes  value  = 2;
+}
+
+message SubscriberResponse {
+	repeated SubscriberUpdates updates = 1;
 }
 
 message Request {
