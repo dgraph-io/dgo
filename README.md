@@ -178,7 +178,21 @@ res, err := txn.QueryWithVars(ctx, q, map[string]string{"$a": "Alice"})
 fmt.Printf("%s\n", res.Json)
 ```
 
-When running a schema query, the schema response is found in the `Schema` field of `api.Response`.
+You can also use `txn.Do` function to run a query.
+
+```go
+req := &api.Request{
+  Query: q,
+  Vars: map[string]string{"$a": "Alice"},
+}
+res, err := txn.Do(ctx, req)
+if err != nil {
+  log.Fatal(err)
+}
+fmt.Printf("%s\n", res.Json)
+```
+
+When running a schema query, the schema response is found in the `Json` field of `api.Response` as shown below:
 
 ```go
 q := `schema(pred: [name]) {
@@ -193,21 +207,7 @@ q := `schema(pred: [name]) {
 }`
 
 res, err := txn.Query(ctx, q)
-fmt.Println(res.Schema)
-```
-
-You can also use `txn.Do` function to run the query.
-
-```go
-req := &api.Request{
-  Query: q,
-  Vars: map[string]string{"$a": "Alice"},
-}
-res, err := txn.Do(ctx, req)
-if err != nil {
-  log.Fatal(err)
-}
-fmt.Printf("%s\n", res.Json)
+fmt.Println(res.Json)
 ```
 
 ### Running an Upsert: Query + Mutation
