@@ -192,7 +192,8 @@ if err != nil {
 fmt.Printf("%s\n", res.Json)
 ```
 
-When running a schema query, the schema response is found in the `Json` field of `api.Response` as shown below:
+When running a schema query for predicate `name`, the schema response is found
+in the `Json` field of `api.Response` as shown below:
 
 ```go
 q := `schema(pred: [name]) {
@@ -207,7 +208,10 @@ q := `schema(pred: [name]) {
 }`
 
 res, err := txn.Query(ctx, q)
-fmt.Println(res.Json)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("%s\n", res.Json)
 ```
 
 ### Running an Upsert: Query + Mutation
