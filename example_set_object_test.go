@@ -7,9 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
-	"google.golang.org/grpc"
 )
 
 type School struct {
@@ -39,20 +37,14 @@ type Person struct {
 }
 
 func Example_setObject() {
-	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal("While trying to dial gRPC")
-	}
-	defer conn.Close()
-
-	dc := api.NewDgraphClient(conn)
-	dg := dgo.NewDgraphClient(dc)
+	dg, cancel := getDgraphClient()
+	defer cancel()
 
 	dob := time.Date(1980, 01, 01, 23, 0, 0, 0, time.UTC)
 	// While setting an object if a struct has a Uid then its properties in the graph are updated
 	// else a new node is created.
 	// In the example below new nodes for Alice, Bob and Charlie and school are created (since they
-	// dont have a Uid).
+	// don't have a Uid).
 	p := Person{
 		Uid:     "_:alice",
 		Name:    "Alice",
@@ -110,8 +102,7 @@ func Example_setObject() {
 	`
 
 	ctx := context.Background()
-	err = dg.Alter(ctx, op)
-	if err != nil {
+	if err := dg.Alter(ctx, op); err != nil {
 		log.Fatal(err)
 	}
 
