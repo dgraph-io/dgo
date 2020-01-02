@@ -106,7 +106,7 @@ func query(t *testing.T, dg *dgo.Dgraph, shouldFail bool) {
 	q := `
 	{
 		q(func: eq(predicate_to_read, "val1")) {
-			uid
+			predicate_to_read
 		}
 	}
 	`
@@ -151,14 +151,14 @@ func TestACLs(t *testing.T) {
 	resetUser(t)
 	time.Sleep(5 * time.Second)
 
-	// All operations without ACLs.
+	// All operations without ACLs should fail.
 	err := dg.Login(context.Background(), username, userpassword)
 	require.NoError(t, err, "unable to login for user: %s", username)
-	query(t, dg, false)
-	mutation(t, dg, false)
-	changeSchema(t, dg, false)
+	query(t, dg, true)
+	mutation(t, dg, true)
+	changeSchema(t, dg, true)
 
-	// Create unused group, everything should fail now.
+	// Create unused group, everything should still fail.
 	createGroupACLs(t, unusedgroup)
 	time.Sleep(6 * time.Second)
 	query(t, dg, true)
