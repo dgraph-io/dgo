@@ -741,7 +741,7 @@ func ExampleTxn_Mutate_facets() {
 	}
 
 	type Root struct {
-		Me []Person `json:"me"`
+		Me []json.RawMessage `json:"me"`
 	}
 
 	var r Root
@@ -754,33 +754,42 @@ func ExampleTxn_Mutate_facets() {
 	fmt.Printf("%s\n", out)
 	// Output: [
 	// 	{
-	// 		"name": "Alice",
 	// 		"name|origin": "Indonesia",
+	// 		"name": "Alice",
+	// 		"dgraph.type": [
+	// 			"Person"
+	// 		],
 	// 		"friends": [
 	// 			{
 	// 				"name": "Bob",
-	// 				"friends|since": "2009-11-10T23:00:00Z",
-	// 				"friends|family": "yes",
-	// 				"friends|age": 13,
-	// 				"friends|close": true,
 	// 				"dgraph.type": [
 	// 					"Person"
 	// 				]
 	// 			}
 	// 		],
-	// 		"friends|since": "0001-01-01T00:00:00Z",
+	// 		"friends|age": {
+	// 			"0": 13
+	// 		},
+	// 		"friends|close": {
+	// 			"0": true
+	// 		},
+	// 		"friends|family": {
+	// 			"0": "yes"
+	// 		},
+	// 		"friends|since": {
+	// 			"0": "2009-11-10T23:00:00Z"
+	// 		},
 	// 		"school": [
 	// 			{
 	// 				"name": "Wellington School",
-	// 				"school|since": "2009-11-10T23:00:00Z",
 	// 				"dgraph.type": [
 	// 					"Institution"
 	// 				]
 	// 			}
 	// 		],
-	// 		"dgraph.type": [
-	// 			"Person"
-	// 		]
+	// 		"school|since": {
+	// 			"0": "2009-11-10T23:00:00Z"
+	// 		}
 	// 	}
 	// ]
 }
