@@ -111,10 +111,12 @@ func query(t *testing.T, dg *dgo.Dgraph, shouldFail bool) {
 	}
 	`
 
-	_, err := dg.NewReadOnlyTxn().Query(context.Background(), q)
-	if (err != nil && !shouldFail) || (err == nil && shouldFail) {
-		t.Logf("result did not match for query")
-		t.FailNow()
+	// Dgraph does not throw Permission Denied error in query any more. Dgraph
+	// just does not return the predicates that a user doesn't have access to.
+	resp, err := dg.NewReadOnlyTxn().Query(context.Background(), q)
+	require.NoError(t, err)
+	if shouldFail {
+		require.Equal(t, string(resp.Json), "{}")
 	}
 }
 
