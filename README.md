@@ -11,7 +11,7 @@ to understand how to run and work with Dgraph.
 
 ## Table of contents
 
-- [Import](#import)
+- [Supported Versions](#supported-versions)
 - [Using a client](#using-a-client)
   - [Creating a client](#creating-a-client)
   - [Altering the database](#altering-the-database)
@@ -25,7 +25,7 @@ to understand how to run and work with Dgraph.
 - [Development](#development)
   - [Running tests](#running-tests)
 
-## Import
+## Supported Versions
 
 Depending on the version of Dgraph that you are connecting to, you will have to
 use a different version of this client and their corresponding import paths.
