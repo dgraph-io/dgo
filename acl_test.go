@@ -54,6 +54,7 @@ func initializeDBACLs(t *testing.T, dg *dgo.Dgraph) {
 	op.Schema = fmt.Sprintf("%s: string @index(exact) .", readpred)
 	err = dg.Alter(context.Background(), op)
 	require.NoError(t, err, "unable to insert schema for read predicate")
+	require.NoError(t, waitForIndexing(dg, readpred, []string{"exact"}, false, false))
 
 	// Insert some record to read for read predicate.
 	data := []byte(fmt.Sprintf(`_:sub <%s> "val1" .`, readpred))
@@ -138,6 +139,9 @@ func changeSchema(t *testing.T, dg *dgo.Dgraph, shouldFail bool) {
 	}
 
 	err := dg.Alter(context.Background(), op)
+	if !shouldFail {
+		require.NoError(t, waitForIndexing(dg, modifypred, []string{"exact"}, false, false))
+	}
 	if (err != nil && !shouldFail) || (err == nil && shouldFail) {
 		t.Logf("result did not match for schema change")
 		t.FailNow()

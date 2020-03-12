@@ -40,6 +40,7 @@ func TestCondUpsertCorrectingName(t *testing.T) {
 	op.Schema = `email: string @index(exact) .`
 	err = dg.Alter(ctx, op)
 	require.NoError(t, err)
+	require.NoError(t, waitForIndexing(dg, "email", []string{"exact"}, false, false))
 
 	// Erroneously, mutation with wrong name "wrong"
 	q1 := `
@@ -130,6 +131,8 @@ works_for: string @index(exact) .
 works_with: [uid] .`
 	err := dg.Alter(context.Background(), op)
 	require.NoError(t, err)
+	require.NoError(t, waitForIndexing(dg, "email", []string{"exact"}, false, false))
+	require.NoError(t, waitForIndexing(dg, "works_for", []string{"exact"}, false, false))
 
 	m1 := `
 _:user1 <name> "user1" .
@@ -311,6 +314,8 @@ name: string @index(exact) .
 content: string @index(exact) .`
 	err = dg.Alter(ctx, op)
 	require.NoError(t, err)
+	require.NoError(t, waitForIndexing(dg, "name", []string{"exact"}, false, false))
+	require.NoError(t, waitForIndexing(dg, "content", []string{"exact"}, false, false))
 
 	m1 := `
 _:user1 <name> "user1" .
@@ -434,6 +439,7 @@ name: string @index(exact) .
 branch: string .`
 	err = dg.Alter(ctx, op)
 	require.NoError(t, err)
+	require.NoError(t, waitForIndexing(dg, "name", []string{"exact"}, false, false))
 
 	m1 := `
 _:user1 <name> "user1" .
@@ -528,6 +534,8 @@ func TestBulkDelete(t *testing.T) {
 	name: string @index(exact) .`
 	err = dg.Alter(ctx, op)
 	require.NoError(t, err)
+	require.NoError(t, waitForIndexing(dg, "name", []string{"exact"}, false, false))
+	require.NoError(t, waitForIndexing(dg, "email", []string{"exact"}, false, false))
 
 	// Insert 2 users.
 	mu1 := &api.Mutation{
