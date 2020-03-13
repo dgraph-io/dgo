@@ -42,6 +42,9 @@ func Example_getSchema() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if err := waitForIndexing(dg, "name", []string{"exact"}, false, false); err != nil {
+		log.Fatal(err)
+	}
 
 	// Ask for the type of name and age.
 	resp, err := dg.NewTxn().Query(ctx, `schema(pred: [name, age]) {type}`)

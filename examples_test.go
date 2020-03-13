@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -46,7 +47,9 @@ func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
 	for {
 		// Keep retrying until we succeed or receive a non-retriable error.
 		err = dg.Login(ctx, "groot", "password")
-		if err == nil || !strings.Contains(err.Error(), "Please retry") {
+		if err == nil || !(strings.Contains(err.Error(), "Please retry") ||
+			strings.Contains(err.Error(), "user not found")) {
+
 			break
 		}
 		time.Sleep(time.Second)
@@ -59,6 +62,46 @@ func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
 		if err := conn.Close(); err != nil {
 			log.Printf("Error while closing connection:%v", err)
 		}
+	}
+}
+
+func waitForIndexing(dg *dgo.Dgraph, pred string, toks []string, count, reverse bool) error {
+	sort.Strings(toks)
+	sq := fmt.Sprintf("schema(pred: [%v]){tokenizer reverse count}", pred)
+loop:
+	for {
+		time.Sleep(time.Millisecond * 10)
+		resp, err := dg.NewReadOnlyTxn().Query(context.Background(), sq)
+		if err != nil {
+			return err
+		}
+
+		var result struct {
+			Schema []struct {
+				Tokenizer []string
+				Reverse   bool
+				Count     bool
+			}
+		}
+		if err := json.Unmarshal(resp.Json, &result); err != nil {
+			return err
+		}
+		if len(result.Schema) != 1 {
+			continue
+		}
+
+		s := result.Schema[0]
+		if s.Count != count || s.Reverse != reverse || len(s.Tokenizer) != len(toks) {
+			continue
+		}
+		sort.Strings(s.Tokenizer)
+		for i := 0; i < len(toks); i++ {
+			if toks[i] != s.Tokenizer[i] {
+				goto loop
+			}
+		}
+
+		return nil
 	}
 }
 
@@ -94,6 +137,9 @@ func ExampleTxn_Query_variables() {
 	ctx := context.Background()
 	err := dg.Alter(ctx, op)
 	if err != nil {
+		log.Fatal(err)
+	}
+	if err := waitForIndexing(dg, "name", []string{"exact"}, false, false); err != nil {
 		log.Fatal(err)
 	}
 
@@ -232,6 +278,9 @@ func ExampleTxn_Mutate() {
 	if err := dg.Alter(ctx, op); err != nil {
 		log.Fatal(err)
 	}
+	if err := waitForIndexing(dg, "name", []string{"exact"}, false, false); err != nil {
+		log.Fatal(err)
+	}
 
 	mu := &api.Mutation{
 		CommitNow: true,
@@ -357,6 +406,9 @@ func ExampleTxn_Mutate_bytes() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if err := waitForIndexing(dg, "name", []string{"exact"}, false, false); err != nil {
+		log.Fatal(err)
+	}
 
 	p := Person{
 		Name:  "Alice-new",
@@ -447,6 +499,9 @@ func ExampleTxn_Query_unmarshal() {
 	ctx := context.Background()
 	err := dg.Alter(ctx, op)
 	if err != nil {
+		log.Fatal(err)
+	}
+	if err := waitForIndexing(dg, "name", []string{"exact"}, false, false); err != nil {
 		log.Fatal(err)
 	}
 
@@ -645,6 +700,9 @@ func ExampleTxn_Mutate_facets() {
 
 	err := dg.Alter(ctx, &op)
 	if err != nil {
+		log.Fatal(err)
+	}
+	if err := waitForIndexing(dg, "name", []string{"exact"}, false, false); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1355,6 +1413,9 @@ func ExampleTxn_Discard() {
 	if err != nil {
 		log.Fatal("The alter should have succeeded")
 	}
+	if err := waitForIndexing(dg, "name", []string{"exact"}, false, false); err != nil {
+		log.Fatal(err)
+	}
 
 	txn := dg.NewTxn()
 	_, err = txn.Mutate(ctx, &api.Mutation{
@@ -1401,6 +1462,9 @@ func ExampleTxn_Mutate_upsert() {
 		name: string .
 		email: string @index(exact) .`
 	if err := dg.Alter(ctx, op); err != nil {
+		log.Fatal(err)
+	}
+	if err := waitForIndexing(dg, "email", []string{"exact"}, false, false); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1473,6 +1537,9 @@ func ExampleTxn_Mutate_upsertJSON() {
 
 	op := &api.Operation{Schema: `email: string @index(exact) @upsert .`}
 	if err := dg.Alter(context.Background(), op); err != nil {
+		log.Fatal(err)
+	}
+	if err := waitForIndexing(dg, "email", []string{"exact"}, false, false); err != nil {
 		log.Fatal(err)
 	}
 
