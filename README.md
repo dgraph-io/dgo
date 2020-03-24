@@ -75,6 +75,19 @@ err := dgraphClient.Alter(ctx, op)
 slate, without bringing the instance down. `DropAttr` is used to drop all the data
 related to a predicate.
 
+Starting Dgraph version 20.03.0, indexes can be computed in the background.
+You can set `RunInBackground` field to `true` of the `api.Operation
+struct before passing it to the `Alter` function. You can find more details
+[here](https://docs.dgraph.io/master/query-language/#indexes-in-background).
+
+```go
+op := &api.Operation{
+  Schema:          `name: string @index(exact) .`,
+  RunInBackground: true
+}
+err := dgraphClient.Alter(ctx, op)
+```
+
 ### Creating a transaction
 
 To create a transaction, call `dgraphClient.NewTxn()`, which returns a `*dgo.Txn` object. This
