@@ -38,7 +38,6 @@ func TestTxnErrFinished(t *testing.T) {
 	op.Schema = `email: string @index(exact) .`
 	err = dg.Alter(ctx, op)
 	require.NoError(t, err)
-	require.NoError(t, waitForIndexing(dg, "email", []string{"exact"}, false, false))
 
 	mu := &api.Mutation{SetNquads: []byte(`_:user1 <email> "user1@company1.io" .`), CommitNow: true}
 	txn := dg.NewTxn()
@@ -62,7 +61,6 @@ func TestTxnErrReadOnly(t *testing.T) {
 	op.Schema = `email: string @index(exact) .`
 	err = dg.Alter(ctx, op)
 	require.NoError(t, err)
-	require.NoError(t, waitForIndexing(dg, "email", []string{"exact"}, false, false))
 
 	mu := &api.Mutation{SetNquads: []byte(`_:user1 <email> "user1@company1.io" .`)}
 
@@ -83,7 +81,6 @@ func TestTxnErrAborted(t *testing.T) {
 	op.Schema = `email: string @index(exact) .`
 	err = dg.Alter(ctx, op)
 	require.NoError(t, err)
-	require.NoError(t, waitForIndexing(dg, "email", []string{"exact"}, false, false))
 
 	mu1 := &api.Mutation{
 		SetNquads: []byte(`_:user1 <email> "user1@company1.io" .`),

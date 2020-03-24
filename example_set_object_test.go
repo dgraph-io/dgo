@@ -105,9 +105,6 @@ func Example_setObject() {
 	if err := dg.Alter(ctx, op); err != nil {
 		log.Fatal(err)
 	}
-	if err := waitForIndexing(dg, "name", []string{"exact"}, false, false); err != nil {
-		log.Fatal(err)
-	}
 
 	mu := &api.Mutation{
 		CommitNow: true,
