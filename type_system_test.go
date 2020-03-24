@@ -61,11 +61,9 @@ func initializeDBTypeSystem(t *testing.T, dg *dgo.Dgraph) {
 		works_at: string @index(exact) .
 		age: int .`,
 	}
+
 	err := dg.Alter(context.Background(), op)
 	require.NoError(t, err)
-	require.NoError(t, waitForIndexing(dg, "email", []string{"exact"}, false, false))
-	require.NoError(t, waitForIndexing(dg, "name", []string{"exact"}, false, false))
-	require.NoError(t, waitForIndexing(dg, "works_at", []string{"exact"}, false, false))
 
 	mu := &api.Mutation{
 		CommitNow: true,
