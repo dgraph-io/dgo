@@ -16,11 +16,13 @@ git push origin <new tag>
 
 ## Steps to Release a Major Version
 
-1. Change all the import paths to import `v<new major version>`
+1. Update the `go.mod` file to the module name with the correct version
+
+2. Change all the import paths to import `v<new major version>`
 
 For example, current import path is `"github.com/dgraph-io/dgo/v200"`.
 When we release v201.07.0, we would replace the import paths to `"github.com/dgraph-io/dgo/v201"`
 
-2. Update [Supported Version](https://github.com/dgraph-io/dgo/#supported-versions)
+3. Update [Supported Version](https://github.com/dgraph-io/dgo/#supported-versions)
 
 Now, follow the [steps to release Minor Version](#steps-to-release-a-minor-version) as above.
