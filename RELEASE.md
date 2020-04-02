@@ -25,4 +25,6 @@ When we release v201.07.0, we would replace the import paths to `"github.com/dgr
 
 3. Update [Supported Version](https://github.com/dgraph-io/dgo/#supported-versions)
 
+4. Commit all the changes and get them merged to master branch.
+
 Now, follow the [steps to release Minor Version](#steps-to-release-a-minor-version) as above.
