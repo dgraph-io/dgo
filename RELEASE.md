@@ -30,4 +30,4 @@ When we release v201.07.0, we would replace the import paths to `"github.com/dgr
 Now, follow the [steps to release Minor Version](#steps-to-release-a-minor-version) as above.
 
 Note that, now you have to also change the import path in the applications that use `dgo` including `dgraph`.
-If you are doing the relese, it would be nice that you raise a PR on Dgraph repo as well updating the paths.
+If you are doing the release, it would be nice that you raise a PR on Dgraph repo as well updating the paths.
