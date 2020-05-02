@@ -97,9 +97,9 @@ err := dgraphClient.Alter(ctx, op)
 To create a transaction, call `dgraphClient.NewTxn()`, which returns a `*dgo.Txn` object. This
 operation incurs no network overhead.
 
-It is a good practice to call `txn.Discard()` using a `defer` statement after it is initialized.
-Calling `txn.Discard()` after `txn.Commit()` is a no-op and you can call `txn.Discard()` multiple
-times with no additional side-effects.
+It is a good practice to call `txn.Discard(ctx)` using a `defer` statement after it is initialized.
+Calling `txn.Discard(ctx)` after `txn.Commit(ctx)` is a no-op. Furthermore, `txn.Discard(ctx)`
+can be called multiple times with no additional side-effects.
 
 ```go
 txn := dgraphClient.NewTxn()
