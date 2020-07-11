@@ -5,6 +5,8 @@ Official Dgraph Go client which communicates with the server using [gRPC](https:
 Before using this client, we highly recommend that you go through [tour.dgraph.io] and [docs.dgraph.io]
 to understand how to run and work with Dgraph.
 
+**Use [Discuss Issues](https://discuss.dgraph.io/tags/c/issues/35/dgo) for reporting issues about this repository.**
+
 [docs.dgraph.io]:https://docs.dgraph.io
 [tour.dgraph.io]:https://tour.dgraph.io
 
