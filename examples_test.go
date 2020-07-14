@@ -662,10 +662,10 @@ func ExampleTxn_Mutate_facets() {
 		Friends    []Person `json:"friends,omitempty"`
 
 		// These are facets on the friend edge.
-		Since  time.Time `json:"friends|since,omitempty"`
-		Family string    `json:"friends|family,omitempty"`
-		Age    float64   `json:"friends|age,omitempty"`
-		Close  bool      `json:"friends|close,omitempty"`
+		Since  *time.Time `json:"friends|since,omitempty"`
+		Family string     `json:"friends|family,omitempty"`
+		Age    float64    `json:"friends|age,omitempty"`
+		Close  bool       `json:"friends|close,omitempty"`
 
 		School []School `json:"school,omitempty"`
 		DType  []string `json:"dgraph.type,omitempty"`
@@ -680,7 +680,7 @@ func ExampleTxn_Mutate_facets() {
 		Friends: []Person{
 			Person{
 				Name:   "Bob",
-				Since:  ti,
+				Since:  &ti,
 				Family: "yes",
 				Age:    13,
 				Close:  true,
@@ -741,7 +741,7 @@ func ExampleTxn_Mutate_facets() {
 	}
 
 	type Root struct {
-		Me []json.RawMessage `json:"me"`
+		Me []Person `json:"me"`
 	}
 
 	var r Root
@@ -753,44 +753,34 @@ func ExampleTxn_Mutate_facets() {
 	out, _ := json.MarshalIndent(r.Me, "", "\t")
 	fmt.Printf("%s\n", out)
 	// Output: [
-	// 	{
-	// 		"name|origin": "Indonesia",
-	// 		"name": "Alice",
-	// 		"dgraph.type": [
-	// 			"Person"
-	// 		],
-	// 		"friends": [
-	// 			{
-	// 				"name": "Bob",
-	// 				"dgraph.type": [
-	// 					"Person"
-	// 				]
-	// 			}
-	// 		],
-	// 		"friends|age": {
-	// 			"0": 13
-	// 		},
-	// 		"friends|close": {
-	// 			"0": true
-	// 		},
-	// 		"friends|family": {
-	// 			"0": "yes"
-	// 		},
-	// 		"friends|since": {
-	// 			"0": "2009-11-10T23:00:00Z"
-	// 		},
-	// 		"school": [
-	// 			{
-	// 				"name": "Wellington School",
-	// 				"dgraph.type": [
-	// 					"Institution"
-	// 				]
-	// 			}
-	// 		],
-	// 		"school|since": {
-	// 			"0": "2009-11-10T23:00:00Z"
-	// 		}
-	// 	}
+	//	{
+	//		"name": "Alice",
+	//		"name|origin": "Indonesia",
+	//		"friends": [
+	//			{
+	//				"name": "Bob",
+	//				"friends|since": "2009-11-10T23:00:00Z",
+	//				"friends|family": "yes",
+	//				"friends|age": 13,
+	//				"friends|close": true,
+	//				"dgraph.type": [
+	//					"Person"
+	//				]
+	//			}
+	//		],
+	//		"school": [
+	//			{
+	//				"name": "Wellington School",
+	//				"school|since": "2009-11-10T23:00:00Z",
+	//				"dgraph.type": [
+	//					"Institution"
+	//				]
+	//			}
+	//		],
+	//		"dgraph.type": [
+	//			"Person"
+	//		]
+	//	}
 	// ]
 }
 
