@@ -95,7 +95,7 @@ func (txn *Txn) Query(ctx context.Context, q string) (*api.Response, error) {
 
 // QueryRDF sends a query to one of the connected Dgraph instances and returns RDF response. If no
 // mutations need to be made in the same transaction, it's convenient to
-// chain the method, e.g. NewTxn().Query(ctx, "...").
+// chain the method, e.g. NewTxn().QueryRDF(ctx, "...").
 func (txn *Txn) QueryRDF(ctx context.Context, q string) (*api.Response, error) {
 	return txn.QueryRDFWithVars(ctx, q, nil)
 }
