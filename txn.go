@@ -93,6 +93,13 @@ func (txn *Txn) Query(ctx context.Context, q string) (*api.Response, error) {
 	return txn.QueryWithVars(ctx, q, nil)
 }
 
+// QueryRDF sends a query to one of the connected Dgraph instances and returns RDF response. If no
+// mutations need to be made in the same transaction, it's convenient to
+// chain the method, e.g. NewTxn().QueryRDF(ctx, "...").
+func (txn *Txn) QueryRDF(ctx context.Context, q string) (*api.Response, error) {
+	return txn.QueryRDFWithVars(ctx, q, nil)
+}
+
 // QueryWithVars is like Query, but allows a variable map to be used.
 // This can provide safety against injection attacks.
 func (txn *Txn) QueryWithVars(ctx context.Context, q string, vars map[string]string) (
@@ -104,6 +111,23 @@ func (txn *Txn) QueryWithVars(ctx context.Context, q string, vars map[string]str
 		StartTs:    txn.context.StartTs,
 		ReadOnly:   txn.readOnly,
 		BestEffort: txn.bestEffort,
+		RespFormat: api.Request_JSON,
+	}
+	return txn.Do(ctx, req)
+}
+
+// QueryRDFWithVars is like Query and returns RDF, but allows a variable map to be used.
+// This can provide safety against injection attacks.
+func (txn *Txn) QueryRDFWithVars(ctx context.Context, q string, vars map[string]string) (
+	*api.Response, error) {
+
+	req := &api.Request{
+		Query:      q,
+		Vars:       vars,
+		StartTs:    txn.context.StartTs,
+		ReadOnly:   txn.readOnly,
+		BestEffort: txn.bestEffort,
+		RespFormat: api.Request_RDF,
 	}
 	return txn.Do(ctx, req)
 }
