@@ -52,11 +52,6 @@ message Request {
 
 	repeated Mutation mutations = 12;
 	bool commit_now = 13;
-	enum RespFormat {
-		JSON = 0;
-		RDF = 1;
-	}
-	RespFormat resp_format = 14;
 }
 
 message Uids {
@@ -72,7 +67,6 @@ message Response {
 	// uids contains a mapping of blank_node => uid for the node. It only returns uids
 	// that were created as part of a mutation.
 	map<string, string> uids = 12;
-	bytes rdf = 13;
 }
 
 message Mutation {
