@@ -17,6 +17,7 @@ func TestQueryNoDiscardTxn(t *testing.T) {
 	_, err := txn.Query(ctx, `{me(){}me(){}}`)
 	require.NotNil(t, err)
 
-	_, err = txn.Query(ctx, `{me(){}}`)
+	resp, err := txn.Query(ctx, `{me(){}}`)
 	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(resp.GetHdrs()), 1)
 }
