@@ -21,7 +21,9 @@ import (
 
 	"github.com/dgraph-io/dgo/v200/protos/api"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -166,7 +168,20 @@ func (txn *Txn) Do(ctx context.Context, req *api.Request) (*api.Response, error)
 
 	ctx = txn.dg.getContext(ctx)
 	req.StartTs = txn.context.StartTs
-	resp, err := txn.dc.Query(ctx, req)
+
+	// Append the GRPC Response headers to the responses. Needed for Slash.
+	appendHdr := func(hdrs *metadata.MD, resp *api.Response) {
+		if resp != nil {
+			resp.Hdrs = make(map[string]*api.ListOfString)
+			for k,v := range *hdrs {
+				resp.Hdrs[k] = &api.ListOfString{Value: v}
+			}
+		}
+	}
+
+	var responseHeaders metadata.MD
+	resp, err := txn.dc.Query(ctx, req, grpc.Header(&responseHeaders))
+	appendHdr(&responseHeaders, resp)
 
 	if isJwtExpired(err) {
 		err = txn.dg.retryLogin(ctx)
@@ -175,7 +190,9 @@ func (txn *Txn) Do(ctx context.Context, req *api.Request) (*api.Response, error)
 		}
 
 		ctx = txn.dg.getContext(ctx)
-		resp, err = txn.dc.Query(ctx, req)
+		var responseHeaders metadata.MD
+		resp, err = txn.dc.Query(ctx, req, grpc.Header(&responseHeaders))
+		appendHdr(&responseHeaders, resp)
 	}
 
 	if err == nil {
