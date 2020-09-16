@@ -20,7 +20,6 @@ import (
 	"context"
 	"crypto/x509"
 	"fmt"
-	"log"
 	"math/rand"
 	"net/url"
 	"strings"
@@ -42,15 +41,15 @@ type Dgraph struct {
 	jwt      api.Jwt
 	dc       []api.DgraphClient
 }
-type authorizationCredentials struct {
+type authCreds struct {
 	token string
 }
 
-func (a *authorizationCredentials) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+func (a *authCreds) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
 	return map[string]string{"Authorization": a.token}, nil
 }
 
-func (a *authorizationCredentials) RequireTransportSecurity() bool {
+func (a *authCreds) RequireTransportSecurity() bool {
 	return true
 }
 
@@ -69,28 +68,28 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 
 // DialSlashGraphQLEndpoint creates a new Dgraph (client) for interacting with Alphas spawned
 // in Slash backend. It requires Slash GraphQL's backend url and API Query key.
-func DialSlashGraphQLEndpoint(endpoint, key string) *Dgraph {
+func DialSlashGraphQLEndpoint(endpoint, key string) (*Dgraph, error) {
 
-	u, _ := url.Parse(endpoint)
+	u, err := url.Parse(endpoint)
 	urlParts := strings.SplitN(u.Host, ".", 2)
 
 	host := urlParts[0] + ".grpc." + urlParts[1] + ":" + slashPort
-	pool, _ := x509.SystemCertPool()
+	pool, err := x509.SystemCertPool()
 	creds := credentials.NewClientTLSFromCert(pool, "")
 	conn, err := grpc.Dial(
 		host,
 		grpc.WithTransportCredentials(creds),
-		grpc.WithPerRPCCredentials(&authorizationCredentials{key}),
+		grpc.WithPerRPCCredentials(&authCreds{key}),
 	)
 
 	if err != nil {
-		log.Fatal("While trying to dial gRPC")
+		return nil, err
 	}
 
 	dc := api.NewDgraphClient(conn)
 	dg := NewDgraphClient(dc)
 
-	return dg
+	return dg, nil
 }
 
 // Login logs in the current client using the provided credentials.
