@@ -18,22 +18,39 @@ package dgo
 
 import (
 	"context"
+	"crypto/x509"
 	"fmt"
 	"math/rand"
+	"net/url"
 	"strings"
 	"sync"
 
 	"github.com/dgraph-io/dgo/v200/protos/api"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
+
+var slashPort = "443"
 
 // Dgraph is a transaction aware client to a set of Dgraph server instances.
 type Dgraph struct {
 	jwtMutex sync.RWMutex
 	jwt      api.Jwt
 	dc       []api.DgraphClient
+}
+type authCreds struct {
+	token string
+}
+
+func (a *authCreds) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	return map[string]string{"Authorization": a.token}, nil
+}
+
+func (a *authCreds) RequireTransportSecurity() bool {
+	return true
 }
 
 // NewDgraphClient creates a new Dgraph (client) for interacting with Alphas.
@@ -47,6 +64,32 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 	}
 
 	return dg
+}
+
+// DialSlashGraphQLEndpoint creates a new Dgraph (client) for interacting with Alphas spawned
+// in Slash backend. It requires Slash GraphQL's backend url and API Query key.
+func DialSlashGraphQLEndpoint(endpoint, key string) (*Dgraph, error) {
+
+	u, err := url.Parse(endpoint)
+	urlParts := strings.SplitN(u.Host, ".", 2)
+
+	host := urlParts[0] + ".grpc." + urlParts[1] + ":" + slashPort
+	pool, err := x509.SystemCertPool()
+	creds := credentials.NewClientTLSFromCert(pool, "")
+	conn, err := grpc.Dial(
+		host,
+		grpc.WithTransportCredentials(creds),
+		grpc.WithPerRPCCredentials(&authCreds{key}),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	dc := api.NewDgraphClient(conn)
+	dg := NewDgraphClient(dc)
+
+	return dg, nil
 }
 
 // Login logs in the current client using the provided credentials.
