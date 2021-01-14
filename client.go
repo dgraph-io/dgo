@@ -26,6 +26,7 @@ import (
 	"sync"
 
 	"github.com/dgraph-io/dgo/v200/protos/api"
+	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -120,8 +121,7 @@ func (d *Dgraph) Login(ctx context.Context, userid string, password string) erro
 	if err != nil {
 		return err
 	}
-
-	return d.jwt.Unmarshal(resp.Json)
+	return proto.Unmarshal(resp.Json, &d.jwt)
 }
 
 // Alter can be used to do the following by setting various fields of api.Operation:
@@ -164,7 +164,7 @@ func (d *Dgraph) retryLogin(ctx context.Context) error {
 		return err
 	}
 
-	return d.jwt.Unmarshal(resp.Json)
+	return proto.Unmarshal(resp.Json, &d.jwt)
 }
 
 func (d *Dgraph) getContext(ctx context.Context) context.Context {

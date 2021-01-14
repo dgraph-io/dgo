@@ -21,7 +21,7 @@
 
 syntax = "proto3";
 
-package api;
+/* package api; */
 
 /* import "gogoproto/gogo.proto"; */
 
@@ -30,6 +30,7 @@ package api;
 /* option (gogoproto.unmarshaler_all) = true; */
 /* option (gogoproto.goproto_getters_all) = true; */
 
+option go_package = "github.com/dgraph-io/dgo/v200/protos/api";
 option java_package = "io.dgraph";
 option java_outer_classname = "DgraphProto";
 
