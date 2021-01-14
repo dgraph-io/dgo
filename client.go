@@ -37,9 +37,10 @@ var slashPort = "443"
 
 // Dgraph is a transaction aware client to a set of Dgraph server instances.
 type Dgraph struct {
-	jwtMutex sync.RWMutex
-	jwt      api.Jwt
-	dc       []api.DgraphClient
+	jwtMutex  sync.RWMutex
+	jwt       api.Jwt
+	dc        []api.DgraphClient
+	namespace string
 }
 type authCreds struct {
 	token string
@@ -64,6 +65,10 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 	}
 
 	return dg
+}
+
+func (d *Dgraph) SetNamespace(namespace string) {
+	d.namespace = namespace
 }
 
 // DialSlashGraphQLEndpoint creates a new Dgraph (client) for interacting with Alphas spawned
@@ -158,18 +163,16 @@ func (d *Dgraph) getContext(ctx context.Context) context.Context {
 	d.jwtMutex.RLock()
 	defer d.jwtMutex.RUnlock()
 
-	if len(d.jwt.AccessJwt) > 0 {
-		md, ok := metadata.FromOutgoingContext(ctx)
-		if !ok {
-			// no metadata key is in the context, add one
-			md = metadata.New(nil)
-		}
-
-		md.Set("accessJwt", d.jwt.AccessJwt)
-		return metadata.NewOutgoingContext(ctx, md)
+	md, ok := metadata.FromOutgoingContext(ctx)
+	if !ok {
+		// no metadata key is in the context, add one
+		md = metadata.New(nil)
 	}
-
-	return ctx
+	md.Set("namespace", d.namespace)
+	if len(d.jwt.AccessJwt) > 0 {
+		md.Set("accessJwt", d.jwt.AccessJwt)
+	}
+	return metadata.NewOutgoingContext(ctx, md)
 }
 
 // isJwtExpired returns true if the error indicates that the jwt has expired.

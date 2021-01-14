@@ -173,7 +173,7 @@ func (txn *Txn) Do(ctx context.Context, req *api.Request) (*api.Response, error)
 	appendHdr := func(hdrs *metadata.MD, resp *api.Response) {
 		if resp != nil {
 			resp.Hdrs = make(map[string]*api.ListOfString)
-			for k,v := range *hdrs {
+			for k, v := range *hdrs {
 				resp.Hdrs[k] = &api.ListOfString{Value: v}
 			}
 		}
