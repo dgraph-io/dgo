@@ -5,6 +5,9 @@
 #  with the Commons Clause restriction.
 #
 
+PROTO_PATH := ${GOPATH}/src:.
+PROTO_PATH := ${PROTO_PATH}:${GOPATH}/src/github.com/gogo/protobuf
+
 .PHONY: help
 help:
 	@echo Use \"make regenerate\" to proceed.
@@ -14,8 +17,7 @@ clean:
 
 regenerate: clean
 	@protoc \
-		--go_out=plugins=grpc:api \
-		--go_opt=paths=source_relative \
-		-I=. \
+		--proto_path=${PROTO_PATH} \
+		--gofast_out=plugins=grpc:api \
 		api.proto
 	@echo Done.

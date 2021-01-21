@@ -31,7 +31,6 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
 )
 
 var slashPort = "443"
@@ -121,7 +120,8 @@ func (d *Dgraph) Login(ctx context.Context, userid string, password string) erro
 	if err != nil {
 		return err
 	}
-	return proto.Unmarshal(resp.Json, &d.jwt)
+
+	return d.jwt.Unmarshal(resp.Json)
 }
 
 // Alter can be used to do the following by setting various fields of api.Operation:
@@ -164,7 +164,7 @@ func (d *Dgraph) retryLogin(ctx context.Context) error {
 		return err
 	}
 
-	return proto.Unmarshal(resp.Json, &d.jwt)
+	return d.jwt.Unmarshal(resp.Json)
 }
 
 func (d *Dgraph) getContext(ctx context.Context) context.Context {
