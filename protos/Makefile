@@ -1,5 +1,5 @@
 #
-#  Copyright 2018 Dgraph Labs, Inc.
+#  Copyright 2018-2021 Dgraph Labs, Inc.
 #
 #  This file is available under the Apache License, Version 2.0,
 #  with the Commons Clause restriction.
@@ -18,6 +18,6 @@ clean:
 regenerate: clean
 	@protoc \
 		--proto_path=${PROTO_PATH} \
-		--gofast_out=plugins=grpc:api \
+		--gogofaster_out=plugins=grpc:api \
 		api.proto
 	@echo Done.
