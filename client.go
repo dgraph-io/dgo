@@ -66,21 +66,34 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 	return dg
 }
 
-// DialSlashGraphQLEndpoint creates a new Dgraph (client) for interacting with Alphas spawned
-// in Slash backend. It requires Slash GraphQL's backend url and API Query key.
-func DialSlashGraphQLEndpoint(endpoint, key string) (*Dgraph, error) {
-
+// DialSlashEndpoint creates a new TLS connection to a Slash GraphQL or Slash Enterprise backend
+// It requires the backend endpoint as well as the api key
+func DialSlashEndpoint(endpoint, key string) (*grpc.ClientConn, error) {
 	u, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
 	urlParts := strings.SplitN(u.Host, ".", 2)
 
 	host := urlParts[0] + ".grpc." + urlParts[1] + ":" + slashPort
 	pool, err := x509.SystemCertPool()
+	if err != nil {
+		return nil, err
+	}
+
 	creds := credentials.NewClientTLSFromCert(pool, "")
-	conn, err := grpc.Dial(
+	return grpc.Dial(
 		host,
 		grpc.WithTransportCredentials(creds),
 		grpc.WithPerRPCCredentials(&authCreds{key}),
 	)
+}
+
+// DialSlashGraphQLEndpoint is deprecated, as it leaks GRPC connections.
+// Please use DialSlashEndpoint instead
+func DialSlashGraphQLEndpoint(endpoint, key string) (*Dgraph, error) {
+	conn, err := DialSlashEndpoint(endpoint, key)
 
 	if err != nil {
 		return nil, err
