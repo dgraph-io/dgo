@@ -122,12 +122,12 @@ will be a no-op.
 
 To use JSON, use the fields SetJson and DeleteJson, which accept a string
 representing the nodes to be added or removed respectively (either as a JSON map
-or a list). To use RDF, use the fields SetNquads and DeleteNquads, which accept
+or a list). To use RDF, use the fields SetNquads and DelNquads, which accept
 a string representing the valid RDF triples (one per line) to added or removed
 respectively. This protobuf object also contains the Set and Del fields which
 accept a list of RDF triples that have already been parsed into our internal
 format. As such, these fields are mainly used internally and users should use
-the SetNquads and DeleteNquads instead if they are planning on using RDF.
+the SetNquads and DelNquads instead if they are planning on using RDF.
 
 We define a Person struct to represent a Person and marshal an instance of it to
 use with `Mutation` object.
