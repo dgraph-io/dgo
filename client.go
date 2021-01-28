@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -40,7 +41,7 @@ type Dgraph struct {
 	jwtMutex  sync.RWMutex
 	jwt       api.Jwt
 	dc        []api.DgraphClient
-	namespace string
+	namespace uint64
 }
 type authCreds struct {
 	token string
@@ -67,7 +68,7 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 	return dg
 }
 
-func (d *Dgraph) SetNamespace(namespace string) {
+func (d *Dgraph) SetNamespace(namespace uint64) {
 	d.namespace = namespace
 }
 
@@ -168,7 +169,11 @@ func (d *Dgraph) getContext(ctx context.Context) context.Context {
 		// no metadata key is in the context, add one
 		md = metadata.New(nil)
 	}
-	md.Set("namespace", d.namespace)
+	ns := strconv.FormatUint(d.namespace, 10)
+	// buf := make([]byte, 8)
+	// binary.BigEndian.PutUint64(buf, d.namespace)
+	// ns := fmt.Sprintf("%s", buf)
+	md.Set("namespace", ns)
 	if len(d.jwt.AccessJwt) > 0 {
 		md.Set("accessJwt", d.jwt.AccessJwt)
 	}
