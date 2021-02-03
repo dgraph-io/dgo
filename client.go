@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"math/rand"
 	"net/url"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -38,10 +37,9 @@ var slashPort = "443"
 
 // Dgraph is a transaction aware client to a set of Dgraph server instances.
 type Dgraph struct {
-	jwtMutex  sync.RWMutex
-	jwt       api.Jwt
-	dc        []api.DgraphClient
-	namespace uint64
+	jwtMutex sync.RWMutex
+	jwt      api.Jwt
+	dc       []api.DgraphClient
 }
 type authCreds struct {
 	token string
@@ -66,10 +64,6 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 	}
 
 	return dg
-}
-
-func (d *Dgraph) SetNamespace(namespace uint64) {
-	d.namespace = namespace
 }
 
 // DialSlashGraphQLEndpoint creates a new Dgraph (client) for interacting with Alphas spawned
@@ -100,14 +94,15 @@ func DialSlashGraphQLEndpoint(endpoint, key string) (*Dgraph, error) {
 
 // Login logs in the current client using the provided credentials.
 // Valid for the duration the client is alive.
-func (d *Dgraph) Login(ctx context.Context, userid string, password string) error {
+func (d *Dgraph) Login(ctx context.Context, userid string, password string, namespace uint64) error {
 	d.jwtMutex.Lock()
 	defer d.jwtMutex.Unlock()
 
 	dc := d.anyClient()
 	loginRequest := &api.LoginRequest{
-		Userid:   userid,
-		Password: password,
+		Userid:    userid,
+		Password:  password,
+		Namespace: namespace,
 	}
 	resp, err := dc.Login(ctx, loginRequest)
 	if err != nil {
@@ -169,11 +164,11 @@ func (d *Dgraph) getContext(ctx context.Context) context.Context {
 		// no metadata key is in the context, add one
 		md = metadata.New(nil)
 	}
-	ns := strconv.FormatUint(d.namespace, 10)
+	// ns := strconv.FormatUint(d.namespace, 10)
 	// buf := make([]byte, 8)
 	// binary.BigEndian.PutUint64(buf, d.namespace)
 	// ns := fmt.Sprintf("%s", buf)
-	md.Set("namespace", ns)
+	// md.Set("namespace", ns)
 	if len(d.jwt.AccessJwt) > 0 {
 		md.Set("accessJwt", d.jwt.AccessJwt)
 	}

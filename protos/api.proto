@@ -195,6 +195,7 @@ message LoginRequest {
 	string userid = 1;
 	string password = 2;
 	string refresh_token = 3;
+	uint64 namespace = 4;
 }
 
 message Jwt {
