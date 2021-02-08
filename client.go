@@ -159,20 +159,16 @@ func (d *Dgraph) getContext(ctx context.Context) context.Context {
 	d.jwtMutex.RLock()
 	defer d.jwtMutex.RUnlock()
 
-	md, ok := metadata.FromOutgoingContext(ctx)
-	if !ok {
-		// no metadata key is in the context, add one
-		md = metadata.New(nil)
-	}
-	// ns := strconv.FormatUint(d.namespace, 10)
-	// buf := make([]byte, 8)
-	// binary.BigEndian.PutUint64(buf, d.namespace)
-	// ns := fmt.Sprintf("%s", buf)
-	// md.Set("namespace", ns)
 	if len(d.jwt.AccessJwt) > 0 {
+		md, ok := metadata.FromOutgoingContext(ctx)
+		if !ok {
+			// no metadata key is in the context, add one
+			md = metadata.New(nil)
+		}
 		md.Set("accessJwt", d.jwt.AccessJwt)
+		return metadata.NewOutgoingContext(ctx, md)
 	}
-	return metadata.NewOutgoingContext(ctx, md)
+	return ctx
 }
 
 // isJwtExpired returns true if the error indicates that the jwt has expired.

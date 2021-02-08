@@ -1394,13 +1394,6 @@ func (m *LoginRequest) GetRefreshToken() string {
 	return ""
 }
 
-func (m *LoginRequest) GetNamespace() uint64 {
-	if m != nil {
-		return m.Namespace
-	}
-	return 0
-}
-
 type Jwt struct {
 	AccessJwt            string   `protobuf:"bytes,1,opt,name=access_jwt,json=accessJwt,proto3" json:"access_jwt,omitempty"`
 	RefreshJwt           string   `protobuf:"bytes,2,opt,name=refresh_jwt,json=refreshJwt,proto3" json:"refresh_jwt,omitempty"`
