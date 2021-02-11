@@ -24,6 +24,7 @@ to understand how to run and work with Dgraph.
   - [Running Conditional Upsert](#running-conditional-upsert)
   - [Committing a transaction](#committing-a-transaction)
   - [Setting Metadata Headers](#setting-metadata-headers)
+  - [Connecting To Slash Endpoint](#connecting-to-slash-endpoint)
 - [Development](#development)
   - [Running tests](#running-tests)
 
@@ -40,9 +41,9 @@ Dgraph version   | dgo version  |        dgo import path          |
 
 Note: One of the most important API breakages from dgo v1 to v2 is in
 the function `dgo.Txn.Mutate`. This function returns an `*api.Assigned`
-value in v1 but an `*api.Response` in v2. 
+value in v1 but an `*api.Response` in v2.
 
-Note: There is no breaking API change from v2 to v200 but we have decided 
+Note: There is no breaking API change from v2 to v200 but we have decided
 to follow the [CalVer Versioning Scheme](https://dgraph.io/blog/post/dgraph-calendar-versioning).
 
 ## Using a client
@@ -121,12 +122,12 @@ will be a no-op.
 
 To use JSON, use the fields SetJson and DeleteJson, which accept a string
 representing the nodes to be added or removed respectively (either as a JSON map
-or a list). To use RDF, use the fields SetNquads and DeleteNquads, which accept
+or a list). To use RDF, use the fields SetNquads and DelNquads, which accept
 a string representing the valid RDF triples (one per line) to added or removed
 respectively. This protobuf object also contains the Set and Del fields which
 accept a list of RDF triples that have already been parsed into our internal
 format. As such, these fields are mainly used internally and users should use
-the SetNquads and DeleteNquads instead if they are planning on using RDF.
+the SetNquads and DelNquads instead if they are planning on using RDF.
 
 We define a Person struct to represent a Person and marshal an instance of it to
 use with `Mutation` object.
@@ -320,6 +321,19 @@ md := metadata.New(nil)
 md.Append("auth-token", "the-auth-token-value")
 ctx := metadata.NewOutgoingContext(context.Background(), md)
 dg.Alter(ctx, &op)
+```
+
+### Connecting To Slash Endpoint
+
+Please use the following snippet to connect to a Slash GraphQL or Slash Enterprise backend.
+
+```go
+conn, err := dgo.DialSlashEndpoint("https://your.endpoint.dgraph.io/graphql", "api-token")
+if err != nil {
+  log.Fatal(err)
+}
+defer conn.Close()
+dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 ```
 
 ## Development
