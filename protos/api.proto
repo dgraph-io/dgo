@@ -150,13 +150,14 @@ message Metrics {
 }
 
 message NQuad {
+	reserved 5; // This was used for label.
 	string subject = 1;
 	string predicate = 2;
 	string object_id = 3;
 	Value object_value = 4;
-	string label = 5;
 	string lang = 6;
 	repeated Facet facets = 7;
+	uint64 namespace = 8;
 }
 
 message Value {
@@ -195,6 +196,7 @@ message LoginRequest {
 	string userid = 1;
 	string password = 2;
 	string refresh_token = 3;
+	uint64 namespace = 4;
 }
 
 message Jwt {
