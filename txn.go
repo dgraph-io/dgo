@@ -18,6 +18,7 @@ package dgo
 
 import (
 	"context"
+	"sort"
 
 	"github.com/dgraph-io/dgo/v200/protos/api"
 	"github.com/pkg/errors"
@@ -267,7 +268,9 @@ func (txn *Txn) mergeContext(src *api.TxnContext) error {
 		return errors.New("StartTs mismatch")
 	}
 	txn.context.Keys = append(txn.context.Keys, src.Keys...)
+	txn.context.Keys = unique(txn.context.Keys)
 	txn.context.Preds = append(txn.context.Preds, src.Preds...)
+	txn.context.Preds = unique(txn.context.Preds)
 	return nil
 }
 
@@ -294,4 +297,22 @@ func (txn *Txn) commitOrAbort(ctx context.Context) error {
 	}
 
 	return err
+}
+
+// unique takes an array and returns it with no duplicate entries.
+func unique(a []string) []string {
+	if len(a) < 2 {
+		return a
+	}
+
+	sort.Strings(a)
+	idx := 1
+	for _, val := range a {
+		if a[idx-1] == val {
+			continue
+		}
+		a[idx] = val
+		idx++
+	}
+	return a[:idx]
 }
