@@ -63,7 +63,7 @@ func (d *Dgraph) NewTxn() *Txn {
 	return &Txn{
 		dg:      d,
 		dc:      d.anyClient(),
-		context: &api.TxnContext{},
+		context: &api.TxnContext{Keys: make(map[string]bool), Preds: make(map[string]bool)},
 	}
 }
 
@@ -267,10 +267,12 @@ func (txn *Txn) mergeContext(src *api.TxnContext) error {
 	if txn.context.StartTs != src.StartTs {
 		return errors.New("StartTs mismatch")
 	}
-	txn.context.Keys = append(txn.context.Keys, src.Keys...)
-	txn.context.Keys = unique(txn.context.Keys)
-	txn.context.Preds = append(txn.context.Preds, src.Preds...)
-	txn.context.Preds = unique(txn.context.Preds)
+	for key := range src.Keys {
+		txn.context.Keys[key] = true
+	}
+	for pred := range src.Preds {
+		txn.context.Preds[pred] = true
+	}
 	return nil
 }
 
