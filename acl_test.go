@@ -30,7 +30,7 @@ import (
 )
 
 var (
-	grootpassword = "password"
+	guardianCreds = "user=groot;password=password;"
 	username      = "alice"
 	userpassword  = "alicepassword"
 	readpred      = "predicate_to_read"
@@ -63,7 +63,7 @@ func initializeDBACLs(t *testing.T, dg *dgo.Dgraph) {
 
 func resetUser(t *testing.T) {
 	createuser := exec.Command("dgraph", "acl", "add", "-a", dgraphAddress, "-u", username, "-p",
-		userpassword, "-x", grootpassword)
+		userpassword, "--guardian-creds", guardianCreds)
 
 	_, err := createuser.CombinedOutput()
 	require.NoError(t, err, "unable to create user")
@@ -72,32 +72,32 @@ func resetUser(t *testing.T) {
 func createGroupACLs(t *testing.T, groupname string) {
 	// create group
 	createGroup := exec.Command("dgraph", "acl", "add", "-a", dgraphAddress,
-		"-g", groupname, "-x", grootpassword)
+		"-g", groupname, "--guardian-creds", guardianCreds)
 	_, err := createGroup.CombinedOutput()
 	require.NoError(t, err, "unable to create group: %s", groupname)
 
 	// assign read access to read predicate
 	readAccess := exec.Command("dgraph", "acl", "mod", "-a", dgraphAddress, "-g", groupname, "-p",
-		readpred, "-m", "4", "-x", grootpassword)
+		readpred, "-m", "4", "--guardian-creds", guardianCreds)
 	_, err = readAccess.CombinedOutput()
 	require.NoError(t, err, "unable to grant read access to group: %s", groupname)
 
 	// assign write access to write predicate
 	writeAccess := exec.Command("dgraph", "acl", "mod", "-a", dgraphAddress, "-g", groupname, "-p",
-		writepred, "-m", "2", "-x", grootpassword)
+		writepred, "-m", "2", "--guardian-creds", guardianCreds)
 	_, err = writeAccess.CombinedOutput()
 	require.NoError(t, err, "unable to grant write access to group: %s", groupname)
 
 	// assign modify access to modify predicate
 	modifyAccess := exec.Command("dgraph", "acl", "mod", "-a", dgraphAddress, "-g", groupname, "-p",
-		modifypred, "-m", "1", "-x", grootpassword)
+		modifypred, "-m", "1", "--guardian-creds", guardianCreds)
 	_, err = modifyAccess.CombinedOutput()
 	require.NoError(t, err, "unable to grant modify access to group: %s", groupname)
 }
 
 func addUserToGroup(t *testing.T, username, groupname string) {
 	linkCmd := exec.Command("dgraph", "acl", "mod", "-a", dgraphAddress, "-u", username,
-		"--group_list", groupname, "-x", grootpassword)
+		"--group_list", groupname, "--guardian-creds", guardianCreds)
 	_, err := linkCmd.CombinedOutput()
 	require.NoError(t, err, "unable to link user: %s and group: %s", username, groupname)
 }
