@@ -29,14 +29,13 @@ import (
 )
 
 var (
-	grootpassword = "password"
-	username      = "alice"
-	userpassword  = "alicepassword"
-	readpred      = "predicate_to_read"
-	writepred     = "predicate_to_write"
-	modifypred    = "predicate_to_modify"
-	unusedgroup   = "unused"
-	devgroup      = "dev"
+	username     = "alice"
+	userpassword = "alicepassword"
+	readpred     = "predicate_to_read"
+	writepred    = "predicate_to_write"
+	modifypred   = "predicate_to_modify"
+	unusedgroup  = "unused"
+	devgroup     = "dev"
 
 	dgraphAddress = "127.0.0.1:9180"
 	adminUrl      = "http://127.0.0.1:8180/admin"
