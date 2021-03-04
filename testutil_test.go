@@ -115,7 +115,7 @@ func (gqlErr *GqlError) Error() string {
 }
 func MakeGQLRequest(t *testing.T, endpoint string, params *GraphQLParams,
 	token *HttpToken) *GraphQLResponse {
-	resp := MakeGQLRequestHelper(t, params, token)
+	resp := MakeGQLRequestHelper(t, endpoint, params, token)
 	if len(resp.Errors) == 0 || !strings.Contains(resp.Errors.Error(), "Token is expired") {
 		return resp
 	}
