@@ -19,7 +19,6 @@ package dgo_test
 import (
 	"context"
 	"fmt"
-	"os/exec"
 	"testing"
 	"time"
 
@@ -30,16 +29,16 @@ import (
 )
 
 var (
-	guardianCreds = "user=groot;password=password;"
-	username      = "alice"
-	userpassword  = "alicepassword"
-	readpred      = "predicate_to_read"
-	writepred     = "predicate_to_write"
-	modifypred    = "predicate_to_modify"
-	unusedgroup   = "unused"
-	devgroup      = "dev"
+	username     = "alice"
+	userpassword = "alicepassword"
+	readpred     = "predicate_to_read"
+	writepred    = "predicate_to_write"
+	modifypred   = "predicate_to_modify"
+	unusedgroup  = "unused"
+	devgroup     = "dev"
 
 	dgraphAddress = "127.0.0.1:9180"
+	adminUrl      = "http://127.0.0.1:8180/admin"
 )
 
 func initializeDBACLs(t *testing.T, dg *dgo.Dgraph) {
@@ -61,45 +60,122 @@ func initializeDBACLs(t *testing.T, dg *dgo.Dgraph) {
 	require.NoError(t, err, "unable to insert data for read predicate")
 }
 
-func resetUser(t *testing.T) {
-	createuser := exec.Command("dgraph", "acl", "add", "-a", dgraphAddress, "-u", username, "-p",
-		userpassword, "--guardian-creds", guardianCreds)
+func resetUser(t *testing.T, token *HttpToken) {
+	resetUser := `mutation addUser($name: String!, $pass: String!) {
+					  addUser(input: [{name: $name, password: $pass}]) {
+						user {
+						  name
+						}
+					  }
+					}`
 
-	_, err := createuser.CombinedOutput()
-	require.NoError(t, err, "unable to create user")
+	params := &GraphQLParams{
+		Query: resetUser,
+		Variables: map[string]interface{}{
+			"name": username,
+			"pass": userpassword,
+		},
+	}
+	resp := MakeGQLRequest(t, adminUrl, params, token)
+	require.True(t, len(resp.Errors) == 0, resp.Errors)
 }
 
-func createGroupACLs(t *testing.T, groupname string) {
+func createGroupACLs(t *testing.T, groupname string, token *HttpToken) {
 	// create group
-	createGroup := exec.Command("dgraph", "acl", "add", "-a", dgraphAddress,
-		"-g", groupname, "--guardian-creds", guardianCreds)
-	_, err := createGroup.CombinedOutput()
-	require.NoError(t, err, "unable to create group: %s", groupname)
+	createGroup := `mutation addGroup($name: String!){
+			addGroup(input: [{name: $name}]) {
+				group {
+				  name
+				  users {
+					name
+				  }
+				}
+			  }
+			}`
+	params := &GraphQLParams{
+		Query: createGroup,
+		Variables: map[string]interface{}{
+			"name": groupname,
+		},
+	}
+	resp := MakeGQLRequest(t, adminUrl, params, token)
+	require.Truef(t, len(resp.Errors) == 0, "unable to create group: %+v", resp.Errors.Error())
+
+	// Set permissions.
+	updatePerms := `mutation updateGroup($gname: String!, $pred: String!, $perm: Int!) {
+		  updateGroup(input: {filter: {name: {eq: $gname}}, set: {rules: [{predicate: $pred, permission: $perm}]}}) {
+			group {
+			  name
+			  rules {
+				permission
+				predicate
+			  }
+			}
+		  }
+		}`
+
+	setPermission := func(pred string, permission int) {
+		params = &GraphQLParams{
+			Query: updatePerms,
+			Variables: map[string]interface{}{
+				"gname": groupname,
+				"pred":  pred,
+				"perm":  permission,
+			},
+		}
+		resp = MakeGQLRequest(t, adminUrl, params, token)
+		require.Truef(t, len(resp.Errors) == 0, "unable to set permissions: %+v", resp.Errors)
+	}
 
 	// assign read access to read predicate
-	readAccess := exec.Command("dgraph", "acl", "mod", "-a", dgraphAddress, "-g", groupname, "-p",
-		readpred, "-m", "4", "--guardian-creds", guardianCreds)
-	_, err = readAccess.CombinedOutput()
-	require.NoError(t, err, "unable to grant read access to group: %s", groupname)
-
+	setPermission(readpred, 4)
 	// assign write access to write predicate
-	writeAccess := exec.Command("dgraph", "acl", "mod", "-a", dgraphAddress, "-g", groupname, "-p",
-		writepred, "-m", "2", "--guardian-creds", guardianCreds)
-	_, err = writeAccess.CombinedOutput()
-	require.NoError(t, err, "unable to grant write access to group: %s", groupname)
-
+	setPermission(writepred, 2)
 	// assign modify access to modify predicate
-	modifyAccess := exec.Command("dgraph", "acl", "mod", "-a", dgraphAddress, "-g", groupname, "-p",
-		modifypred, "-m", "1", "--guardian-creds", guardianCreds)
-	_, err = modifyAccess.CombinedOutput()
-	require.NoError(t, err, "unable to grant modify access to group: %s", groupname)
+	setPermission(modifypred, 1)
 }
 
-func addUserToGroup(t *testing.T, username, groupname string) {
-	linkCmd := exec.Command("dgraph", "acl", "mod", "-a", dgraphAddress, "-u", username,
-		"--group_list", groupname, "--guardian-creds", guardianCreds)
-	_, err := linkCmd.CombinedOutput()
-	require.NoError(t, err, "unable to link user: %s and group: %s", username, groupname)
+func addUserToGroup(t *testing.T, username, group, op string, token *HttpToken) {
+	addToGroup := `mutation updateUser($name: String, $group: String!) {
+		updateUser(input: {filter: {name: {eq: $name}}, set: {groups: [{name: $group}]}}) {
+			user {
+			  name
+			  groups {
+				name
+			}
+			}
+		  }
+		}`
+	removeFromGroup := `mutation updateUser($name: String, $group: String!) {
+		updateUser(input: {filter: {name: {eq: $name}}, remove: {groups: [{name: $group}]}}) {
+			user {
+			  name
+			  groups {
+				name
+			}
+			}
+		  }
+		}`
+
+	var query string
+	switch op {
+	case "add":
+		query = addToGroup
+	case "del":
+		query = removeFromGroup
+	default:
+		require.Fail(t, "invalid operation for updating user")
+	}
+
+	params := &GraphQLParams{
+		Query: query,
+		Variables: map[string]interface{}{
+			"name":  username,
+			"group": group,
+		},
+	}
+	resp := MakeGQLRequest(t, adminUrl, params, token)
+	require.Truef(t, len(resp.Errors) == 0, "unable to update user: %+v", resp.Errors)
 }
 
 func query(t *testing.T, dg *dgo.Dgraph, shouldFail bool) {
@@ -150,33 +226,39 @@ func TestACLs(t *testing.T) {
 
 	initializeDBACLs(t, dg)
 
-	resetUser(t)
+	token, err := HttpLogin(&LoginParams{
+		Endpoint:  adminUrl,
+		UserID:    "groot",
+		Passwd:    "password",
+		Namespace: 0, // Galaxy namespace
+	})
+	resetUser(t, token)
 	time.Sleep(5 * time.Second)
 
 	// All operations without ACLs should fail.
-	err := dg.Login(context.Background(), username, userpassword)
+	err = dg.Login(context.Background(), username, userpassword)
 	require.NoError(t, err, "unable to login for user: %s", username)
 	query(t, dg, true)
 	mutation(t, dg, true)
 	changeSchema(t, dg, true)
 
 	// Create unused group, everything should still fail.
-	createGroupACLs(t, unusedgroup)
+	createGroupACLs(t, unusedgroup, token)
 	time.Sleep(6 * time.Second)
 	query(t, dg, true)
 	mutation(t, dg, true)
 	changeSchema(t, dg, true)
 
 	// Create dev group and link user to it. Everything should pass now.
-	createGroupACLs(t, devgroup)
-	addUserToGroup(t, username, devgroup)
+	createGroupACLs(t, devgroup, token)
+	addUserToGroup(t, username, devgroup, "add", token)
 	time.Sleep(6 * time.Second)
 	query(t, dg, false)
 	mutation(t, dg, false)
 	changeSchema(t, dg, false)
 
 	// Remove user from dev group, everything should fail now.
-	addUserToGroup(t, username, "")
+	addUserToGroup(t, username, devgroup, "del", token)
 	time.Sleep(6 * time.Second)
 	query(t, dg, true)
 	mutation(t, dg, true)
