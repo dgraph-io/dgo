@@ -275,7 +275,7 @@ func (txn *Txn) mergeContext(src *api.TxnContext) error {
 	for _, key := range src.Keys {
 		txn.keys[key] = struct{}{}
 	}
-	for _, pred := range src.Keys {
+	for _, pred := range src.Preds {
 		txn.preds[pred] = struct{}{}
 	}
 	return nil
