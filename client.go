@@ -124,6 +124,23 @@ func (d *Dgraph) login(ctx context.Context, userid string, password string,
 	return d.jwt.Unmarshal(resp.Json)
 }
 
+// This is an exposed copy of mergContext.
+func (d *Dgraph) AttachJwt(ctx context.Context) context.Context {
+	d.jwtMutex.RLock()
+	defer d.jwtMutex.RUnlock()
+
+	if len(d.jwt.AccessJwt) > 0 {
+		md, ok := metadata.FromOutgoingContext(ctx)
+		if !ok {
+			// no metadata key is in the context, add one
+			md = metadata.New(nil)
+		}
+		md.Set("accessJwt", d.jwt.AccessJwt)
+		return metadata.NewOutgoingContext(ctx, md)
+	}
+	return ctx
+}
+
 // Login logs in the current client using the provided credentials into default namespace (0).
 // Valid for the duration the client is alive.
 func (d *Dgraph) Login(ctx context.Context, userid string, password string) error {
