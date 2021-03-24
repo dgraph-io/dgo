@@ -155,7 +155,7 @@ func (d *Dgraph) Alter(ctx context.Context, op *api.Operation) error {
 	_, err := dc.Alter(ctx, op)
 
 	if isJwtExpired(err) {
-		err = d.retryLogin(ctx)
+		err = d.RetryLogin(ctx)
 		if err != nil {
 			return err
 		}
@@ -167,7 +167,7 @@ func (d *Dgraph) Alter(ctx context.Context, op *api.Operation) error {
 	return err
 }
 
-func (d *Dgraph) retryLogin(ctx context.Context) error {
+func (d *Dgraph) RetryLogin(ctx context.Context) error {
 	d.jwtMutex.Lock()
 	defer d.jwtMutex.Unlock()
 
