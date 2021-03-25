@@ -265,6 +265,8 @@ func (txn *Txn) mergeContext(src *api.TxnContext) error {
 		return nil
 	}
 
+	txn.context.Hash = src.Hash
+
 	if txn.context.StartTs == 0 {
 		txn.context.StartTs = src.StartTs
 	}

@@ -128,6 +128,7 @@ message TxnContext {
 	bool aborted = 3;
 	repeated string keys = 4;  // List of keys to be used for conflict detection.
 	repeated string preds = 5; // List of predicates involved in this transaction.
+	string hash = 6;
 }
 
 message Check {}
