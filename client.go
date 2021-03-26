@@ -155,7 +155,7 @@ func (d *Dgraph) Alter(ctx context.Context, op *api.Operation) error {
 	_, err := dc.Alter(ctx, op)
 
 	if isJwtExpired(err) {
-		err = d.RetryLogin(ctx)
+		err = d.retryLogin(ctx)
 		if err != nil {
 			return err
 		}
@@ -167,7 +167,13 @@ func (d *Dgraph) Alter(ctx context.Context, op *api.Operation) error {
 	return err
 }
 
-func (d *Dgraph) RetryLogin(ctx context.Context) error {
+// Relogin relogin the current client using the refresh token. This can be used when the
+// access-token gets expired.
+func (d *Dgraph) Relogin(ctx context.Context) error {
+	return d.retryLogin(ctx)
+}
+
+func (d *Dgraph) retryLogin(ctx context.Context) error {
 	d.jwtMutex.Lock()
 	defer d.jwtMutex.Unlock()
 

@@ -189,7 +189,7 @@ func (txn *Txn) Do(ctx context.Context, req *api.Request) (*api.Response, error)
 	appendHdr(&responseHeaders, resp)
 
 	if isJwtExpired(err) {
-		err = txn.dg.RetryLogin(ctx)
+		err = txn.dg.retryLogin(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -304,7 +304,7 @@ func (txn *Txn) commitOrAbort(ctx context.Context) error {
 	_, err := txn.dc.CommitOrAbort(ctx, txn.context)
 
 	if isJwtExpired(err) {
-		err = txn.dg.RetryLogin(ctx)
+		err = txn.dg.retryLogin(ctx)
 		if err != nil {
 			return err
 		}
