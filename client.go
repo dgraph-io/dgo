@@ -124,6 +124,13 @@ func (d *Dgraph) login(ctx context.Context, userid string, password string,
 	return d.jwt.Unmarshal(resp.Json)
 }
 
+// GetJwt returns back the JWT for the dgraph client.
+func (d *Dgraph) GetJwt() api.Jwt {
+	d.jwtMutex.RLock()
+	defer d.jwtMutex.RUnlock()
+	return d.jwt
+}
+
 // Login logs in the current client using the provided credentials into default namespace (0).
 // Valid for the duration the client is alive.
 func (d *Dgraph) Login(ctx context.Context, userid string, password string) error {
@@ -158,6 +165,12 @@ func (d *Dgraph) Alter(ctx context.Context, op *api.Operation) error {
 	}
 
 	return err
+}
+
+// Relogin relogin the current client using the refresh token. This can be used when the
+// access-token gets expired.
+func (d *Dgraph) Relogin(ctx context.Context) error {
+	return d.retryLogin(ctx)
 }
 
 func (d *Dgraph) retryLogin(ctx context.Context) error {
