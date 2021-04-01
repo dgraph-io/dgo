@@ -57,6 +57,7 @@ message Request {
 		RDF = 1;
 	}
 	RespFormat resp_format = 14;
+	string hash = 15;
 }
 
 message Uids {

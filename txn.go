@@ -173,6 +173,7 @@ func (txn *Txn) Do(ctx context.Context, req *api.Request) (*api.Response, error)
 
 	ctx = txn.dg.getContext(ctx)
 	req.StartTs = txn.context.StartTs
+	req.Hash = txn.context.Hash
 
 	// Append the GRPC Response headers to the responses. Needed for Slash.
 	appendHdr := func(hdrs *metadata.MD, resp *api.Response) {
