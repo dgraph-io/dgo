@@ -33,11 +33,14 @@ to understand how to run and work with Dgraph.
 Depending on the version of Dgraph that you are connecting to, you will have to
 use a different version of this client and their corresponding import paths.
 
-Dgraph version   | dgo version  |        dgo import path          |
----------------  | -----------  | ------------------------------- |
-  dgraph 1.0.X   |  dgo 1.X.Y   |   "github.com/dgraph-io/dgo"    |
-  dgraph 1.1.X   |  dgo 2.X.Y   | "github.com/dgraph-io/dgo/v2"   |
-  dgraph 20.03.0 |  dgo 200.03.0| "github.com/dgraph-io/dgo/v200" |
+Dgraph version   | dgo version   |        dgo import path          |
+---------------  | -----------   | ------------------------------- |
+  dgraph 1.0.X   |  dgo 1.X.Y    |   "github.com/dgraph-io/dgo"    |
+  dgraph 1.1.X   |  dgo 2.X.Y    | "github.com/dgraph-io/dgo/v2"   |
+  dgraph 20.03.0 |  dgo 200.03.0 | "github.com/dgraph-io/dgo/v200" |
+  dgraph 20.07.0 |  dgo 200.03.0 | "github.com/dgraph-io/dgo/v200" |
+  dgraph 20.11.0 |  dgo 200.03.0 | "github.com/dgraph-io/dgo/v200" |
+  dgraph 21.03.0 |  dgo 210.03.0 | "github.com/dgraph-io/dgo/v210" |
 
 Note: One of the most important API breakages from dgo v1 to v2 is in
 the function `dgo.Txn.Mutate`. This function returns an `*api.Assigned`
@@ -63,6 +66,27 @@ if err != nil {
 }
 defer conn.Close()
 dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
+```
+
+### Login into a namespace
+
+If your server has Access Control Lists enabled (Dgraph v1.1 or above), the client must be 
+logged in for accessing data. Use `Login` endpoint:
+
+Calling login will obtain and remember the access and refresh JWT tokens. All subsequent operations 
+via the logged in client will send along the stored access token.
+
+```go
+err := dgraphClient.Login(ctx, "user", "passwd")
+// Check error
+```
+
+If your server additionally has namespaces (Dgraph v21.03 or above), use the 
+`LoginIntoNamespace` API.
+
+```go
+err := dgraphClient.LoginIntoNamespace(ctx, "user", "passwd", 0x10)
+// Check error
 ```
 
 ### Altering the database
