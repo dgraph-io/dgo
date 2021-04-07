@@ -20,7 +20,7 @@ git push origin <new tag>
 
 2. Change all the import paths to import `v<new major version>`.
 
-For example, current import path is `"github.com/dgraph-io/dgo/v200"`.
+For example, if the current import path is `"github.com/dgraph-io/dgo/v200"`.
 When we release v201.07.0, we would replace the import paths to `"github.com/dgraph-io/dgo/v201"`.
 
 3. Update [Supported Version](https://github.com/dgraph-io/dgo/#supported-versions).
