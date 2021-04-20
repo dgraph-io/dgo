@@ -25,7 +25,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dgraph-io/dgo/v200/protos/api"
+	"github.com/dgraph-io/dgo/v210/protos/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -66,8 +66,15 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 	return dg
 }
 
+<<<<<<< HEAD
 // DialSlashEndpoint is deprecated. It will be removed in the 21.07 release.
 // Use DialCloudEndpoint to connect to Dgraph Cloud backend.
+=======
+// DialSlashEndpoint is deprecated and will be removed in v21.07 release. For more details,
+// see: https://discuss.dgraph.io/t/regarding-slash-cloud-dgraph-endpoints-in-the-clients/13492
+// DialSlashEndpoint creates a new TLS connection to a Slash GraphQL or Slash Enterprise backend
+// It requires the backend endpoint as well as the api key
+>>>>>>> master
 func DialSlashEndpoint(endpoint, key string) (*grpc.ClientConn, error) {
 	return DialCloudEndpoint(endpoint, key)
 }
@@ -111,6 +118,26 @@ func DialCloudEndpoint(endpoint, key string) (*grpc.ClientConn, error) {
 	)
 }
 
+<<<<<<< HEAD
+=======
+// DialSlashGraphQLEndpoint is deprecated and will be removed in v21.07 release. For more details,
+// see: https://discuss.dgraph.io/t/regarding-slash-cloud-dgraph-endpoints-in-the-clients/13492
+// DialSlashGraphQLEndpoint is deprecated, as it leaks GRPC connections.
+// Please use DialSlashEndpoint instead
+func DialSlashGraphQLEndpoint(endpoint, key string) (*Dgraph, error) {
+	conn, err := DialSlashEndpoint(endpoint, key)
+
+	if err != nil {
+		return nil, err
+	}
+
+	dc := api.NewDgraphClient(conn)
+	dg := NewDgraphClient(dc)
+
+	return dg, nil
+}
+
+>>>>>>> master
 func (d *Dgraph) login(ctx context.Context, userid string, password string,
 	namespace uint64) error {
 	d.jwtMutex.Lock()
