@@ -18,22 +18,39 @@ package dgo
 
 import (
 	"context"
+	"crypto/x509"
 	"fmt"
 	"math/rand"
+	"net/url"
 	"strings"
 	"sync"
 
 	"github.com/dgraph-io/dgo/v200/protos/api"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
+
+var slashPort = "443"
 
 // Dgraph is a transaction aware client to a set of Dgraph server instances.
 type Dgraph struct {
 	jwtMutex sync.RWMutex
 	jwt      api.Jwt
 	dc       []api.DgraphClient
+}
+type authCreds struct {
+	token string
+}
+
+func (a *authCreds) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	return map[string]string{"Authorization": a.token}, nil
+}
+
+func (a *authCreds) RequireTransportSecurity() bool {
+	return true
 }
 
 // NewDgraphClient creates a new Dgraph (client) for interacting with Alphas.
@@ -49,9 +66,43 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 	return dg
 }
 
-// DialSlashEndpoint is deprecated. Follow the docs [Link: ] to create a connection from cloud endpoint
-func DialSlashEndpoint(endpoint, key string) error {
-	return fmt.Errorf("DialSlashEndpoint is deprecated")
+// DialSlashEndpoint creates a new TLS connection to a Slash GraphQL or Slash Enterprise backend
+// It requires the backend endpoint as well as the api key
+func DialSlashEndpoint(endpoint, key string) (*grpc.ClientConn, error) {
+	u, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	urlParts := strings.SplitN(u.Host, ".", 2)
+
+	host := urlParts[0] + ".grpc." + urlParts[1] + ":" + slashPort
+	pool, err := x509.SystemCertPool()
+	if err != nil {
+		return nil, err
+	}
+
+	creds := credentials.NewClientTLSFromCert(pool, "")
+	return grpc.Dial(
+		host,
+		grpc.WithTransportCredentials(creds),
+		grpc.WithPerRPCCredentials(&authCreds{key}),
+	)
+}
+
+// DialSlashGraphQLEndpoint is deprecated, as it leaks GRPC connections.
+// Please use DialSlashEndpoint instead
+func DialSlashGraphQLEndpoint(endpoint, key string) (*Dgraph, error) {
+	conn, err := DialSlashEndpoint(endpoint, key)
+
+	if err != nil {
+		return nil, err
+	}
+
+	dc := api.NewDgraphClient(conn)
+	dg := NewDgraphClient(dc)
+
+	return dg, nil
 }
 
 func (d *Dgraph) login(ctx context.Context, userid string, password string,
