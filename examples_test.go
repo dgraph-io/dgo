@@ -213,7 +213,6 @@ func ExampleTxn_Mutate() {
 		loc: geo .
 		type: string .
 		coords: float .
-		Friends: [uid] .
 
 		type Person {
 			name
