@@ -883,10 +883,6 @@ func ExampleDeleteEdges() {
 		type Institution {
 			name
 		}
-
-		type Institution {
-			name: string
-		}
 	`
 
 	ctx := context.Background()
