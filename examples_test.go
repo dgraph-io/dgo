@@ -213,7 +213,6 @@ func ExampleTxn_Mutate() {
 		loc: geo .
 		type: string .
 		coords: float .
-		Friends: [uid] .
 
 		type Person {
 			name
@@ -883,10 +882,6 @@ func ExampleDeleteEdges() {
 
 		type Institution {
 			name
-		}
-
-		type Institution {
-			name: string
 		}
 	`
 
