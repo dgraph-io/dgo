@@ -40,6 +40,13 @@ service Dgraph {
 	rpc Alter (Operation)          returns (Payload) {}
 	rpc CommitOrAbort (TxnContext) returns (TxnContext) {}
 	rpc CheckVersion(Check)        returns (Version) {}
+	rpc Health(HealthRequest) returns (Response) {}
+}
+
+
+message HealthRequest {
+	bool all = 1;
+	bool lin_read = 2;
 }
 
 message Request {

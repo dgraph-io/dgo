@@ -138,6 +138,11 @@ func (d *Dgraph) login(ctx context.Context, userid string, password string,
 	return d.jwt.Unmarshal(resp.Json)
 }
 
+func (d *Dgraph) Health(ctx context.Context, req *api.HealthRequest) (*api.Response, error) {
+	dc := d.anyClient()
+	return dc.Health(ctx, req)
+}
+
 // GetJwt returns back the JWT for the dgraph client.
 func (d *Dgraph) GetJwt() api.Jwt {
 	d.jwtMutex.RLock()
