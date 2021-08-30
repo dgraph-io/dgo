@@ -149,7 +149,6 @@ message Latency {
 message Metrics {
 	// num_uids is the map of number of uids processed by each attribute.
 	map<string, uint64> num_uids = 1;
-	repeated string logs = 2;
 }
 
 message NQuad {
