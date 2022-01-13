@@ -205,7 +205,7 @@ if err != nil {
 
 ### Running a query
 
-You can run a query by calling `txn.Query(ctx, q)`. You will need to pass in a GraphQL+- query string. If
+You can run a query by calling `txn.Query(ctx, q)`. You will need to pass in a DQL query string. If
 you want to pass an additional map of any variables that you might want to set in the query, call
 `txn.QueryWithVars(ctx, q, vars)` with the variables map as third argument.
 
