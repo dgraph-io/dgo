@@ -75,7 +75,7 @@ func MakeGQLRequestHelper(t *testing.T, endpoint string, params *GraphQLParams,
 	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(b))
 	require.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
-	if token.AccessJwt != "" {
+	if token != nil && token.AccessJwt != "" {
 		req.Header.Set("X-Dgraph-AccessToken", token.AccessJwt)
 	}
 	client := &http.Client{}
