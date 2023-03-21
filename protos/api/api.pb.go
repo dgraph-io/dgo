@@ -1024,6 +1024,7 @@ func (m *NQuad) GetNamespace() uint64 {
 
 type Value struct {
 	// Types that are valid to be assigned to Val:
+	//
 	//	*Value_DefaultVal
 	//	*Value_BytesVal
 	//	*Value_IntVal

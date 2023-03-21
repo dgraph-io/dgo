@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Dgraph Labs, Inc. and Contributors
+ * Copyright (C) 2023 Dgraph Labs, Inc. and Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,10 @@ func TestTxnErrFinished(t *testing.T) {
 	err = dg.Alter(ctx, op)
 	require.NoError(t, err)
 
-	mu := &api.Mutation{SetNquads: []byte(`_:user1 <email> "user1@company1.io" .`), CommitNow: true}
+	mu := &api.Mutation{
+		SetNquads: []byte(`_:user1 <email> "user1@company1.io" .`),
+		CommitNow: true,
+	}
 	txn := dg.NewTxn()
 	_, err = txn.Mutate(context.Background(), mu)
 	require.NoError(t, err, "first mutation should be successful")
@@ -105,12 +108,12 @@ func TestTxnErrAborted(t *testing.T) {
 
 	req := &api.Request{Query: q, Mutations: []*api.Mutation{mu2}}
 	ctx1, ctx2 := context.Background(), context.Background()
-	_, err1 := txn1.Do(ctx1, req)
-	_, err2 := txn2.Do(ctx2, req)
-
-	require.NoError(t, err1)
-	require.NoError(t, err2)
+	_, err = txn1.Do(ctx1, req)
+	require.NoError(t, err)
+	_, err = txn2.Do(ctx2, req)
+	require.NoError(t, err)
 
 	err = txn1.Commit(ctx1)
+	require.NoError(t, err)
 	require.Error(t, txn2.Commit(ctx2), dgo.ErrAborted, "2nd transaction should have aborted")
 }

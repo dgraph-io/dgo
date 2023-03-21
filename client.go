@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Dgraph Labs, Inc. and Contributors
+ * Copyright (C) 2023 Dgraph Labs, Inc. and Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,15 +25,18 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dgraph-io/dgo/v210/protos/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"github.com/dgraph-io/dgo/v210/protos/api"
 )
 
-var slashPort = "443"
+const (
+	cloudPort = "443"
+)
 
 // Dgraph is a transaction aware client to a set of Dgraph server instances.
 type Dgraph struct {
@@ -45,7 +48,9 @@ type authCreds struct {
 	token string
 }
 
-func (a *authCreds) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+func (a *authCreds) GetRequestMetadata(ctx context.Context, uri ...string) (
+	map[string]string, error) {
+
 	return map[string]string{"Authorization": a.token}, nil
 }
 
@@ -73,30 +78,28 @@ func DialSlashEndpoint(endpoint, key string) (*grpc.ClientConn, error) {
 }
 
 // DialSlashGraphQLEndpoint is deprecated, as it leaks GRPC connections.
-// It will be removed in the 21.07 release. Please use DialCloudEndpoint instead.
+// It will be removed in the 21.07 release. Please use DialCloud instead.
 func DialSlashGraphQLEndpoint(endpoint, key string) (*Dgraph, error) {
-	conn, err := DialSlashEndpoint(endpoint, key)
-
+	conn, err := DialCloud(endpoint, key)
 	if err != nil {
 		return nil, err
 	}
 
 	dc := api.NewDgraphClient(conn)
 	dg := NewDgraphClient(dc)
-
 	return dg, nil
 }
 
 // DialCloud creates a new TLS connection to a Dgraph Cloud backend
-/* 	It requires the backend endpoint as well as the api token
- 	Usage:
-		conn, err := grpc.DialCloud("CLOUD_ENDPOINT","API_TOKEN")
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer conn.Close()
-		DgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
-*/
+//
+//	It requires the backend endpoint as well as the api token
+//	Usage:
+//		conn, err := grpc.DialCloud("CLOUD_ENDPOINT","API_TOKEN")
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//		defer conn.Close()
+//		dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 func DialCloud(endpoint, key string) (*grpc.ClientConn, error) {
 	u, err := url.Parse(endpoint)
 	if err != nil {
@@ -105,7 +108,7 @@ func DialCloud(endpoint, key string) (*grpc.ClientConn, error) {
 
 	urlParts := strings.SplitN(u.Host, ".", 2)
 
-	host := urlParts[0] + ".grpc." + urlParts[1] + ":" + slashPort
+	host := urlParts[0] + ".grpc." + urlParts[1] + ":" + cloudPort
 	pool, err := x509.SystemCertPool()
 	if err != nil {
 		return nil, err
@@ -145,23 +148,24 @@ func (d *Dgraph) GetJwt() api.Jwt {
 	return d.jwt
 }
 
-// Login logs in the current client using the provided credentials into default namespace (0).
-// Valid for the duration the client is alive.
+// Login logs in the current client using the provided credentials into
+// default namespace (0). Valid for the duration the client is alive.
 func (d *Dgraph) Login(ctx context.Context, userid string, password string) error {
 	return d.login(ctx, userid, password, 0)
 }
 
 // LoginIntoNamespace logs in the current client using the provided credentials.
 // Valid for the duration the client is alive.
-func (d *Dgraph) LoginIntoNamespace(ctx context.Context, userid string, password string,
-	namespace uint64) error {
+func (d *Dgraph) LoginIntoNamespace(ctx context.Context,
+	userid string, password string, namespace uint64) error {
+
 	return d.login(ctx, userid, password, namespace)
 }
 
 // Alter can be used to do the following by setting various fields of api.Operation:
-//   1. Modify the schema.
-//   2. Drop a predicate.
-//   3. Drop the database.
+//  1. Modify the schema.
+//  2. Drop a predicate.
+//  3. Drop the database.
 func (d *Dgraph) Alter(ctx context.Context, op *api.Operation) error {
 	dc := d.anyClient()
 
@@ -235,6 +239,7 @@ func isJwtExpired(err error) bool {
 }
 
 func (d *Dgraph) anyClient() api.DgraphClient {
+	//nolint:gosec
 	return d.dc[rand.Intn(len(d.dc))]
 }
 

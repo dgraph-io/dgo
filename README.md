@@ -1,46 +1,47 @@
-# dgo [![GoDoc](https://godoc.org/github.com/dgraph-io/dgo?status.svg)](https://godoc.org/github.com/dgraph-io/dgo) [![Build Status](https://teamcity.dgraph.io/guestAuth/app/rest/builds/buildType:(id:dgo_integration)/statusIcon.svg)](https://teamcity.dgraph.io/viewLog.html?buildTypeId=dgo_integration&buildId=lastFinished&guest=1)
+# dgo [![GoDoc](https://godoc.org/github.com/dgraph-io/dgo?status.svg)](https://godoc.org/github.com/dgraph-io/dgo)
 
 Official Dgraph Go client which communicates with the server using [gRPC](https://grpc.io/).
 
-Before using this client, we highly recommend that you go through [tour.dgraph.io] and [docs.dgraph.io]
-to understand how to run and work with Dgraph.
+Before using this client, we highly recommend that you go through [dgraph.io/tour] and
+[dgraph.io/docs] to understand how to run and work with Dgraph.
 
-**Use [Github Issues](https://github.com/dgraph-io/dgo/issues) for reporting issues about this repository.**
-
-[docs.dgraph.io]:https://docs.dgraph.io
-[tour.dgraph.io]:https://tour.dgraph.io
+[docs.dgraph.io]:https://dgraph.io/docs
+[tour.dgraph.io]:https://dgraph.io/tour
 
 
 ## Table of contents
 
-- [Supported Versions](#supported-versions)
-- [Using a client](#using-a-client)
-  - [Creating a client](#creating-a-client)
-  - [Altering the database](#altering-the-database)
-  - [Creating a transaction](#creating-a-transaction)
-  - [Running a mutation](#running-a-mutation)
-  - [Running a query](#running-a-query)
-  - [Running an Upsert: Query + Mutation](#running-an-upsert-query--mutation)
-  - [Running Conditional Upsert](#running-conditional-upsert)
-  - [Committing a transaction](#committing-a-transaction)
-  - [Setting Metadata Headers](#setting-metadata-headers)
-  - [Connecting To Slash Endpoint](#connecting-to-slash-endpoint)
-- [Development](#development)
-  - [Running tests](#running-tests)
+- [dgo ](#dgo-)
+  - [Table of contents](#table-of-contents)
+  - [Supported Versions](#supported-versions)
+  - [Using a client](#using-a-client)
+    - [Creating a client](#creating-a-client)
+    - [Login into a namespace](#login-into-a-namespace)
+    - [Altering the database](#altering-the-database)
+    - [Creating a transaction](#creating-a-transaction)
+    - [Running a mutation](#running-a-mutation)
+    - [Running a query](#running-a-query)
+    - [Running an Upsert: Query + Mutation](#running-an-upsert-query--mutation)
+    - [Running Conditional Upsert](#running-conditional-upsert)
+    - [Committing a transaction](#committing-a-transaction)
+    - [Setting Metadata Headers](#setting-metadata-headers)
+    - [Connecting To Dgraph Cloud](#connecting-to-dgraph-cloud)
+  - [Development](#development)
+    - [Running tests](#running-tests)
 
 ## Supported Versions
 
 Depending on the version of Dgraph that you are connecting to, you will have to
 use a different version of this client and their corresponding import paths.
 
-Dgraph version   | dgo version   |        dgo import path          |
----------------  | -----------   | ------------------------------- |
-  dgraph 1.0.X   |  dgo 1.X.Y    |   "github.com/dgraph-io/dgo"    |
-  dgraph 1.1.X   |  dgo 2.X.Y    | "github.com/dgraph-io/dgo/v2"   |
-  dgraph 20.03.0 |  dgo 200.03.0 | "github.com/dgraph-io/dgo/v200" |
-  dgraph 20.07.0 |  dgo 200.03.0 | "github.com/dgraph-io/dgo/v200" |
-  dgraph 20.11.0 |  dgo 200.03.0 | "github.com/dgraph-io/dgo/v200" |
-  dgraph 21.03.0 |  dgo 210.03.0 | "github.com/dgraph-io/dgo/v210" |
+|   Dgraph version   | dgo version   |        dgo import path          |
+| -----------------  | -----------   | ------------------------------- |
+|  dgraph 1.0.X      |  dgo 1.X.Y    |   "github.com/dgraph-io/dgo"    |
+|  dgraph 1.1.X      |  dgo 2.X.Y    | "github.com/dgraph-io/dgo/v2"   |
+|  dgraph 20.03.0    |  dgo 200.03.0 | "github.com/dgraph-io/dgo/v200" |
+|  dgraph 20.07.0    |  dgo 200.03.0 | "github.com/dgraph-io/dgo/v200" |
+|  dgraph 20.11.0    |  dgo 200.03.0 | "github.com/dgraph-io/dgo/v200" |
+|  dgraph >= 21.03.0 |  dgo 210.03.0 | "github.com/dgraph-io/dgo/v210" |
 
 Note: One of the most important API breakages from dgo v1 to v2 is in
 the function `dgo.Txn.Mutate`. This function returns an `*api.Assigned`
@@ -61,19 +62,17 @@ The following code snippet shows just one connection.
 
 ```go
 conn, err := grpc.Dial("localhost:9080", grpc.WithInsecure())
-if err != nil {
-  log.Fatal(err)
-}
+// Check error
 defer conn.Close()
 dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 ```
 
 ### Login into a namespace
 
-If your server has Access Control Lists enabled (Dgraph v1.1 or above), the client must be 
+If your server has Access Control Lists enabled (Dgraph v1.1 or above), the client must be
 logged in for accessing data. Use `Login` endpoint:
 
-Calling login will obtain and remember the access and refresh JWT tokens. All subsequent operations 
+Calling login will obtain and remember the access and refresh JWT tokens. All subsequent operations
 via the logged in client will send along the stored access token.
 
 ```go
@@ -81,7 +80,7 @@ err := dgraphClient.Login(ctx, "user", "passwd")
 // Check error
 ```
 
-If your server additionally has namespaces (Dgraph v21.03 or above), use the 
+If your server additionally has namespaces (Dgraph v21.03 or above), use the
 `LoginIntoNamespace` API.
 
 ```go
@@ -144,14 +143,14 @@ will be a no-op.
 `txn.Mutate(ctx, mu)` runs a mutation. It takes in a `context.Context` and a
 `*api.Mutation` object. You can set the data using JSON or RDF N-Quad format.
 
-To use JSON, use the fields SetJson and DeleteJson, which accept a string
+To use JSON, use the fields `SetJson` and `DeleteJson`, which accept a string
 representing the nodes to be added or removed respectively (either as a JSON map
-or a list). To use RDF, use the fields SetNquads and DelNquads, which accept
+or a list). To use RDF, use the fields `SetNquads` and `DelNquads`, which accept
 a string representing the valid RDF triples (one per line) to added or removed
-respectively. This protobuf object also contains the Set and Del fields which
+respectively. This protobuf object also contains the `Set` and `Del` fields which
 accept a list of RDF triples that have already been parsed into our internal
 format. As such, these fields are mainly used internally and users should use
-the SetNquads and DelNquads instead if they are planning on using RDF.
+the `SetNquads` and `DelNquads` instead if they are planning on using RDF.
 
 We define a Person struct to represent a Person and marshal an instance of it to
 use with `Mutation` object.
@@ -170,21 +169,17 @@ p := Person{
 }
 
 pb, err := json.Marshal(p)
-if err != nil {
-	log.Fatal(err)
-}
+// Check error
 
 mu := &api.Mutation{
 	SetJson: pb,
 }
 res, err := txn.Mutate(ctx, mu)
-if err != nil {
-	log.Fatal(err)
-}
+// Check error
 ```
 
 For a more complete example, see
-[GoDoc](https://godoc.org/github.com/dgraph-io/dgo#example-package--SetObject).
+[Example](https://pkg.go.dev/github.com/dgraph-io/dgo#example-package-SetObject).
 
 Sometimes, you only want to commit a mutation, without querying anything
 further. In such cases, you can use `mu.CommitNow = true` to indicate that the
@@ -198,9 +193,7 @@ mu := &api.Mutation{
 }
 req := &api.Request{CommitNow:true, Mutations: []*api.Mutation{mu}}
 res, err := txn.Do(ctx, req)
-if err != nil {
-  log.Fatal(err)
-}
+// Check error
 ```
 
 ### Running a query
@@ -230,9 +223,7 @@ req := &api.Request{
   Vars: map[string]string{"$a": "Alice"},
 }
 res, err := txn.Do(ctx, req)
-if err != nil {
-  log.Fatal(err)
-}
+// Check error
 fmt.Printf("%s\n", res.Json)
 ```
 
@@ -252,9 +243,7 @@ q := `schema(pred: [name]) {
 }`
 
 res, err := txn.Query(ctx, q)
-if err != nil {
-    log.Fatal(err)
-}
+// Check error
 fmt.Printf("%s\n", res.Json)
 ```
 
@@ -265,7 +254,7 @@ one mutation. Variables can be defined in the query and used in the mutation.
 You could also use `txn.Do` to perform a query followed by a mutation.
 
 To know more about upsert, we highly recommend going through the docs
-at https://docs.dgraph.io/mutations/#upsert-block.
+at [Upsert Block](https://dgraph.io/docs/dql/dql-syntax/dql-mutation/#upsert-block).
 
 ```go
 query = `
@@ -282,9 +271,8 @@ req := &api.Request{
 }
 
 // Update email only if matching uid found.
-if _, err := dg.NewTxn().Do(ctx, req); err != nil {
-  log.Fatal(err)
-}
+_, err := dg.NewTxn().Do(ctx, req)
+// Check error
 ```
 
 ### Running Conditional Upsert
@@ -293,7 +281,7 @@ The upsert block also allows specifying a conditional mutation block using an `@
 The mutation is executed only when the specified condition is true. If the condition is false,
 the mutation is silently ignored.
 
-See more about Conditional Upsert [Here](https://docs.dgraph.io/mutations/#conditional-upsert).
+See more about Conditional Upsert [Here](https://dgraph.io/docs/dql/dql-syntax/dql-mutation/#conditional-upsert).
 
 ```go
 query = `
@@ -311,9 +299,8 @@ req := &api.Request{
 }
 
 // Update email only if exactly one matching uid is found.
-if _, err := dg.NewTxn().Do(ctx, req); err != nil {
-  log.Fatal(err)
-}
+_, err := dg.NewTxn().Do(ctx, req)
+// Check error
 ```
 
 ### Committing a transaction
@@ -337,7 +324,9 @@ if err == y.ErrAborted {
 ```
 
 ### Setting Metadata Headers
-Metadata headers such as authentication tokens can be set through the context of gRPC methods. Below is an example of how to set a header named "auth-token".
+Metadata headers such as authentication tokens can be set through the context of gRPC methods.
+Below is an example of how to set a header named "auth-token".
+
 ```go
 // The following piece of code shows how one can set metadata with
 // auth-token, to allow Alter operation, if the server requires it.
@@ -347,15 +336,13 @@ ctx := metadata.NewOutgoingContext(context.Background(), md)
 dg.Alter(ctx, &op)
 ```
 
-### Connecting To Slash Endpoint
+### Connecting To Dgraph Cloud
 
-Please use the following snippet to connect to a Slash GraphQL or Slash Enterprise backend.
+Please use the following snippet to connect to a Dgraph Cloud backend.
 
 ```go
-conn, err := dgo.DialSlashEndpoint("https://your.endpoint.dgraph.io/graphql", "api-token")
-if err != nil {
-  log.Fatal(err)
-}
+conn, err := dgo.DialCloud("https://your.endpoint.dgraph.io/graphql", "api-token")
+// Check error
 defer conn.Close()
 dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 ```
