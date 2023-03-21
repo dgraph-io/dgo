@@ -10,7 +10,7 @@ on:
       - synchronize
       - ready_for_review
     branches:
-      - main
+      - master
   schedule:
     - cron: "0 4 * * *" # daily at 4:00
 jobs:
