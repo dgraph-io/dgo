@@ -12,7 +12,7 @@ on:
     branches:
       - master
   schedule:
-    - cron: "0 4 * * *" # daily at 4:00
+    - cron: "0 0 * * *" # run workflow daily
 jobs:
   golang-lint:
     if: github.event.pull_request.draft == false
