@@ -14,8 +14,8 @@ on:
   schedule:
     - cron: "0 4 * * *" # daily at 4:00
 jobs:
-  dgraph-tests:
-    runs-on: ubuntu-20.04
+  dgo-tests:
+    runs-on: [self-hosted, x64] # needed to use docker commands
     steps:
       - name: Checkout Dgraph repo
         uses: actions/checkout@v3
@@ -39,34 +39,15 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: ${{ env.GOVERSION }}
-      - name: Set up Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-      - name: Install protobuf-compiler
-        run: sudo apt-get install -y protobuf-compiler
-      - name: Check protobuf
-        run: |
-          cd ./protos
-          go mod tidy
-          make regenerate
-          git diff --exit-code -- .
       - name: Make Linux Build and Docker Image
         run: make docker-image
-      - name: Build Test Binary
-        run: |
-          #!/bin/bash
-          # build the test binary
-          cd t; go build .
+      - name: Move into dgo repo
+        run: cd ../dgo
       - name: Clean Up Environment
         run: |
           #!/bin/bash
-          # clean cache
+          # clean go test cache
           go clean -testcache
-          # clean up docker containers before test execution
-          cd t; ./t -r
-      - name: Move into dgo repo
-        run: cd ../dgo
       - name: Run dgo client tests
         run: |
           #!/bin/bash
