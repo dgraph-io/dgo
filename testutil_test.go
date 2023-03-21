@@ -22,8 +22,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"os/exec"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
@@ -227,4 +230,52 @@ func HttpLogin(params *LoginParams) (*HttpToken, error) {
 		AccessJwt:    newAccessJwt,
 		RefreshToken: newRefreshJwt,
 	}, nil
+}
+
+func TestMain(m *testing.M) {
+	fmt.Println("starting cluster")
+	_ = startCluster()
+	fmt.Println("running tests")
+	os.Exit(m.Run())
+	fmt.Println("exiting")
+	_ = stopCluster()
+}
+
+// todo: use docker api https://pkg.go.dev/github.com/docker/docker/client
+func startCluster() error {
+	args := []string{
+		"compose",
+		"-f", "t/docker-compose.yml",
+		"up",
+	}
+	startCmd := exec.Command("docker", args...)
+
+	out, err := startCmd.CombinedOutput()
+	if err != nil {
+		fmt.Printf("Error %v\n", err)
+		fmt.Printf("Output %v\n", string(out))
+		return errors.Wrapf(err, string(out))
+	}
+	fmt.Printf("CLUSTER STARTED\n")
+	// wait for cluster to be healthy
+	// todo: do proper health check
+	time.Sleep(10 * time.Second)
+	return nil
+}
+
+func stopCluster() error {
+	args := []string{
+		"compose",
+		"-f", "t/docker-compose.yml",
+		"stop",
+	}
+	stopCmd := exec.Command("docker", args...)
+	stopCmd.Stderr = nil
+	if err := stopCmd.Run(); err != nil {
+		fmt.Printf("Error while bringing down cluster. Error: %v\n",
+			err)
+	} else {
+		fmt.Printf("CLUSTER STOPPED\n")
+	}
+	return nil
 }
