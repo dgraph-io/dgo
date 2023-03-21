@@ -29,7 +29,7 @@ services:
     command: dgraph alpha -o 102 --my=alpha2:7182 --zero=zero1:5180 --logtostderr
       -v=2 --raft "idx=2; group=1" --security whitelist=0.0.0.0/0 --acl secret-file=/data/acl_secret;access-ttl=3s
   alpha3:
-    image: dgraph/dgraph:latest # change to local 
+    image: dgraph/dgraph:latest # change to local
     container_name: alpha3
     working_dir: /alpha3
     ports:
