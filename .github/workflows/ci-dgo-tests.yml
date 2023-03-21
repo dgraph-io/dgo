@@ -70,7 +70,10 @@ jobs:
       - name: Run dgo client tests
         run: |
           #!/bin/bash
-          docker compose -f t/docker-compose.yml up
+          docker compose -f t/docker-compose.yml up -d
+          echo "Waiting for cluster to be healthy..."
+          sleep 20
+          echo "Running dgo tests..."
           go test -v ./...
           docker compose -f t/docker-compose.yml down
 
