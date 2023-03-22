@@ -40,13 +40,15 @@ jobs:
           go-version: ${{ env.GOVERSION }}
       - name: Make Linux Build and Docker Image
         run: cd dgraph && make docker-image
+      - name: Move dgraph binary to gopath
+        run: cd dgraph && mv dgraph/dgraph ~/go/bin/dgraph
       - name: Clean Up Test Cache
         run: go clean -testcache
       - name: Run dgo client tests
         run: |
           #!/bin/bash
           cd dgo
-          DGRAPH_VERSION=local docker compose -f t/docker-compose.yml up -d
+          docker compose -f t/docker-compose.yml up -d
           echo "Waiting for cluster to be healthy..."
           sleep 20
           echo "Running dgo tests..."
