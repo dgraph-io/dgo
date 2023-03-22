@@ -364,7 +364,7 @@ dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 
 ### Running tests
 
-The dgo test suite requires a Dgraph cluster with ACL enabled to be running locally.  To start such a cluster, you may use the docker compose file located in the testing directory `t`.  To run tests:
+The dgo test suite requires that a Dgraph cluster with ACL enabled be running locally.  To start such a cluster, you may use the docker compose file located in the testing directory `t`.  To run tests:
 
 ```sh
 docker compose -f t/docker-compose.yml up -d
