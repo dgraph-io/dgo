@@ -15,7 +15,7 @@ func TestQueryNoDiscardTxn(t *testing.T) {
 	ctx := context.Background()
 
 	_, err := txn.Query(ctx, `{me(){}me(){}}`)
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	resp, err := txn.Query(ctx, `{me(){}}`)
 	require.NoError(t, err)

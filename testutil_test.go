@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Dgraph Labs, Inc. and Contributors
+ * Copyright (C) 2023 Dgraph Labs, Inc. and Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -83,7 +83,7 @@ func MakeGQLRequestHelper(t *testing.T, endpoint string, params *GraphQLParams,
 	require.NoError(t, err)
 
 	defer resp.Body.Close()
-	b, err = ioutil.ReadAll(resp.Body)
+	b, err = io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
 	var gqlResp GraphQLResponse
@@ -178,7 +178,7 @@ func HttpLogin(params *LoginParams) (*HttpToken, error) {
 	}
 	defer resp.Body.Close()
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to read from response")
 	}

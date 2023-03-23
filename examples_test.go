@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Dgraph Labs, Inc. and Contributors
+ * Copyright (C) 2023 Dgraph Labs, Inc. and Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,15 +24,20 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/grpc"
+
 	"github.com/dgraph-io/dgo/v210"
 	"github.com/dgraph-io/dgo/v210/protos/api"
-	"google.golang.org/grpc"
+)
+
+const (
+	dgraphAddress = "127.0.0.1:9180"
 )
 
 type CancelFunc func()
 
 func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
-	conn, err := grpc.Dial("127.0.0.1:9180", grpc.WithInsecure())
+	conn, err := grpc.Dial(dgraphAddress, grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
@@ -157,8 +162,8 @@ func ExampleTxn_Mutate() {
 		Coords []float64 `json:"coordinates,omitempty"`
 	}
 
-	// If omitempty is not set, then edges with empty values (0 for int/float, "" for string, false
-	// for bool) would be created for values not specified explicitly.
+	// If omitempty is not set, then edges with empty values (0 for int/float, "" for string,
+	// false for bool) would be created for values not specified explicitly.
 
 	type Person struct {
 		Uid      string   `json:"uid,omitempty"`
@@ -677,7 +682,7 @@ func ExampleTxn_Mutate_facets() {
 		NameOrigin: "Indonesia",
 		DType:      []string{"Person"},
 		Friends: []Person{
-			Person{
+			{
 				Name:   "Bob",
 				Since:  &ti,
 				Family: "yes",
@@ -685,14 +690,14 @@ func ExampleTxn_Mutate_facets() {
 				Close:  true,
 				DType:  []string{"Person"},
 			},
-			Person{
+			{
 				Name:   "Charlie",
 				Family: "maybe",
 				Age:    16,
 				DType:  []string{"Person"},
 			},
 		},
-		School: []School{School{
+		School: []School{{
 			Name:  "Wellington School",
 			Since: ti,
 			DType: []string{"Institution"},
@@ -925,7 +930,7 @@ func ExampleDeleteEdges() {
 			Age:   29,
 			DType: []string{"Person"},
 		}},
-		Schools: []*School{&School{
+		Schools: []*School{{
 			Name:  "Crown Public School",
 			DType: []string{"Institution"},
 		}},
@@ -994,7 +999,9 @@ func ExampleDeleteEdges() {
 	}
 
 	var r Root
-	err = json.Unmarshal(resp.Json, &r)
+	if err := json.Unmarshal(resp.Json, &r); err != nil {
+		log.Fatal(err)
+	}
 	out, _ := json.MarshalIndent(r.Me, "", "\t")
 	fmt.Printf("%s\n", out)
 	// Output: [
@@ -1037,17 +1044,20 @@ func ExampleTxn_Mutate_deleteNode() {
 		Age:     26,
 		Married: true,
 		DType:   []string{"Person"},
-		Friends: []*Person{&Person{
-			Uid:   "_:bob",
-			Name:  "Bob",
-			Age:   24,
-			DType: []string{"Person"},
-		}, &Person{
-			Uid:   "_:charlie",
-			Name:  "Charlie",
-			Age:   29,
-			DType: []string{"Person"},
-		}},
+		Friends: []*Person{
+			{
+				Uid:   "_:bob",
+				Name:  "Bob",
+				Age:   24,
+				DType: []string{"Person"},
+			},
+			{
+				Uid:   "_:charlie",
+				Name:  "Charlie",
+				Age:   29,
+				DType: []string{"Person"},
+			},
+		},
 	}
 
 	op := &api.Operation{}
@@ -1133,7 +1143,9 @@ func ExampleTxn_Mutate_deleteNode() {
 	}
 
 	var r Root
-	err = json.Unmarshal(resp.Json, &r)
+	if err := json.Unmarshal(resp.Json, &r); err != nil {
+		log.Fatal(err)
+	}
 
 	// Now lets try to delete Alice. This won't delete Bob and Charlie
 	// but just remove the connection between Alice and them.
@@ -1211,15 +1223,18 @@ func ExampleTxn_Mutate_deletePredicate() {
 		Age:     26,
 		Married: true,
 		DType:   []string{"Person"},
-		Friends: []Person{Person{
-			Name:  "Bob",
-			Age:   24,
-			DType: []string{"Person"},
-		}, Person{
-			Name:  "Charlie",
-			Age:   29,
-			DType: []string{"Person"},
-		}},
+		Friends: []Person{
+			{
+				Name:  "Bob",
+				Age:   24,
+				DType: []string{"Person"},
+			},
+			{
+				Name:  "Charlie",
+				Age:   29,
+				DType: []string{"Person"},
+			},
+		},
 	}
 
 	op := &api.Operation{}
@@ -1348,7 +1363,9 @@ func ExampleTxn_Discard() {
 	if err != nil {
 		log.Fatal("The mutation should have succeeded")
 	}
-	txn.Discard(ctx)
+	if err := txn.Discard(ctx); err != nil {
+		log.Fatal(err)
+	}
 
 	// now query the cluster and make sure that the data has made no effect
 	queryTxn := dg.NewReadOnlyTxn()
@@ -1365,7 +1382,7 @@ func ExampleTxn_Discard() {
 		log.Fatal("The query should have succeeded")
 	}
 
-	fmt.Printf(string(resp.Json))
+	fmt.Print(string(resp.Json))
 	// Output: {"q":[]}
 }
 

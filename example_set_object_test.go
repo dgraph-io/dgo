@@ -20,8 +20,8 @@ type loc struct {
 	Coords []float64 `json:"coordinates,omitempty"`
 }
 
-// If omitempty is not set, then edges with empty values (0 for int/float, "" for string, false
-// for bool) would be created for values not specified explicitly.
+// If omitempty is not set, then edges with empty values (0 for int/float, "" for string,
+// false for bool) would be created for values not specified explicitly.
 
 type Person struct {
 	Uid      string     `json:"uid,omitempty"`
@@ -41,10 +41,10 @@ func Example_setObject() {
 	defer cancel()
 
 	dob := time.Date(1980, 01, 01, 23, 0, 0, 0, time.UTC)
-	// While setting an object if a struct has a Uid then its properties in the graph are updated
-	// else a new node is created.
-	// In the example below new nodes for Alice, Bob and Charlie and school are created (since they
-	// don't have a Uid).
+	// While setting an object if a struct has a Uid then its properties
+	//  in the graph are updated else a new node is created.
+	// In the example below new nodes for Alice, Bob and Charlie and
+	//  school are created (since they don't have a Uid).
 	p := Person{
 		Uid:     "_:alice",
 		Name:    "Alice",

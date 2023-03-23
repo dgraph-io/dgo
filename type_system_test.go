@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Dgraph Labs, Inc. and Contributors
+ * Copyright (C) 2023 Dgraph Labs, Inc. and Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/dgraph-io/dgo/v210"
 	"github.com/dgraph-io/dgo/v210/protos/api"
-
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -96,6 +96,7 @@ func TestNoType(t *testing.T) {
 	}`
 
 	res, err := dg.NewReadOnlyTxn().Query(context.Background(), fmt.Sprintf(q, alicename))
+	require.NoError(t, err)
 	var ts struct {
 		Q []struct {
 			DgraphType []string `json:"dgraph.type"`
@@ -142,6 +143,7 @@ func TestSingleType(t *testing.T) {
 	}`
 
 	res1, err := dg.NewReadOnlyTxn().Query(context.Background(), fmt.Sprintf(q2, alicename))
+	require.NoError(t, err)
 	var ts struct {
 		Q []struct {
 			DgraphType []string `json:"dgraph.type"`
@@ -255,6 +257,7 @@ func TestMultipleType(t *testing.T) {
 	}`
 
 	res1, err := dg.NewReadOnlyTxn().Query(context.Background(), fmt.Sprintf(q2, alicename))
+	require.NoError(t, err)
 	var ts struct {
 		Q []struct {
 			DgraphType []string `json:"dgraph.type"`

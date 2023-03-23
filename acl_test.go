@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Dgraph Labs, Inc. and Contributors
+ * Copyright (C) 2023 Dgraph Labs, Inc. and Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,8 +37,7 @@ var (
 	unusedgroup  = "unused"
 	devgroup     = "dev"
 
-	dgraphAddress = "127.0.0.1:9180"
-	adminUrl      = "http://127.0.0.1:8180/admin"
+	adminUrl = "http://127.0.0.1:8180/admin"
 )
 
 func initializeDBACLs(t *testing.T, dg *dgo.Dgraph) {
@@ -99,7 +98,7 @@ func createGroupACLs(t *testing.T, groupname string, token *HttpToken) {
 		},
 	}
 	resp := MakeGQLRequest(t, adminUrl, params, token)
-	require.Truef(t, len(resp.Errors) == 0, "unable to create group: %+v", resp.Errors.Error())
+	require.Truef(t, len(resp.Errors) == 0, "unable to create group: %+v", resp.Errors)
 
 	// Set permissions.
 	updatePerms := `mutation updateGroup($gname: String!, $pred: String!, $perm: Int!) {
@@ -193,6 +192,8 @@ func query(t *testing.T, dg *dgo.Dgraph, shouldFail bool) {
 	require.NoError(t, err)
 	if shouldFail {
 		require.Equal(t, string(resp.Json), "{}")
+	} else {
+		require.NotEqual(t, string(resp.Json), "{}")
 	}
 }
 
@@ -232,6 +233,7 @@ func TestACLs(t *testing.T) {
 		Passwd:    "password",
 		Namespace: 0, // Galaxy namespace
 	})
+	require.NoError(t, err)
 	resetUser(t, token)
 	time.Sleep(5 * time.Second)
 

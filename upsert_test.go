@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Dgraph Labs, Inc. and Contributors
+ * Copyright (C) 2023 Dgraph Labs, Inc. and Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,10 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/dgraph-io/dgo/v210"
 	"github.com/dgraph-io/dgo/v210/protos/api"
-	"github.com/stretchr/testify/require"
 )
 
 func TestCondUpsertCorrectingName(t *testing.T) {
@@ -63,7 +64,7 @@ func TestCondUpsertCorrectingName(t *testing.T) {
 		CommitNow: true,
 		Query:     q1,
 		Mutations: []*api.Mutation{
-			&api.Mutation{
+			{
 				Cond:    ` @if(eq(len(v), 0)) `,
 				SetJson: []byte(m1),
 			},
@@ -99,7 +100,7 @@ func TestCondUpsertCorrectingName(t *testing.T) {
 		CommitNow: true,
 		Query:     q3,
 		Mutations: []*api.Mutation{
-			&api.Mutation{
+			{
 				Cond:    ` @if(eq(len(v), 1)) `,
 				SetJson: []byte(m3),
 			},
@@ -150,7 +151,7 @@ _:user4 <works_for> "company2" .`
 	req := &api.Request{
 		CommitNow: true,
 		Mutations: []*api.Mutation{
-			&api.Mutation{
+			{
 				SetNquads: []byte(m1),
 			},
 		},
@@ -182,7 +183,7 @@ uid(c2) <works_with> uid(c1) .`
 		CommitNow: true,
 		Query:     q1,
 		Mutations: []*api.Mutation{
-			&api.Mutation{
+			{
 				Cond:      `@if(eq(len(c1), 2) AND eq(len(c2), 2))`,
 				SetNquads: []byte(m1),
 			},
@@ -256,7 +257,7 @@ _:user5 <works_with> uid(c2) .`
 		CommitNow: true,
 		Query:     q1,
 		Mutations: []*api.Mutation{
-			&api.Mutation{
+			{
 				Cond:      `@if(lt(len(c1), 3))`,
 				SetNquads: []byte(m1),
 			},
@@ -339,7 +340,7 @@ _:post6 <author> _:user3 .
 	req := &api.Request{
 		CommitNow: true,
 		Mutations: []*api.Mutation{
-			&api.Mutation{
+			{
 				SetNquads: []byte(m1),
 			},
 		},
@@ -366,7 +367,7 @@ uid(p4) <author> * .`
 		CommitNow: true,
 		Query:     q2,
 		Mutations: []*api.Mutation{
-			&api.Mutation{
+			{
 				Cond:      `@if(eq(len(u2), 1))`,
 				DelNquads: []byte(m2),
 			},
@@ -405,7 +406,7 @@ uid(p4) <author> * .`
 		CommitNow: true,
 		Query:     q4,
 		Mutations: []*api.Mutation{
-			&api.Mutation{
+			{
 				Cond:      `@if(eq(len(u4), 1))`,
 				DelNquads: []byte(m4),
 			},
@@ -448,7 +449,7 @@ _:user3 <branch> "Fuller Street, San Francisco" .
 	req := &api.Request{
 		CommitNow: true,
 		Mutations: []*api.Mutation{
-			&api.Mutation{
+			{
 				SetNquads: []byte(m1),
 			},
 		},
@@ -461,7 +462,7 @@ _:user3 <branch> "Fuller Street, San Francisco" .
 		CommitNow: true,
 		Query:     `{ u as var(func: has(branch)) }`,
 		Mutations: []*api.Mutation{
-			&api.Mutation{
+			{
 				SetNquads: []byte(`uid(u) <branch> "Fuller Street, SF" .`),
 			},
 		},
@@ -496,7 +497,7 @@ _:user3 <branch> "Fuller Street, San Francisco" .
 		CommitNow: true,
 		Query:     `{ u as var(func: has(branch)) }`,
 		Mutations: []*api.Mutation{
-			&api.Mutation{
+			{
 				DelNquads: []byte(`uid(u) <branch> * .`),
 			},
 		},

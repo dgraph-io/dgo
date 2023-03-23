@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Dgraph Labs, Inc.
+ * Copyright 2023 Dgraph Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,13 @@ package dgo
 import (
 	"context"
 
-	"github.com/dgraph-io/dgo/v210/protos/api"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"github.com/dgraph-io/dgo/v210/protos/api"
 )
 
 var (
@@ -39,12 +40,12 @@ var (
 
 // Txn is a single atomic transaction.
 // A transaction lifecycle is as follows:
-//   1. Created using NewTxn.
-//   2. Various Query and Mutate calls made.
-//   3. Commit or Discard used. If any mutations have been made, It's important
-//      that at least one of these methods is called to clean up resources. Discard
-//      is a no-op if Commit has already been called, so it's safe to defer a call
-//      to Discard immediately after NewTxn.
+//  1. Created using NewTxn.
+//  2. Various Query and Mutate calls made.
+//  3. Commit or Discard used. If any mutations have been made, It's important
+//     that at least one of these methods is called to clean up resources. Discard
+//     is a no-op if Commit has already been called, so it's safe to defer a call
+//     to Discard immediately after NewTxn.
 type Txn struct {
 	context *api.TxnContext
 
@@ -100,9 +101,9 @@ func (txn *Txn) Query(ctx context.Context, q string) (*api.Response, error) {
 	return txn.QueryWithVars(ctx, q, nil)
 }
 
-// QueryRDF sends a query to one of the connected Dgraph instances and returns RDF response. If no
-// mutations need to be made in the same transaction, it's convenient to
-// chain the method, e.g. NewTxn().QueryRDF(ctx, "...").
+// QueryRDF sends a query to one of the connected Dgraph instances and returns RDF
+// response. If no mutations need to be made in the same transaction, it's convenient
+// to chain the method, e.g. NewTxn().QueryRDF(ctx, "...").
 func (txn *Txn) QueryRDF(ctx context.Context, q string) (*api.Response, error) {
 	return txn.QueryRDFWithVars(ctx, q, nil)
 }
@@ -175,7 +176,7 @@ func (txn *Txn) Do(ctx context.Context, req *api.Request) (*api.Response, error)
 	req.StartTs = txn.context.StartTs
 	req.Hash = txn.context.Hash
 
-	// Append the GRPC Response headers to the responses. Needed for Slash.
+	// Append the GRPC Response headers to the responses. Needed for Cloud.
 	appendHdr := func(hdrs *metadata.MD, resp *api.Response) {
 		if resp != nil {
 			resp.Hdrs = make(map[string]*api.ListOfString)
