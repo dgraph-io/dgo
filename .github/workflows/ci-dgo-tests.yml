@@ -1,0 +1,58 @@
+name: ci-dgo-tests
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+    branches:
+      - master
+  schedule:
+    - cron: "0 0 * * *" # run workflow daily
+jobs:
+  dgo-tests:
+    runs-on: [self-hosted, x64] # needed to use docker commands
+    steps:
+      - name: Checkout Dgraph repo
+        uses: actions/checkout@v3
+        with:
+          path: dgraph
+          repository: dgraph-io/dgraph
+          ref: main
+      - name: Checkout Dgo repo
+        uses: actions/checkout@v3
+        with:
+          path: dgo
+          repository: dgraph-io/dgo
+      - name: Get Go Version
+        run: |
+          #!/bin/bash
+          cd dgraph
+          GOVERSION=$({ [ -f .go-version ] && cat .go-version; })
+          echo "GOVERSION=$GOVERSION" >> $GITHUB_ENV
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GOVERSION }}
+      - name: Make Linux Build and Docker Image
+        run: cd dgraph && make docker-image
+      - name: Move dgraph binary to gopath
+        run: cd dgraph && mv dgraph/dgraph ~/go/bin/dgraph
+      - name: Clean Up Test Cache
+        run: go clean -testcache
+      - name: Run dgo client tests
+        run: |
+          #!/bin/bash
+          cd dgo
+          # go env settings
+          export GOPATH=~/go
+          docker compose -f t/docker-compose.yml up -d
+          echo "Waiting for cluster to be healthy..."
+          sleep 20
+          echo "Running dgo tests..."
+          go test -v ./...
+          docker compose -f t/docker-compose.yml down
