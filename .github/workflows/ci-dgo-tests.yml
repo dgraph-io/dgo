@@ -48,6 +48,8 @@ jobs:
         run: |
           #!/bin/bash
           cd dgo
+          # go env settings
+          export GOPATH=~/go
           docker compose -f t/docker-compose.yml up -d
           echo "Waiting for cluster to be healthy..."
           sleep 20
