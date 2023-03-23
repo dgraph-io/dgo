@@ -20,7 +20,7 @@ jobs:
       - name: Checkout Dgraph repo
         uses: actions/checkout@v3
         with:
-          path: dgraph 
+          path: dgraph
           repository: dgraph-io/dgraph
           ref: main
       - name: Checkout Dgo repo
