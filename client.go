@@ -71,25 +71,6 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 	return dg
 }
 
-// DialSlashEndpoint is deprecated. It will be removed in the 21.07 release.
-// Use DialCloud to connect to Dgraph Cloud backend.
-func DialSlashEndpoint(endpoint, key string) (*grpc.ClientConn, error) {
-	return DialCloud(endpoint, key)
-}
-
-// DialSlashGraphQLEndpoint is deprecated, as it leaks GRPC connections.
-// It will be removed in the 21.07 release. Please use DialCloud instead.
-func DialSlashGraphQLEndpoint(endpoint, key string) (*Dgraph, error) {
-	conn, err := DialCloud(endpoint, key)
-	if err != nil {
-		return nil, err
-	}
-
-	dc := api.NewDgraphClient(conn)
-	dg := NewDgraphClient(dc)
-	return dg, nil
-}
-
 // DialCloud creates a new TLS connection to a Dgraph Cloud backend
 //
 //	It requires the backend endpoint as well as the api token
