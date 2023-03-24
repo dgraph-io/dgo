@@ -15,7 +15,7 @@ on:
     - cron: "0 0 * * *" # run workflow daily
 jobs:
   dgo-tests:
-    runs-on: [self-hosted, x64] # needed to use docker commands
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout Dgraph repo
         uses: actions/checkout@v3
