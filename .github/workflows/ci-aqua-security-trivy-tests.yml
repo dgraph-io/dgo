@@ -33,8 +33,8 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-ref: 'repo'
-          scan-type: 'repo'
+          scan-type: 'fs'
+          scan-ref: '.'          
           format: 'sarif'
           output: 'trivy-results.sarif'
       - name: Upload Trivy scan results to GitHub Security tab
