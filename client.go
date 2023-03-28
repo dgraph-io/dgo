@@ -19,6 +19,7 @@ package dgo
 import (
 	"context"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/url"
@@ -82,22 +83,37 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 //		defer conn.Close()
 //		dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 func DialCloud(endpoint, key string) (*grpc.ClientConn, error) {
-	u, err := url.Parse(endpoint)
-	if err != nil {
-		return nil, err
+	var grpcHost string
+	switch {
+	case strings.Contains(endpoint, ".grpc.") && strings.Contains(endpoint, ":"+cloudPort):
+		// if we already have the grpc URL with the port, we don't need to do anything
+		grpcHost = endpoint
+	case strings.Contains(endpoint, ".grpc.") && !strings.Contains(endpoint, ":"+cloudPort):
+		// if we have the grpc URL without the port, just add the port
+		grpcHost = endpoint + ":" + cloudPort
+	default:
+		// otherwise, parse the non-grpc URL and add ".grpc." along with port to it.
+		if !strings.HasPrefix(endpoint, "http") {
+			endpoint = "https://" + endpoint
+		}
+		u, err := url.Parse(endpoint)
+		if err != nil {
+			return nil, err
+		}
+		urlParts := strings.SplitN(u.Host, ".", 2)
+		if len(urlParts) < 2 {
+			return nil, errors.New("invalid URL to Dgraph Cloud")
+		}
+		grpcHost = urlParts[0] + ".grpc." + urlParts[1] + ":" + cloudPort
 	}
 
-	urlParts := strings.SplitN(u.Host, ".", 2)
-
-	host := urlParts[0] + ".grpc." + urlParts[1] + ":" + cloudPort
 	pool, err := x509.SystemCertPool()
 	if err != nil {
 		return nil, err
 	}
-
 	creds := credentials.NewClientTLSFromCert(pool, "")
 	return grpc.Dial(
-		host,
+		grpcHost,
 		grpc.WithTransportCredentials(creds),
 		grpc.WithPerRPCCredentials(&authCreds{key}),
 	)
