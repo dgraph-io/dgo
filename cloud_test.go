@@ -21,7 +21,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/dgraph-io/dgo/v210"
+	"github.com/dgraph-io/dgo/v230"
 )
 
 func TestDialCLoud(t *testing.T) {

@@ -1,4 +1,4 @@
-module github.com/dgraph-io/dgo/v210
+module github.com/dgraph-io/dgo/v230
 
 go 1.19
 
