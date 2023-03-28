@@ -2,8 +2,11 @@
 
 Official Dgraph Go client which communicates with the server using [gRPC](https://grpc.io/).
 
-Before using this client, we highly recommend that you go through [dgraph.io/tour](https://docs.dgraph.io) and
-[dgraph.io/docs](https://tour.dgraph.io) to understand how to run and work with Dgraph.
+Before using this client, we highly recommend that you go through [dgraph.io/tour] and
+[dgraph.io/docs] to understand how to run and work with Dgraph.
+
+[docs.dgraph.io]:https://dgraph.io/docs
+[tour.dgraph.io]:https://dgraph.io/tour
 
 **Use [Github Issues](https://github.com/dgraph-io/dgo/issues) for reporting issues about this repository.**
 
@@ -44,6 +47,9 @@ use a different version of this client and their corresponding import paths.
 Note: One of the most important API breakages from dgo v1 to v2 is in
 the function `dgo.Txn.Mutate`. This function returns an `*api.Assigned`
 value in v1 but an `*api.Response` in v2.
+
+Note: We have removed functions `DialSlashEndpoint`, `DialSlashGraphQLEndpoint` from `v230.0.0`.
+Please use `DialCloud` instead.
 
 Note: There is no breaking API change from v2 to v200 but we have decided
 to follow the [CalVer Versioning Scheme](https://dgraph.io/blog/post/dgraph-calendar-versioning).
@@ -349,8 +355,8 @@ dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 
 ### Running tests
 
-Make sure you have `dgraph` installed in your GOPATH before you run the tests. 
-The dgo test suite requires that a Dgraph cluster with ACL enabled be running locally.  
+Make sure you have `dgraph` installed in your GOPATH before you run the tests.
+The dgo test suite requires that a Dgraph cluster with ACL enabled be running locally.
 To start such a cluster, you may use the docker compose file located in the testing directory `t`.
 
 ```sh
