@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/dgraph-io/dgo/v210/protos/api"
+	"github.com/dgraph-io/dgo/v230/protos/api"
 )
 
 type School struct {
