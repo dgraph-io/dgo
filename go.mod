@@ -20,3 +20,5 @@ require (
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
+
+retract v230.0.0 // needed to merge #158 for v230.0.0 release
