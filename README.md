@@ -43,6 +43,7 @@ use a different version of this client and their corresponding import paths.
 |  dgraph 20.07.0    |  dgo 200.03.0 | "github.com/dgraph-io/dgo/v200" |
 |  dgraph 20.11.0    |  dgo 200.03.0 | "github.com/dgraph-io/dgo/v200" |
 |  dgraph 21.03.0    |  dgo 210.03.0 | "github.com/dgraph-io/dgo/v210" |
+|  dgraph 22.00.0    |  dgo 210.03.0 | "github.com/dgraph-io/dgo/v210" |
 |  dgraph >= 23.0.0  |  dgo 230.00.0 | "github.com/dgraph-io/dgo/v230" |
 
 Note: One of the most important API breakages from dgo v1 to v2 is in
