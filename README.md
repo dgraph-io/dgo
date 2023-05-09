@@ -299,7 +299,7 @@ res, err := txn.QueryRDF(context.Background(), q)
 fmt.Println(res.Rdf)
 ```
 
-`txn.QueryRDFWithVars` is aslo available when you need to pass values for variables
+`txn.QueryRDFWithVars` is also available when you need to pass values for variables
 used in the query.
 
 ### Running an Upsert: Query + Mutation
