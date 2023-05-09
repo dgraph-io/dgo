@@ -18,15 +18,16 @@ Before using this client, we highly recommend that you go through [dgraph.io/tou
   - [Using a client](#using-a-client)
     - [Creating a client](#creating-a-client)
     - [Login into a namespace](#login-into-a-namespace)
+    - [Connecting To Dgraph Cloud](#connecting-to-dgraph-cloud)
     - [Altering the database](#altering-the-database)
     - [Creating a transaction](#creating-a-transaction)
     - [Running a mutation](#running-a-mutation)
     - [Running a query](#running-a-query)
+    - [Query with RDF response](#query-with-rdf-response)
     - [Running an Upsert: Query + Mutation](#running-an-upsert-query--mutation)
     - [Running Conditional Upsert](#running-conditional-upsert)
     - [Committing a transaction](#committing-a-transaction)
     - [Setting Metadata Headers](#setting-metadata-headers)
-    - [Connecting To Dgraph Cloud](#connecting-to-dgraph-cloud)
   - [Development](#development)
     - [Running tests](#running-tests)
 
@@ -73,6 +74,15 @@ defer conn.Close()
 dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 ```
 
+The client can be configured to use gRPC compression:
+
+```go
+dialOpts := append([]grpc.DialOption{},
+	grpc.WithInsecure(),
+	grpc.WithDefaultCallOptions(grpc.UseCompressor(gzip.Name)))
+d, err := grpc.Dial("localhost:9080", dialOpts...)
+```
+
 ### Login into a namespace
 
 If your server has Access Control Lists enabled (Dgraph v1.1 or above), the client must be
@@ -92,6 +102,17 @@ If your server additionally has namespaces (Dgraph v21.03 or above), use the
 ```go
 err := dgraphClient.LoginIntoNamespace(ctx, "user", "passwd", 0x10)
 // Check error
+```
+
+### Connecting To Dgraph Cloud
+
+Please use the following snippet to connect to a Dgraph Cloud backend.
+
+```go
+conn, err := dgo.DialCloud("https://your.endpoint.dgraph.io/graphql", "api-token")
+// Check error
+defer conn.Close()
+dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 ```
 
 ### Altering the database
@@ -253,6 +274,34 @@ res, err := txn.Query(ctx, q)
 fmt.Printf("%s\n", res.Json)
 ```
 
+### Query with RDF response
+
+You can get query result as a RDF response by calling `txn.QueryRDF`. The response would contain
+a `Rdf` field, which has the RDF encoded result.
+
+**Note:** If you are querying only for `uid` values, use a JSON format response.
+
+```go
+// Query the balance for Alice and Bob.
+const q = `
+{
+	all(func: anyofterms(name, "Alice Bob")) {
+		name
+		balance
+	}
+}
+`
+res, err := txn.QueryRDF(context.Background(), q)
+// check error
+
+// <0x17> <name> "Alice" .
+// <0x17> <balance> 100 .
+fmt.Println(res.Rdf)
+```
+
+`txn.QueryRDFWithVars` is aslo available when you need to pass values for variables
+used in the query.
+
 ### Running an Upsert: Query + Mutation
 
 The `txn.Do` function allows you to run upserts consisting of one query and
@@ -340,17 +389,6 @@ md := metadata.New(nil)
 md.Append("auth-token", "the-auth-token-value")
 ctx := metadata.NewOutgoingContext(context.Background(), md)
 dg.Alter(ctx, &op)
-```
-
-### Connecting To Dgraph Cloud
-
-Please use the following snippet to connect to a Dgraph Cloud backend.
-
-```go
-conn, err := dgo.DialCloud("https://your.endpoint.dgraph.io/graphql", "api-token")
-// Check error
-defer conn.Close()
-dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 ```
 
 ## Development
