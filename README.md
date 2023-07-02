@@ -36,12 +36,8 @@ Before using this client, we highly recommend that you go through [dgraph.io/tou
 Depending on the version of Dgraph that you are connecting to, you will have to
 use a different version of this client and their corresponding import paths.
 
-|   Dgraph version   | dgo version   |        dgo import path          |
-| -----------------  | -----------   | ------------------------------- |
-|  dgraph 1.0.X      |  dgo 1.X.Y    |   "github.com/dgraph-io/dgo"    |
-|  dgraph 1.1.X      |  dgo 2.X.Y    | "github.com/dgraph-io/dgo/v2"   |
-|  dgraph 20.03.0    |  dgo 200.03.0 | "github.com/dgraph-io/dgo/v200" |
-|  dgraph 20.07.0    |  dgo 200.03.0 | "github.com/dgraph-io/dgo/v200" |
+|   Dgraph version   |  dgo version  |        dgo import path          |
+| -----------------  | ------------- | ------------------------------- |
 |  dgraph 20.11.0    |  dgo 200.03.0 | "github.com/dgraph-io/dgo/v200" |
 |  dgraph 21.X.Y     |  dgo 210.X.Y  | "github.com/dgraph-io/dgo/v210" |
 |  dgraph 22.X.Y     |  dgo 210.X.Y  | "github.com/dgraph-io/dgo/v210" |
