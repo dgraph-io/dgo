@@ -175,6 +175,7 @@ message Value {
 		bytes datetime_val = 9;
 		string password_val = 10;
 		uint64 uid_val=11;
+		bytes vdouble_val=12;
 	}
 }
 
