@@ -175,6 +175,8 @@ message Value {
 		bytes datetime_val = 9;
 		string password_val = 10;
 		uint64 uid_val=11;
+		// number 12 is reserved for bigfloat
+		bytes vfloat32_val=13;
 	}
 }
 
