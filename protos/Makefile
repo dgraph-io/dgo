@@ -21,10 +21,10 @@ clean:
 .PHONY: check
 check:
 	echo "Installing proto libraries to versions in go.mod." ; \
-		go install github.com/golang/protobuf/protoc-gen-go ; \
-		go install github.com/gogo/protobuf/protoc-gen-gogofaster
+		go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0 ; \
+		go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0
 
 .PHONY: regenerate
 regenerate: check clean
-	@protoc --gogofaster_out=plugins=grpc:api api.proto
+	@protoc --go_out=api --go-grpc_out=api --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative api.proto
 	@echo Done.
