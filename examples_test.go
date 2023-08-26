@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/dgraph-io/dgo/v230"
 	"github.com/dgraph-io/dgo/v230/protos/api"
@@ -37,7 +38,7 @@ const (
 type CancelFunc func()
 
 func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
-	conn, err := grpc.Dial(dgraphAddress, grpc.WithInsecure())
+	conn, err := grpc.Dial(dgraphAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
