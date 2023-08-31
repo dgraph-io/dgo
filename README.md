@@ -64,7 +64,7 @@ distribution of workload.
 The following code snippet shows just one connection.
 
 ```go
-conn, err := grpc.Dial("localhost:9080", grpc.WithInsecure())
+conn, err := grpc.Dial("localhost:9080", grpc.WithTransportCredentials(insecure.NewCredentials()))
 // Check error
 defer conn.Close()
 dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
@@ -74,7 +74,7 @@ The client can be configured to use gRPC compression:
 
 ```go
 dialOpts := append([]grpc.DialOption{},
-	grpc.WithInsecure(),
+	grpc.WithTransportCredentials(insecure.NewCredentials()),
 	grpc.WithDefaultCallOptions(grpc.UseCompressor(gzip.Name)))
 d, err := grpc.Dial("localhost:9080", dialOpts...)
 ```
