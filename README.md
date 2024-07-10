@@ -1,4 +1,4 @@
-# dgo [![GoDoc](https://godoc.org/github.com/dgraph-io/dgo?status.svg)](https://godoc.org/github.com/dgraph-io/dgo)
+# dgo [![GoDoc](https://godoc.org/github.com/dgraph-io/dgo?status.svg)](https://pkg.go.dev/github.com/dgraph-io/dgo/v230)
 
 Official Dgraph Go client which communicates with the server using [gRPC](https://grpc.io/).
 
