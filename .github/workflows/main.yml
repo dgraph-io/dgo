@@ -18,7 +18,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Close Issue
-        uses: peter-evans/close-issue@v1.0.1
+        uses: peter-evans/close-issue@v3.0.1
         with:
           comment: |
            **Use [Discuss Issues](https://discuss.dgraph.io/c/issues/35/clients/46) for reporting issues about this repository.**
