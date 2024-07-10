@@ -18,13 +18,13 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout Dgraph repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: dgraph
           repository: dgraph-io/dgraph
           ref: main
       - name: Checkout Dgo repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: dgo
           repository: dgraph-io/dgo
