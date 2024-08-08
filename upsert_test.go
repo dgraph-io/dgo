@@ -17,7 +17,9 @@
 package dgo_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -579,4 +581,51 @@ func TestBulkDelete(t *testing.T) {
 	}
 	require.NoError(t, json.Unmarshal(res.Json, &res1))
 	require.Equal(t, res1.Q[0].Email, "bob@company1.io")
+}
+
+func TestVectorSupport(t *testing.T) {
+	dg, cancel := getDgraphClient()
+	defer cancel()
+
+	ctx := context.Background()
+	err := dg.Alter(ctx, &api.Operation{DropAll: true})
+	require.NoError(t, err)
+
+	schema := `project_discription_v: float32vector @index(hnsw(exponent: "5", metric: "euclidian")) .`
+	err = dg.Alter(ctx, &api.Operation{Schema: schema})
+	require.NoError(t, err)
+
+	vect := []float32{5.1, 5.1, 1.1}
+	buf := new(bytes.Buffer)
+	for _, v := range vect {
+		if err := binary.Write(buf, binary.LittleEndian, v); err != nil {
+			require.NoError(t, err)
+		}
+	}
+	vectBytes := buf.Bytes()
+	nquad := &api.NQuad{
+		Subject:   "0x1011",
+		Predicate: "project_discription_v",
+		ObjectValue: &api.Value{
+			Val: &api.Value_Vfloat32Val{Vfloat32Val: vectBytes},
+		},
+	}
+
+	mu := &api.Mutation{Set: []*api.NQuad{nquad}, CommitNow: true}
+
+	txn := dg.NewTxn()
+	_, err = txn.Mutate(context.Background(), mu)
+	require.NoError(t, err)
+
+	query := `query {  q (func: uid(0x1011)) { 
+                          uid
+                          project_discription_v
+  
+                         } 
+					} `
+
+	txn1 := dg.NewTxn()
+	resp, err := txn1.Query(context.Background(), query)
+	require.NoError(t, err)
+	require.Equal(t, `{"q":[{"uid":"0x1011","project_discription_v":[5.1E+00,5.1E+00,1.1E+00]}]}`, string(resp.Json))
 }
