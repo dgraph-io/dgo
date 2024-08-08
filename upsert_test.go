@@ -607,7 +607,7 @@ func TestVectorSupport(t *testing.T) {
 		Subject:   "0x1011",
 		Predicate: "project_discription_v",
 		ObjectValue: &api.Value{
-			Val: &api.Value_Vfloat32Val{Vfloat32Val: []byte(vectBytes)},
+			Val: &api.Value_Vfloat32Val{Vfloat32Val: vectBytes},
 		},
 	}
 
