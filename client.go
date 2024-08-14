@@ -112,7 +112,7 @@ func DialCloud(endpoint, key string) (*grpc.ClientConn, error) {
 		return nil, err
 	}
 	creds := credentials.NewClientTLSFromCert(pool, "")
-	return grpc.Dial(
+	return grpc.NewClient(
 		grpcHost,
 		grpc.WithTransportCredentials(creds),
 		grpc.WithPerRPCCredentials(&authCreds{key}),

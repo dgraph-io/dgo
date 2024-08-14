@@ -38,7 +38,7 @@ const (
 type CancelFunc func()
 
 func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
-	conn, err := grpc.Dial(dgraphAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(dgraphAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
