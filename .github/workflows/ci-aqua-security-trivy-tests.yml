@@ -13,6 +13,10 @@ on:
       - master
   schedule:
     - cron: "0 2 * * *"
+
+permissions:
+  security-events: write
+
 jobs:
   build:
     name: trivy-tests
