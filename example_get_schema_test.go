@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/dgraph-io/dgo/v230/protos/api"
+	"github.com/dgraph-io/dgo/v240/protos/api"
 )
 
 func Example_getSchema() {
