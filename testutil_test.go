@@ -27,8 +27,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-
-	"github.com/dgraph-io/dgo/v230/protos/api"
 )
 
 // LoginParams stores the information needed to perform a login request.
@@ -134,14 +132,6 @@ func MakeGQLRequest(t *testing.T, endpoint string, params *GraphQLParams,
 // and returns the access JWT and refresh JWT extracted from
 // the HTTP response
 func HttpLogin(params *LoginParams) (*HttpToken, error) {
-	loginPayload := api.LoginRequest{}
-	if len(params.RefreshJwt) > 0 {
-		loginPayload.RefreshToken = params.RefreshJwt
-	} else {
-		loginPayload.Userid = params.UserID
-		loginPayload.Password = params.Passwd
-	}
-
 	login := `mutation login($userId: String, $password: String, $namespace: Int, $refreshToken: String) {
 		login(userId: $userId, password: $password, namespace: $namespace, refreshToken: $refreshToken) {
 			response {

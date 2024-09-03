@@ -1,4 +1,4 @@
-# dgo [![GoDoc](https://godoc.org/github.com/dgraph-io/dgo?status.svg)](https://pkg.go.dev/github.com/dgraph-io/dgo/v230)
+# dgo [![GoDoc](https://godoc.org/github.com/dgraph-io/dgo?status.svg)](https://pkg.go.dev/github.com/dgraph-io/dgo/v240)
 
 Official Dgraph Go client which communicates with the server using [gRPC](https://grpc.io/).
 
@@ -42,6 +42,7 @@ use a different version of this client and their corresponding import paths.
 |  dgraph 21.X.Y     |  dgo 210.X.Y  | "github.com/dgraph-io/dgo/v210" |
 |  dgraph 22.X.Y     |  dgo 210.X.Y  | "github.com/dgraph-io/dgo/v210" |
 |  dgraph 23.X.Y     |  dgo 230.X.Y  | "github.com/dgraph-io/dgo/v230" |
+|  dgraph 24.X.Y     |  dgo 240.X.Y  | "github.com/dgraph-io/dgo/v240" |
 
 Note: One of the most important API breakages from dgo v1 to v2 is in
 the function `dgo.Txn.Mutate`. This function returns an `*api.Assigned`
