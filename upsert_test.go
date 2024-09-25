@@ -591,7 +591,7 @@ func TestVectorSupport(t *testing.T) {
 	err := dg.Alter(ctx, &api.Operation{DropAll: true})
 	require.NoError(t, err)
 
-	schema := `project_discription_v: float32vector @index(hnsw(exponent: "5", metric: "euclidian")) .`
+	schema := `project_discription_v: float32vector @index(hnsw(exponent: "5", metric: "euclidean")) .`
 	err = dg.Alter(ctx, &api.Operation{Schema: schema})
 	require.NoError(t, err)
 
