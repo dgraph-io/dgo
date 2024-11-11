@@ -1,6 +1,8 @@
 module github.com/dgraph-io/dgo/v240
 
-go 1.22.6
+go 1.21
+
+toolchain go1.23.2
 
 require (
 	github.com/gogo/protobuf v1.3.2
