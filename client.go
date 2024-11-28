@@ -31,6 +31,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/dgraph-io/dgo/v240/protos/api"
 )
@@ -135,7 +136,7 @@ func (d *Dgraph) login(ctx context.Context, userid string, password string,
 		return err
 	}
 
-	return d.jwt.Unmarshal(resp.Json)
+	return proto.Unmarshal(resp.Json, &d.jwt)
 }
 
 // GetJwt returns back the JWT for the dgraph client.
@@ -205,7 +206,7 @@ func (d *Dgraph) retryLogin(ctx context.Context) error {
 		return err
 	}
 
-	return d.jwt.Unmarshal(resp.Json)
+	return proto.Unmarshal(resp.Json, &d.jwt)
 }
 
 func (d *Dgraph) getContext(ctx context.Context) context.Context {
