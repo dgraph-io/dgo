@@ -28,14 +28,30 @@ option go_package = "github.com/dgraph-io/dgo/v240/protos/api";
 option java_package = "io.dgraph";
 option java_outer_classname = "DgraphProto";
 
-// Graph response.
 service Dgraph {
 	rpc Login (LoginRequest)       returns (Response) {}
 	rpc Query (Request)            returns (Response) {}
 	rpc Alter (Operation)          returns (Payload) {}
 	rpc CommitOrAbort (TxnContext) returns (TxnContext) {}
 	rpc CheckVersion(Check)        returns (Version) {}
+
+	rpc CreateNamespace(CreateNamespaceRequest) returns (CreateNamespaceResponse) {}
+	rpc DropNamespace(DropNamespaceRequest) returns (DropNamespaceResponse) {}
 }
+
+message CreateNamespaceRequest {
+	string name = 1;
+}
+
+message CreateNamespaceResponse {
+	uint64 namespace = 1;
+}
+
+message DropNamespaceRequest {
+	string name = 1;
+}
+
+message DropNamespaceResponse {}
 
 message Request {
 	uint64 start_ts = 1;
@@ -196,6 +212,7 @@ message LoginRequest {
 	string password = 2;
 	string refresh_token = 3;
 	uint64 namespace = 4;
+	string namespace_name = 5;
 }
 
 message Jwt {

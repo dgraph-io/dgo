@@ -46,6 +46,7 @@ type Dgraph struct {
 	jwt      api.Jwt
 	dc       []api.DgraphClient
 }
+
 type authCreds struct {
 	token string
 }
@@ -121,15 +122,17 @@ func DialCloud(endpoint, key string) (*grpc.ClientConn, error) {
 }
 
 func (d *Dgraph) login(ctx context.Context, userid string, password string,
-	namespace uint64) error {
+	namespace uint64, namespaceName string) error {
+
 	d.jwtMutex.Lock()
 	defer d.jwtMutex.Unlock()
 
 	dc := d.anyClient()
 	loginRequest := &api.LoginRequest{
-		Userid:    userid,
-		Password:  password,
-		Namespace: namespace,
+		Userid:        userid,
+		Password:      password,
+		Namespace:     namespace,
+		NamespaceName: namespaceName,
 	}
 	resp, err := dc.Login(ctx, loginRequest)
 	if err != nil {
@@ -149,7 +152,7 @@ func (d *Dgraph) GetJwt() api.Jwt {
 // Login logs in the current client using the provided credentials into
 // default namespace (0). Valid for the duration the client is alive.
 func (d *Dgraph) Login(ctx context.Context, userid string, password string) error {
-	return d.login(ctx, userid, password, 0)
+	return d.login(ctx, userid, password, 0, "")
 }
 
 // LoginIntoNamespace logs in the current client using the provided credentials.
@@ -157,7 +160,15 @@ func (d *Dgraph) Login(ctx context.Context, userid string, password string) erro
 func (d *Dgraph) LoginIntoNamespace(ctx context.Context,
 	userid string, password string, namespace uint64) error {
 
-	return d.login(ctx, userid, password, namespace)
+	return d.login(ctx, userid, password, namespace, "")
+}
+
+// LoginIntoNamespaceWithName logs in the current client using the provided credentials.
+// Valid for the duration the client is alive.
+func (d *Dgraph) LoginIntoNamespaceWithName(ctx context.Context,
+	userid string, password string, namespaceName string) error {
+
+	return d.login(ctx, userid, password, 0, namespaceName)
 }
 
 // Alter can be used to do the following by setting various fields of api.Operation:
@@ -254,4 +265,24 @@ func DeleteEdges(mu *api.Mutation, uid string, predicates ...string) {
 			ObjectValue: &api.Value{Val: &api.Value_DefaultVal{DefaultVal: "_STAR_ALL"}},
 		})
 	}
+}
+
+func (d *Dgraph) CreateNamespace(ctx context.Context, name string) error {
+	dc := d.anyClient()
+
+	ctx = d.getContext(ctx)
+	_, err := dc.CreateNamespace(ctx, &api.CreateNamespaceRequest{
+		Name: name,
+	})
+	return err
+}
+
+func (d *Dgraph) DropNamespace(ctx context.Context, name string) error {
+	dc := d.anyClient()
+
+	ctx = d.getContext(ctx)
+	_, err := dc.DropNamespace(ctx, &api.DropNamespaceRequest{
+		Name: name,
+	})
+	return err
 }
