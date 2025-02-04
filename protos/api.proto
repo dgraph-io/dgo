@@ -72,7 +72,7 @@ message ListNamespacesResponse {
 
 message Namespace {
 	string name = 1;
-	string id = 2;
+	uint64 id = 2;
 }
 
 message Request {
