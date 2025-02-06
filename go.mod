@@ -2,7 +2,7 @@ module github.com/dgraph-io/dgo/v240
 
 go 1.22.11
 
-toolchain go1.23.5
+toolchain go1.23.6
 
 require (
 	github.com/pkg/errors v0.9.1
