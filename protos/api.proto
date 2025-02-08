@@ -17,51 +17,13 @@ option go_package = "github.com/dgraph-io/dgo/v240/protos/api";
 option java_package = "io.dgraph";
 option java_outer_classname = "DgraphProto";
 
+// Graph response.
 service Dgraph {
 	rpc Login (LoginRequest)       returns (Response) {}
 	rpc Query (Request)            returns (Response) {}
 	rpc Alter (Operation)          returns (Payload) {}
 	rpc CommitOrAbort (TxnContext) returns (TxnContext) {}
 	rpc CheckVersion(Check)        returns (Version) {}
-
-	rpc CreateNamespace(CreateNamespaceRequest) returns (CreateNamespaceResponse) {}
-	rpc DropNamespace(DropNamespaceRequest) returns (DropNamespaceResponse) {}
-	rpc RenameNamespace(RenameNamespaceRequest) returns (RenameNamespaceResponse) {}
-	rpc ListNamespaces(ListNamespacesRequest) returns (ListNamespacesResponse) {}
-}
-
-message CreateNamespaceRequest {
-	string ns_name = 1;
-	string password = 2;
-}
-
-message CreateNamespaceResponse {
-	uint64 ns_id = 1;
-}
-
-message DropNamespaceRequest {
-	string ns_name = 1;
-	uint64 ns_id = 2;
-}
-
-message DropNamespaceResponse {}
-
-message RenameNamespaceRequest {
-	string from_ns = 1;
-	string to_ns = 2;
-}
-
-message RenameNamespaceResponse {}
-
-message ListNamespacesRequest {}
-
-message ListNamespacesResponse {
-	map<string, Namespace> ns_list = 1;
-}
-
-message Namespace {
-	string name = 1;
-	string id = 2;
 }
 
 message Request {
@@ -223,7 +185,6 @@ message LoginRequest {
 	string password = 2;
 	string refresh_token = 3;
 	uint64 namespace = 4;
-	string ns_name = 5;
 }
 
 message Jwt {
