@@ -23,6 +23,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/dgraph-io/dgo/v240/protos/api"
+	apiv25 "github.com/dgraph-io/dgo/v240/protos/api.v25"
 )
 
 const (
@@ -33,8 +34,12 @@ const (
 type Dgraph struct {
 	jwtMutex sync.RWMutex
 	jwt      api.Jwt
-	dc       []api.DgraphClient
+
+	conns []*grpc.ClientConn
+	dc    []api.DgraphClient
+	dcv25 []apiv25.DgraphHMClient
 }
+
 type authCreds struct {
 	token string
 }
@@ -54,24 +59,28 @@ func (a *authCreds) RequireTransportSecurity() bool {
 // servers in a cluster.
 //
 // A single Dgraph (client) is thread safe for sharing with multiple goroutines.
+//
+// Deprecated: Use dgo.NewClient instead.
 func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
-	dg := &Dgraph{
-		dc: clients,
+	dcv25 := make([]apiv25.DgraphHMClient, len(clients))
+	for i, client := range clients {
+		dcv25[i] = apiv25.NewDgraphHMClient(api.GetConn(client))
 	}
-
-	return dg
+	return &Dgraph{dc: clients, dcv25: dcv25}
 }
 
 // DialCloud creates a new TLS connection to a Dgraph Cloud backend
 //
 //	It requires the backend endpoint as well as the api token
 //	Usage:
-//		conn, err := grpc.DialCloud("CLOUD_ENDPOINT","API_TOKEN")
+//		conn, err := dgo.DialCloud("CLOUD_ENDPOINT","API_TOKEN")
 //		if err != nil {
 //			log.Fatal(err)
 //		}
 //		defer conn.Close()
 //		dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
+//
+// Deprecated: Use dgo.NewClient instead.
 func DialCloud(endpoint, key string) (*grpc.ClientConn, error) {
 	var grpcHost string
 	switch {
@@ -111,6 +120,7 @@ func DialCloud(endpoint, key string) (*grpc.ClientConn, error) {
 
 func (d *Dgraph) login(ctx context.Context, userid string, password string,
 	namespace uint64) error {
+
 	d.jwtMutex.Lock()
 	defer d.jwtMutex.Unlock()
 
@@ -137,12 +147,16 @@ func (d *Dgraph) GetJwt() api.Jwt {
 
 // Login logs in the current client using the provided credentials into
 // default namespace (0). Valid for the duration the client is alive.
+//
+// Deprecated: user LoginUser instead.
 func (d *Dgraph) Login(ctx context.Context, userid string, password string) error {
 	return d.login(ctx, userid, password, 0)
 }
 
 // LoginIntoNamespace logs in the current client using the provided credentials.
 // Valid for the duration the client is alive.
+//
+// Deprecated: use LoginUser instead.
 func (d *Dgraph) LoginIntoNamespace(ctx context.Context,
 	userid string, password string, namespace uint64) error {
 
@@ -155,20 +169,9 @@ func (d *Dgraph) LoginIntoNamespace(ctx context.Context,
 //  3. Drop the database.
 func (d *Dgraph) Alter(ctx context.Context, op *api.Operation) error {
 	dc := d.anyClient()
-
-	ctx = d.getContext(ctx)
-	_, err := dc.Alter(ctx, op)
-
-	if isJwtExpired(err) {
-		err = d.retryLogin(ctx)
-		if err != nil {
-			return err
-		}
-
-		ctx = d.getContext(ctx)
-		_, err = dc.Alter(ctx, op)
-	}
-
+	_, err := doWithRetryLogin(ctx, d, func() (*api.Payload, error) {
+		return dc.Alter(d.getContext(ctx), op)
+	})
 	return err
 }
 

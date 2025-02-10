@@ -1,0 +1,75 @@
+/*
+ * SPDX-FileCopyrightText: © Hypermode Inc. <hello@hypermode.com>
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+// Style guide for Protocol Buffer 3.
+// Use CamelCase (with an initial capital) for message names – for example,
+// SongServerRequest. Use underscore_separated_names for field names – for
+// example, song_name.
+
+syntax = "proto3";
+
+package api.v25;
+
+option go_package = "github.com/dgraph-io/dgo/v240/protos/api.v25";
+
+option java_package = "io.dgraph.v25";
+option java_outer_classname = "DgraphProto";
+
+service DgraphHM {
+  rpc Ping(PingRequest) returns (PingResponse) {}
+
+  rpc LoginUser(LoginUserRequest) returns (LoginUserResponse) {}
+
+  rpc CreateNamespace(CreateNamespaceRequest) returns (CreateNamespaceResponse) {}
+  rpc DropNamespace(DropNamespaceRequest) returns (DropNamespaceResponse) {}
+  rpc UpdateNamespace(UpdateNamespaceRequest) returns (UpdateNamespaceResponse) {}
+  rpc ListNamespaces(ListNamespacesRequest) returns (ListNamespacesResponse) {}
+}
+
+message PingRequest {}
+
+message PingResponse {
+  string version = 1;
+}
+
+message LoginUserRequest {
+  string user_id = 1;
+  string password = 2;
+}
+
+message LoginUserResponse {
+  string access_jwt = 1;
+  string refresh_jwt = 2;
+}
+
+message CreateNamespaceRequest {
+  string ns_name = 1;
+}
+
+message CreateNamespaceResponse {}
+
+message DropNamespaceRequest {
+  string ns_name = 1;
+}
+
+message DropNamespaceResponse {}
+
+message UpdateNamespaceRequest {
+  string ns_name = 1;
+  string rename_to_ns = 2;
+}
+
+message UpdateNamespaceResponse {}
+
+message ListNamespacesRequest {}
+
+message ListNamespacesResponse {
+  map<string, Namespace> ns_list = 1;
+}
+
+message Namespace {
+  string name = 1;
+  uint64 id = 2;
+}

@@ -27,20 +27,16 @@ const (
 type CancelFunc func()
 
 func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
-	conn, err := grpc.NewClient(dgraphAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	dg, err := dgo.NewClient(dgraphAddress, dgo.WithGrpcOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
 	if err != nil {
-		log.Fatal("While trying to dial gRPC")
+		log.Fatalf("Error while trying to create a new client %v", err)
 	}
-
-	dc := api.NewDgraphClient(conn)
-	dg := dgo.NewDgraphClient(dc)
-	ctx := context.Background()
 
 	// Perform login call. If the Dgraph cluster does not have ACL and
 	// enterprise features enabled, this call should be skipped.
 	for {
 		// Keep retrying until we succeed or receive a non-retriable error.
-		err = dg.Login(ctx, "groot", "password")
+		err = dg.Login(context.Background(), "groot", "password")
 		if err == nil || !strings.Contains(err.Error(), "Please retry") {
 			break
 		}
@@ -50,11 +46,7 @@ func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
 		log.Fatalf("While trying to login %v", err.Error())
 	}
 
-	return dg, func() {
-		if err := conn.Close(); err != nil {
-			log.Printf("Error while closing connection:%v", err)
-		}
-	}
+	return dg, func() { dg.Close() }
 }
 
 func ExampleDgraph_Alter_dropAll() {

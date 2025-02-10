@@ -21,6 +21,11 @@ runtimes:
 
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
+  ignore:
+    - linters: [ALL]
+      paths:
+        - protos/api/*.pb.go
+        - protos/api.v25/*.pb.go
   enabled:
     - trivy@0.59.1
     - renovate@39.161.0

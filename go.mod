@@ -1,6 +1,6 @@
 module github.com/dgraph-io/dgo/v240
 
-go 1.22.11
+go 1.22.12
 
 toolchain go1.23.6
 
