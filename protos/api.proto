@@ -65,6 +65,11 @@ message Response {
 	map<string, ListOfString> hdrs = 14;
 }
 
+
+message SnapShotStreamResponse {
+    map<int32, string> leaders = 1; // Key: Group ID (int32), Value: Leader Address
+}
+
 message Mutation {
 	bytes set_json = 1;
 	bytes delete_json = 2;
@@ -105,6 +110,10 @@ message Operation {
 // Worker services.
 message Payload {
 	bytes Data = 1;
+}
+
+message LeaderAlphas{
+	map<string, string> Alphas = 1;
 }
 
 message TxnContext {
@@ -185,6 +194,10 @@ message LoginRequest {
 	string password = 2;
 	string refresh_token = 3;
 	uint64 namespace = 4;
+}
+
+message InitiateSnapShotStreamRequest{
+	bool pdirstatus = 1;
 }
 
 message Jwt {

@@ -7,6 +7,7 @@ package dgo
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -25,6 +26,7 @@ var (
 	ErrReadOnly = errors.New("Readonly transaction cannot run mutations or be committed")
 	// ErrAborted is returned when an operation is performed on an aborted transaction.
 	ErrAborted = errors.New("Transaction has been aborted. Please retry")
+	NewErr     = errors.New("Transaction has been aborted. Please retry")
 )
 
 // Txn is a single atomic transaction.
@@ -52,6 +54,7 @@ type Txn struct {
 
 // NewTxn creates a new transaction.
 func (d *Dgraph) NewTxn() *Txn {
+	fmt.Println("new er", NewErr)
 	return &Txn{
 		dg:      d,
 		dc:      d.anyClient(),

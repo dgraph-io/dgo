@@ -28,12 +28,14 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	DgraphHM_Ping_FullMethodName            = "/api.v25.DgraphHM/Ping"
-	DgraphHM_LoginUser_FullMethodName       = "/api.v25.DgraphHM/LoginUser"
-	DgraphHM_CreateNamespace_FullMethodName = "/api.v25.DgraphHM/CreateNamespace"
-	DgraphHM_DropNamespace_FullMethodName   = "/api.v25.DgraphHM/DropNamespace"
-	DgraphHM_UpdateNamespace_FullMethodName = "/api.v25.DgraphHM/UpdateNamespace"
-	DgraphHM_ListNamespaces_FullMethodName  = "/api.v25.DgraphHM/ListNamespaces"
+	DgraphHM_Ping_FullMethodName                   = "/api.v25.DgraphHM/Ping"
+	DgraphHM_LoginUser_FullMethodName              = "/api.v25.DgraphHM/LoginUser"
+	DgraphHM_CreateNamespace_FullMethodName        = "/api.v25.DgraphHM/CreateNamespace"
+	DgraphHM_DropNamespace_FullMethodName          = "/api.v25.DgraphHM/DropNamespace"
+	DgraphHM_UpdateNamespace_FullMethodName        = "/api.v25.DgraphHM/UpdateNamespace"
+	DgraphHM_ListNamespaces_FullMethodName         = "/api.v25.DgraphHM/ListNamespaces"
+	DgraphHM_InitiateSnapShotStream_FullMethodName = "/api.v25.DgraphHM/InitiateSnapShotStream"
+	DgraphHM_StreamPSnapshot_FullMethodName        = "/api.v25.DgraphHM/StreamPSnapshot"
 )
 
 // DgraphHMClient is the client API for DgraphHM service.
@@ -46,6 +48,8 @@ type DgraphHMClient interface {
 	DropNamespace(ctx context.Context, in *DropNamespaceRequest, opts ...grpc.CallOption) (*DropNamespaceResponse, error)
 	UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...grpc.CallOption) (*UpdateNamespaceResponse, error)
 	ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...grpc.CallOption) (*ListNamespacesResponse, error)
+	InitiateSnapShotStream(ctx context.Context, in *InitiateSnapShotStreamRequest, opts ...grpc.CallOption) (*InitiateSnapShotStreamResponse, error)
+	StreamPSnapshot(ctx context.Context, opts ...grpc.CallOption) (DgraphHM_StreamPSnapshotClient, error)
 }
 
 type dgraphHMClient struct {
@@ -110,6 +114,49 @@ func (c *dgraphHMClient) ListNamespaces(ctx context.Context, in *ListNamespacesR
 	return out, nil
 }
 
+func (c *dgraphHMClient) InitiateSnapShotStream(ctx context.Context, in *InitiateSnapShotStreamRequest, opts ...grpc.CallOption) (*InitiateSnapShotStreamResponse, error) {
+	out := new(InitiateSnapShotStreamResponse)
+	err := c.cc.Invoke(ctx, DgraphHM_InitiateSnapShotStream_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dgraphHMClient) StreamPSnapshot(ctx context.Context, opts ...grpc.CallOption) (DgraphHM_StreamPSnapshotClient, error) {
+	stream, err := c.cc.NewStream(ctx, &DgraphHM_ServiceDesc.Streams[0], DgraphHM_StreamPSnapshot_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &dgraphHMStreamPSnapshotClient{stream}
+	return x, nil
+}
+
+type DgraphHM_StreamPSnapshotClient interface {
+	Send(*KVS) error
+	CloseAndRecv() (*ReceiveSnapshotKVRequest, error)
+	grpc.ClientStream
+}
+
+type dgraphHMStreamPSnapshotClient struct {
+	grpc.ClientStream
+}
+
+func (x *dgraphHMStreamPSnapshotClient) Send(m *KVS) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *dgraphHMStreamPSnapshotClient) CloseAndRecv() (*ReceiveSnapshotKVRequest, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(ReceiveSnapshotKVRequest)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // DgraphHMServer is the server API for DgraphHM service.
 // All implementations must embed UnimplementedDgraphHMServer
 // for forward compatibility
@@ -120,6 +167,8 @@ type DgraphHMServer interface {
 	DropNamespace(context.Context, *DropNamespaceRequest) (*DropNamespaceResponse, error)
 	UpdateNamespace(context.Context, *UpdateNamespaceRequest) (*UpdateNamespaceResponse, error)
 	ListNamespaces(context.Context, *ListNamespacesRequest) (*ListNamespacesResponse, error)
+	InitiateSnapShotStream(context.Context, *InitiateSnapShotStreamRequest) (*InitiateSnapShotStreamResponse, error)
+	StreamPSnapshot(DgraphHM_StreamPSnapshotServer) error
 	mustEmbedUnimplementedDgraphHMServer()
 }
 
@@ -144,6 +193,12 @@ func (UnimplementedDgraphHMServer) UpdateNamespace(context.Context, *UpdateNames
 }
 func (UnimplementedDgraphHMServer) ListNamespaces(context.Context, *ListNamespacesRequest) (*ListNamespacesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListNamespaces not implemented")
+}
+func (UnimplementedDgraphHMServer) InitiateSnapShotStream(context.Context, *InitiateSnapShotStreamRequest) (*InitiateSnapShotStreamResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InitiateSnapShotStream not implemented")
+}
+func (UnimplementedDgraphHMServer) StreamPSnapshot(DgraphHM_StreamPSnapshotServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamPSnapshot not implemented")
 }
 func (UnimplementedDgraphHMServer) mustEmbedUnimplementedDgraphHMServer() {}
 
@@ -266,6 +321,50 @@ func _DgraphHM_ListNamespaces_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DgraphHM_InitiateSnapShotStream_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InitiateSnapShotStreamRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DgraphHMServer).InitiateSnapShotStream(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DgraphHM_InitiateSnapShotStream_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DgraphHMServer).InitiateSnapShotStream(ctx, req.(*InitiateSnapShotStreamRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DgraphHM_StreamPSnapshot_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(DgraphHMServer).StreamPSnapshot(&dgraphHMStreamPSnapshotServer{stream})
+}
+
+type DgraphHM_StreamPSnapshotServer interface {
+	SendAndClose(*ReceiveSnapshotKVRequest) error
+	Recv() (*KVS, error)
+	grpc.ServerStream
+}
+
+type dgraphHMStreamPSnapshotServer struct {
+	grpc.ServerStream
+}
+
+func (x *dgraphHMStreamPSnapshotServer) SendAndClose(m *ReceiveSnapshotKVRequest) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *dgraphHMStreamPSnapshotServer) Recv() (*KVS, error) {
+	m := new(KVS)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // DgraphHM_ServiceDesc is the grpc.ServiceDesc for DgraphHM service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -297,7 +396,17 @@ var DgraphHM_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "ListNamespaces",
 			Handler:    _DgraphHM_ListNamespaces_Handler,
 		},
+		{
+			MethodName: "InitiateSnapShotStream",
+			Handler:    _DgraphHM_InitiateSnapShotStream_Handler,
+		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "StreamPSnapshot",
+			Handler:       _DgraphHM_StreamPSnapshot_Handler,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "api.v25.proto",
 }
