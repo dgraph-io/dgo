@@ -8,9 +8,6 @@ Before using this client, we highly recommend that you go through [dgraph.io/tou
 [dgraph.io/docs]: https://dgraph.io/docs
 [dgraph.io/tour]: https://dgraph.io/tour
 
-**Use [Github Issues](https://github.com/hypermodeinc/dgo/issues) for reporting issues about this
-repository.**
-
 ## Table of contents
 
 - [dgo](#dgo-)
