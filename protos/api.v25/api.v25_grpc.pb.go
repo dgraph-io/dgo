@@ -28,274 +28,311 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	DgraphHM_Ping_FullMethodName            = "/api.v25.DgraphHM/Ping"
-	DgraphHM_LoginUser_FullMethodName       = "/api.v25.DgraphHM/LoginUser"
-	DgraphHM_CreateNamespace_FullMethodName = "/api.v25.DgraphHM/CreateNamespace"
-	DgraphHM_DropNamespace_FullMethodName   = "/api.v25.DgraphHM/DropNamespace"
-	DgraphHM_UpdateNamespace_FullMethodName = "/api.v25.DgraphHM/UpdateNamespace"
-	DgraphHM_ListNamespaces_FullMethodName  = "/api.v25.DgraphHM/ListNamespaces"
+	Dgraph_Ping_FullMethodName            = "/api.v25.Dgraph/Ping"
+	Dgraph_SignInUser_FullMethodName      = "/api.v25.Dgraph/SignInUser"
+	Dgraph_Alter_FullMethodName           = "/api.v25.Dgraph/Alter"
+	Dgraph_CreateNamespace_FullMethodName = "/api.v25.Dgraph/CreateNamespace"
+	Dgraph_DropNamespace_FullMethodName   = "/api.v25.Dgraph/DropNamespace"
+	Dgraph_UpdateNamespace_FullMethodName = "/api.v25.Dgraph/UpdateNamespace"
+	Dgraph_ListNamespaces_FullMethodName  = "/api.v25.Dgraph/ListNamespaces"
 )
 
-// DgraphHMClient is the client API for DgraphHM service.
+// DgraphClient is the client API for Dgraph service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type DgraphHMClient interface {
+type DgraphClient interface {
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
-	LoginUser(ctx context.Context, in *LoginUserRequest, opts ...grpc.CallOption) (*LoginUserResponse, error)
+	SignInUser(ctx context.Context, in *SignInUserRequest, opts ...grpc.CallOption) (*SignInUserResponse, error)
+	Alter(ctx context.Context, in *AlterRequest, opts ...grpc.CallOption) (*AlterResponse, error)
 	CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*CreateNamespaceResponse, error)
 	DropNamespace(ctx context.Context, in *DropNamespaceRequest, opts ...grpc.CallOption) (*DropNamespaceResponse, error)
 	UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...grpc.CallOption) (*UpdateNamespaceResponse, error)
 	ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...grpc.CallOption) (*ListNamespacesResponse, error)
 }
 
-type dgraphHMClient struct {
+type dgraphClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewDgraphHMClient(cc grpc.ClientConnInterface) DgraphHMClient {
-	return &dgraphHMClient{cc}
+func NewDgraphClient(cc grpc.ClientConnInterface) DgraphClient {
+	return &dgraphClient{cc}
 }
 
-func (c *dgraphHMClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error) {
+func (c *dgraphClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error) {
 	out := new(PingResponse)
-	err := c.cc.Invoke(ctx, DgraphHM_Ping_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Dgraph_Ping_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dgraphHMClient) LoginUser(ctx context.Context, in *LoginUserRequest, opts ...grpc.CallOption) (*LoginUserResponse, error) {
-	out := new(LoginUserResponse)
-	err := c.cc.Invoke(ctx, DgraphHM_LoginUser_FullMethodName, in, out, opts...)
+func (c *dgraphClient) SignInUser(ctx context.Context, in *SignInUserRequest, opts ...grpc.CallOption) (*SignInUserResponse, error) {
+	out := new(SignInUserResponse)
+	err := c.cc.Invoke(ctx, Dgraph_SignInUser_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dgraphHMClient) CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*CreateNamespaceResponse, error) {
+func (c *dgraphClient) Alter(ctx context.Context, in *AlterRequest, opts ...grpc.CallOption) (*AlterResponse, error) {
+	out := new(AlterResponse)
+	err := c.cc.Invoke(ctx, Dgraph_Alter_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dgraphClient) CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*CreateNamespaceResponse, error) {
 	out := new(CreateNamespaceResponse)
-	err := c.cc.Invoke(ctx, DgraphHM_CreateNamespace_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Dgraph_CreateNamespace_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dgraphHMClient) DropNamespace(ctx context.Context, in *DropNamespaceRequest, opts ...grpc.CallOption) (*DropNamespaceResponse, error) {
+func (c *dgraphClient) DropNamespace(ctx context.Context, in *DropNamespaceRequest, opts ...grpc.CallOption) (*DropNamespaceResponse, error) {
 	out := new(DropNamespaceResponse)
-	err := c.cc.Invoke(ctx, DgraphHM_DropNamespace_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Dgraph_DropNamespace_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dgraphHMClient) UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...grpc.CallOption) (*UpdateNamespaceResponse, error) {
+func (c *dgraphClient) UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...grpc.CallOption) (*UpdateNamespaceResponse, error) {
 	out := new(UpdateNamespaceResponse)
-	err := c.cc.Invoke(ctx, DgraphHM_UpdateNamespace_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Dgraph_UpdateNamespace_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dgraphHMClient) ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...grpc.CallOption) (*ListNamespacesResponse, error) {
+func (c *dgraphClient) ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...grpc.CallOption) (*ListNamespacesResponse, error) {
 	out := new(ListNamespacesResponse)
-	err := c.cc.Invoke(ctx, DgraphHM_ListNamespaces_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Dgraph_ListNamespaces_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// DgraphHMServer is the server API for DgraphHM service.
-// All implementations must embed UnimplementedDgraphHMServer
+// DgraphServer is the server API for Dgraph service.
+// All implementations must embed UnimplementedDgraphServer
 // for forward compatibility
-type DgraphHMServer interface {
+type DgraphServer interface {
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
-	LoginUser(context.Context, *LoginUserRequest) (*LoginUserResponse, error)
+	SignInUser(context.Context, *SignInUserRequest) (*SignInUserResponse, error)
+	Alter(context.Context, *AlterRequest) (*AlterResponse, error)
 	CreateNamespace(context.Context, *CreateNamespaceRequest) (*CreateNamespaceResponse, error)
 	DropNamespace(context.Context, *DropNamespaceRequest) (*DropNamespaceResponse, error)
 	UpdateNamespace(context.Context, *UpdateNamespaceRequest) (*UpdateNamespaceResponse, error)
 	ListNamespaces(context.Context, *ListNamespacesRequest) (*ListNamespacesResponse, error)
-	mustEmbedUnimplementedDgraphHMServer()
+	mustEmbedUnimplementedDgraphServer()
 }
 
-// UnimplementedDgraphHMServer must be embedded to have forward compatible implementations.
-type UnimplementedDgraphHMServer struct {
+// UnimplementedDgraphServer must be embedded to have forward compatible implementations.
+type UnimplementedDgraphServer struct {
 }
 
-func (UnimplementedDgraphHMServer) Ping(context.Context, *PingRequest) (*PingResponse, error) {
+func (UnimplementedDgraphServer) Ping(context.Context, *PingRequest) (*PingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
-func (UnimplementedDgraphHMServer) LoginUser(context.Context, *LoginUserRequest) (*LoginUserResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LoginUser not implemented")
+func (UnimplementedDgraphServer) SignInUser(context.Context, *SignInUserRequest) (*SignInUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SignInUser not implemented")
 }
-func (UnimplementedDgraphHMServer) CreateNamespace(context.Context, *CreateNamespaceRequest) (*CreateNamespaceResponse, error) {
+func (UnimplementedDgraphServer) Alter(context.Context, *AlterRequest) (*AlterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Alter not implemented")
+}
+func (UnimplementedDgraphServer) CreateNamespace(context.Context, *CreateNamespaceRequest) (*CreateNamespaceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateNamespace not implemented")
 }
-func (UnimplementedDgraphHMServer) DropNamespace(context.Context, *DropNamespaceRequest) (*DropNamespaceResponse, error) {
+func (UnimplementedDgraphServer) DropNamespace(context.Context, *DropNamespaceRequest) (*DropNamespaceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DropNamespace not implemented")
 }
-func (UnimplementedDgraphHMServer) UpdateNamespace(context.Context, *UpdateNamespaceRequest) (*UpdateNamespaceResponse, error) {
+func (UnimplementedDgraphServer) UpdateNamespace(context.Context, *UpdateNamespaceRequest) (*UpdateNamespaceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateNamespace not implemented")
 }
-func (UnimplementedDgraphHMServer) ListNamespaces(context.Context, *ListNamespacesRequest) (*ListNamespacesResponse, error) {
+func (UnimplementedDgraphServer) ListNamespaces(context.Context, *ListNamespacesRequest) (*ListNamespacesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListNamespaces not implemented")
 }
-func (UnimplementedDgraphHMServer) mustEmbedUnimplementedDgraphHMServer() {}
+func (UnimplementedDgraphServer) mustEmbedUnimplementedDgraphServer() {}
 
-// UnsafeDgraphHMServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to DgraphHMServer will
+// UnsafeDgraphServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DgraphServer will
 // result in compilation errors.
-type UnsafeDgraphHMServer interface {
-	mustEmbedUnimplementedDgraphHMServer()
+type UnsafeDgraphServer interface {
+	mustEmbedUnimplementedDgraphServer()
 }
 
-func RegisterDgraphHMServer(s grpc.ServiceRegistrar, srv DgraphHMServer) {
-	s.RegisterService(&DgraphHM_ServiceDesc, srv)
+func RegisterDgraphServer(s grpc.ServiceRegistrar, srv DgraphServer) {
+	s.RegisterService(&Dgraph_ServiceDesc, srv)
 }
 
-func _DgraphHM_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Dgraph_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PingRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DgraphHMServer).Ping(ctx, in)
+		return srv.(DgraphServer).Ping(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: DgraphHM_Ping_FullMethodName,
+		FullMethod: Dgraph_Ping_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DgraphHMServer).Ping(ctx, req.(*PingRequest))
+		return srv.(DgraphServer).Ping(ctx, req.(*PingRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DgraphHM_LoginUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LoginUserRequest)
+func _Dgraph_SignInUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignInUserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DgraphHMServer).LoginUser(ctx, in)
+		return srv.(DgraphServer).SignInUser(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: DgraphHM_LoginUser_FullMethodName,
+		FullMethod: Dgraph_SignInUser_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DgraphHMServer).LoginUser(ctx, req.(*LoginUserRequest))
+		return srv.(DgraphServer).SignInUser(ctx, req.(*SignInUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DgraphHM_CreateNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Dgraph_Alter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AlterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DgraphServer).Alter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Dgraph_Alter_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DgraphServer).Alter(ctx, req.(*AlterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Dgraph_CreateNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateNamespaceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DgraphHMServer).CreateNamespace(ctx, in)
+		return srv.(DgraphServer).CreateNamespace(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: DgraphHM_CreateNamespace_FullMethodName,
+		FullMethod: Dgraph_CreateNamespace_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DgraphHMServer).CreateNamespace(ctx, req.(*CreateNamespaceRequest))
+		return srv.(DgraphServer).CreateNamespace(ctx, req.(*CreateNamespaceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DgraphHM_DropNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Dgraph_DropNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DropNamespaceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DgraphHMServer).DropNamespace(ctx, in)
+		return srv.(DgraphServer).DropNamespace(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: DgraphHM_DropNamespace_FullMethodName,
+		FullMethod: Dgraph_DropNamespace_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DgraphHMServer).DropNamespace(ctx, req.(*DropNamespaceRequest))
+		return srv.(DgraphServer).DropNamespace(ctx, req.(*DropNamespaceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DgraphHM_UpdateNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Dgraph_UpdateNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateNamespaceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DgraphHMServer).UpdateNamespace(ctx, in)
+		return srv.(DgraphServer).UpdateNamespace(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: DgraphHM_UpdateNamespace_FullMethodName,
+		FullMethod: Dgraph_UpdateNamespace_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DgraphHMServer).UpdateNamespace(ctx, req.(*UpdateNamespaceRequest))
+		return srv.(DgraphServer).UpdateNamespace(ctx, req.(*UpdateNamespaceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DgraphHM_ListNamespaces_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Dgraph_ListNamespaces_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListNamespacesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DgraphHMServer).ListNamespaces(ctx, in)
+		return srv.(DgraphServer).ListNamespaces(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: DgraphHM_ListNamespaces_FullMethodName,
+		FullMethod: Dgraph_ListNamespaces_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DgraphHMServer).ListNamespaces(ctx, req.(*ListNamespacesRequest))
+		return srv.(DgraphServer).ListNamespaces(ctx, req.(*ListNamespacesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// DgraphHM_ServiceDesc is the grpc.ServiceDesc for DgraphHM service.
+// Dgraph_ServiceDesc is the grpc.ServiceDesc for Dgraph service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var DgraphHM_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "api.v25.DgraphHM",
-	HandlerType: (*DgraphHMServer)(nil),
+var Dgraph_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "api.v25.Dgraph",
+	HandlerType: (*DgraphServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Ping",
-			Handler:    _DgraphHM_Ping_Handler,
+			Handler:    _Dgraph_Ping_Handler,
 		},
 		{
-			MethodName: "LoginUser",
-			Handler:    _DgraphHM_LoginUser_Handler,
+			MethodName: "SignInUser",
+			Handler:    _Dgraph_SignInUser_Handler,
+		},
+		{
+			MethodName: "Alter",
+			Handler:    _Dgraph_Alter_Handler,
 		},
 		{
 			MethodName: "CreateNamespace",
-			Handler:    _DgraphHM_CreateNamespace_Handler,
+			Handler:    _Dgraph_CreateNamespace_Handler,
 		},
 		{
 			MethodName: "DropNamespace",
-			Handler:    _DgraphHM_DropNamespace_Handler,
+			Handler:    _Dgraph_DropNamespace_Handler,
 		},
 		{
 			MethodName: "UpdateNamespace",
-			Handler:    _DgraphHM_UpdateNamespace_Handler,
+			Handler:    _Dgraph_UpdateNamespace_Handler,
 		},
 		{
 			MethodName: "ListNamespaces",
-			Handler:    _DgraphHM_ListNamespaces_Handler,
+			Handler:    _Dgraph_ListNamespaces_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

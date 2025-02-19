@@ -28,16 +28,16 @@ lint:
         - protos/api.v25/*.pb.go
   enabled:
     - trivy@0.59.1
-    - renovate@39.161.0
+    - renovate@39.173.1
     - actionlint@1.7.7
-    - checkov@3.2.365
+    - checkov@3.2.370
     - git-diff-check
     - gofmt@1.20.4
-    - golangci-lint@1.63.4
+    - golangci-lint@1.64.5
     - markdownlint@0.44.0
     - osv-scanner@1.9.2
-    - prettier@3.4.2
-    - trufflehog@3.88.4
+    - prettier@3.5.1
+    - trufflehog@3.88.9
     - yamllint@1.35.1
 actions:
   enabled:

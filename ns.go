@@ -18,6 +18,10 @@ import (
 	apiv25 "github.com/dgraph-io/dgo/v240/protos/api.v25"
 )
 
+const (
+	RootNamespace = "root"
+)
+
 type bearerCreds struct {
 	token string
 }
@@ -105,7 +109,7 @@ func NewRoundRobinClient(endpoints []string, opts ...ClientOption) (*Dgraph, err
 
 	conns := make([]*grpc.ClientConn, len(endpoints))
 	dc := make([]api.DgraphClient, len(endpoints))
-	dcv25 := make([]apiv25.DgraphHMClient, len(endpoints))
+	dcv25 := make([]apiv25.DgraphClient, len(endpoints))
 	for i, endpoint := range endpoints {
 		conn, err := grpc.NewClient(endpoint, co.gopts...)
 		if err != nil {
@@ -113,7 +117,7 @@ func NewRoundRobinClient(endpoints []string, opts ...ClientOption) (*Dgraph, err
 		}
 		conns[i] = conn
 		dc[i] = api.NewDgraphClient(conn)
-		dcv25[i] = apiv25.NewDgraphHMClient(conn)
+		dcv25[i] = apiv25.NewDgraphClient(conn)
 	}
 
 	return &Dgraph{dc: dc, dcv25: dcv25}, nil
@@ -126,7 +130,7 @@ func (d *Dgraph) Close() {
 	}
 }
 
-func (d *Dgraph) anyClientv25() apiv25.DgraphHMClient {
+func (d *Dgraph) anyClientv25() apiv25.DgraphClient {
 	//nolint:gosec
 	return d.dcv25[rand.Intn(len(d.dcv25))]
 }
@@ -185,14 +189,14 @@ func doWithRetryLogin[T any](ctx context.Context, d *Dgraph, f func() (*T, error
 	return resp, err
 }
 
-// LoginUser logs the user in using the provided username and password.
-func (d *Dgraph) LoginUser(ctx context.Context, username, password string) error {
+// SignInUser logs the user in using the provided username and password.
+func (d *Dgraph) SignInUser(ctx context.Context, username, password string) error {
 	d.jwtMutex.Lock()
 	defer d.jwtMutex.Unlock()
 
 	dc := d.anyClientv25()
-	req := &apiv25.LoginUserRequest{UserId: username, Password: password}
-	resp, err := dc.LoginUser(ctx, req)
+	req := &apiv25.SignInUserRequest{UserId: username, Password: password}
+	resp, err := dc.SignInUser(ctx, req)
 	if err != nil {
 		return err
 	}
