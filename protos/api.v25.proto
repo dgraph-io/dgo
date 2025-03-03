@@ -26,6 +26,8 @@ service DgraphHM {
   rpc DropNamespace(DropNamespaceRequest) returns (DropNamespaceResponse) {}
   rpc UpdateNamespace(UpdateNamespaceRequest) returns (UpdateNamespaceResponse) {}
   rpc ListNamespaces(ListNamespacesRequest) returns (ListNamespacesResponse) {}
+  rpc InitiateSnapShotStream (InitiateSnapShotStreamRequest)    returns (InitiateSnapShotStreamResponse) {}
+  rpc StreamPSnapshot(stream KVS) returns (ReceiveSnapshotKVRequest) {}
 }
 
 message PingRequest {}
@@ -72,4 +74,27 @@ message ListNamespacesResponse {
 message Namespace {
   string name = 1;
   uint64 id = 2;
+}
+
+message InitiateSnapShotStreamRequest {}
+
+message InitiateSnapShotStreamResponse {
+  string task_id = 1;
+  map<uint32, string> leader_alphas = 2;
+}
+
+message ReceiveSnapshotKVRequest {
+    string message = 1;
+}
+
+message KVS {
+  bytes data = 5;
+
+  // done used to indicate if the stream of KVS is over.
+  bool done = 2;
+  // predicates is the list of predicates known by the leader at the time of the
+  // snapshot.
+  repeated string predicates = 3;
+  // types is the list of types known by the leader at the time of the snapshot.
+  repeated string types = 4;
 }
