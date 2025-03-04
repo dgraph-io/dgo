@@ -170,7 +170,7 @@ func (d *Dgraph) LoginIntoNamespace(ctx context.Context,
 //  2. Drop a predicate.
 //  3. Drop the database.
 //
-// Deprecated: use SetSchema, SetSchemaInBackground, DropAll, DropPredicate, DropType instead.
+// Deprecated: use DropAllNamespaces, DropAll, DropData, DropPredicate, DropType, SetSchema instead.
 func (d *Dgraph) Alter(ctx context.Context, op *api.Operation) error {
 	dc := d.anyClient()
 	_, err := doWithRetryLogin(ctx, d, func() (*api.Payload, error) {
