@@ -10,9 +10,13 @@ import (
 	"crypto/x509"
 	"fmt"
 	"math/rand"
+	"net/url"
+	"strconv"
+	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/dgraph-io/dgo/v240/protos/api"
 	apiv25 "github.com/dgraph-io/dgo/v240/protos/api.v25"
@@ -204,4 +208,59 @@ func (d *Dgraph) SignInUser(ctx context.Context, username, password string) erro
 	d.jwt.AccessJwt = resp.AccessJwt
 	d.jwt.RefreshJwt = resp.RefreshJwt
 	return nil
+}
+
+const (
+	dgraphScheme = "dgraph://"
+	// optional parameter for providing a Dgraph Cloud API key
+	cloudAPIKeyParam = "api-key"
+	// optional parameter for providing a Dgraph namespace
+	namespaceParam = "ns"
+)
+
+// Connect creates a new Dgraph client by parsing a connection string of the form:
+// dgraph://<optional-login>:<optional-pw>@<host>:<port>?<optional-params>
+// It connects to the gRPC endpoint and, if credentials are provided, signs in the user.
+func Connect(connStr string, opts ...ClientOption) (*Dgraph, error) {
+	if !strings.HasPrefix(connStr, dgraphScheme) {
+		return nil, fmt.Errorf("invalid connection string: must start with %s", dgraphScheme)
+	}
+
+	u, err := url.Parse(connStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid connection string: %w", err)
+	}
+
+	// If the api-key is found, use WithDgraphAPIKey.
+	// TODO: add support for a bearer token for Hypermode
+	if apiKey, ok := u.Query()[cloudAPIKeyParam]; ok {
+		opts = append(opts, WithDgraphAPIKey(apiKey[0]))
+	} else {
+		opts = append(opts, WithGrpcOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
+	}
+
+	client, err := NewClient(u.Host, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	// If user info is present, sign in with the provided credentials.
+	if u.User != nil {
+		username := u.User.Username()
+		password, _ := u.User.Password()
+		ctx := context.Background()
+		var ns uint64
+		if nsParam, ok := u.Query()[namespaceParam]; ok {
+			// TODO: handle v25 namespace changes
+			ns, err = strconv.ParseUint(nsParam[0], 10, 64)
+			if err != nil {
+				return nil, fmt.Errorf("invalid namespace: %w", err)
+			}
+		}
+		if err := client.login(ctx, username, password, ns); err != nil {
+			return nil, fmt.Errorf("failed to authenticate: %w", err)
+		}
+	}
+
+	return client, nil
 }
