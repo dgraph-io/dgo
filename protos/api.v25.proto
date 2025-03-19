@@ -19,6 +19,7 @@ option java_outer_classname = "DgraphProto";
 
 service Dgraph {
   rpc Ping(PingRequest) returns (PingResponse) {}
+  rpc AllocateIDs(AllocateIDsRequest) returns (AllocateIDsResponse) {}
 
   rpc SignInUser(SignInUserRequest) returns (SignInUserResponse) {}
   rpc Alter(AlterRequest) returns (AlterResponse) {}
@@ -33,6 +34,22 @@ message PingRequest {}
 
 message PingResponse {
   string version = 1;
+}
+
+enum LeaseType {
+  NS = 0;
+  UID = 1;
+  TS = 2;
+}
+
+message AllocateIDsRequest {
+  uint64 how_many = 1;
+  LeaseType lease_type = 2;
+}
+
+message AllocateIDsResponse {
+  uint64 start = 1;
+  uint64 end = 2; // inclusive
 }
 
 message SignInUserRequest {

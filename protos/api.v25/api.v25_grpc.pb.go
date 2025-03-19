@@ -29,6 +29,7 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	Dgraph_Ping_FullMethodName            = "/api.v25.Dgraph/Ping"
+	Dgraph_AllocateIDs_FullMethodName     = "/api.v25.Dgraph/AllocateIDs"
 	Dgraph_SignInUser_FullMethodName      = "/api.v25.Dgraph/SignInUser"
 	Dgraph_Alter_FullMethodName           = "/api.v25.Dgraph/Alter"
 	Dgraph_CreateNamespace_FullMethodName = "/api.v25.Dgraph/CreateNamespace"
@@ -42,6 +43,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DgraphClient interface {
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
+	AllocateIDs(ctx context.Context, in *AllocateIDsRequest, opts ...grpc.CallOption) (*AllocateIDsResponse, error)
 	SignInUser(ctx context.Context, in *SignInUserRequest, opts ...grpc.CallOption) (*SignInUserResponse, error)
 	Alter(ctx context.Context, in *AlterRequest, opts ...grpc.CallOption) (*AlterResponse, error)
 	CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*CreateNamespaceResponse, error)
@@ -61,6 +63,15 @@ func NewDgraphClient(cc grpc.ClientConnInterface) DgraphClient {
 func (c *dgraphClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error) {
 	out := new(PingResponse)
 	err := c.cc.Invoke(ctx, Dgraph_Ping_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dgraphClient) AllocateIDs(ctx context.Context, in *AllocateIDsRequest, opts ...grpc.CallOption) (*AllocateIDsResponse, error) {
+	out := new(AllocateIDsResponse)
+	err := c.cc.Invoke(ctx, Dgraph_AllocateIDs_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -126,6 +137,7 @@ func (c *dgraphClient) ListNamespaces(ctx context.Context, in *ListNamespacesReq
 // for forward compatibility
 type DgraphServer interface {
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
+	AllocateIDs(context.Context, *AllocateIDsRequest) (*AllocateIDsResponse, error)
 	SignInUser(context.Context, *SignInUserRequest) (*SignInUserResponse, error)
 	Alter(context.Context, *AlterRequest) (*AlterResponse, error)
 	CreateNamespace(context.Context, *CreateNamespaceRequest) (*CreateNamespaceResponse, error)
@@ -141,6 +153,9 @@ type UnimplementedDgraphServer struct {
 
 func (UnimplementedDgraphServer) Ping(context.Context, *PingRequest) (*PingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
+}
+func (UnimplementedDgraphServer) AllocateIDs(context.Context, *AllocateIDsRequest) (*AllocateIDsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllocateIDs not implemented")
 }
 func (UnimplementedDgraphServer) SignInUser(context.Context, *SignInUserRequest) (*SignInUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignInUser not implemented")
@@ -187,6 +202,24 @@ func _Dgraph_Ping_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DgraphServer).Ping(ctx, req.(*PingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Dgraph_AllocateIDs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AllocateIDsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DgraphServer).AllocateIDs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Dgraph_AllocateIDs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DgraphServer).AllocateIDs(ctx, req.(*AllocateIDsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -309,6 +342,10 @@ var Dgraph_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Ping",
 			Handler:    _Dgraph_Ping_Handler,
+		},
+		{
+			MethodName: "AllocateIDs",
+			Handler:    _Dgraph_AllocateIDs_Handler,
 		},
 		{
 			MethodName: "SignInUser",
