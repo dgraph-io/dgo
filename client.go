@@ -18,6 +18,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
@@ -26,11 +27,20 @@ import (
 	apiv25 "github.com/dgraph-io/dgo/v240/protos/api.v25"
 )
 
+type sslMode string
+
 const (
-	cloudPort = "443"
+	cloudPort    = "443"
+	dgraphScheme = "dgraph://"
+	// optional parameter for providing a Dgraph Cloud API key
+	cloudAPIKeyParam = "apikey"
+	// optional parameter for providing a Dgraph SSL mode
+	sslModeParam           = "sslmode"
+	sslModeDisable sslMode = "disable"
+	sslModeRequire sslMode = "require"
 )
 
-// Dgraph is a transaction aware client to a set of Dgraph server instances.
+// Dgraph is a transaction-aware client to a Dgraph cluster.
 type Dgraph struct {
 	jwtMutex sync.RWMutex
 	jwt      api.Jwt
@@ -54,13 +64,68 @@ func (a *authCreds) RequireTransportSecurity() bool {
 	return true
 }
 
+// Open creates a new Dgraph client by parsing a connection string of the form:
+// dgraph://<optional-login>:<optional-password>@<host>:<port>?<optional-params>
+// For example `dgraph://localhost:9080?sslmode=require`
+// It connects to the gRPC endpoint and, if credentials are provided, signs in the user.
+func Open(connStr string) (*Dgraph, error) {
+	if !strings.HasPrefix(connStr, dgraphScheme) {
+		return nil, fmt.Errorf("invalid connection string: must start with %s", dgraphScheme)
+	}
+
+	u, err := url.Parse(connStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid connection string: %w", err)
+	}
+
+	opts := []ClientOption{}
+
+	certPoolAdded := false
+	if sslMode, ok := u.Query()[sslModeParam]; ok {
+		if sslMode[0] == string(sslModeRequire) {
+			opts = append(opts, WithSystemCertPool())
+			certPoolAdded = true
+		}
+	}
+
+	if apiKey, ok := u.Query()[cloudAPIKeyParam]; ok {
+		key := apiKey[0]
+		if len(key) < 12 {
+			return nil, fmt.Errorf("invalid API key")
+		}
+		if !certPoolAdded {
+			opts = append(opts, WithSystemCertPool())
+		}
+		opts = append(opts, WithDgraphAPIKey(apiKey[0]))
+	} else if !certPoolAdded {
+		opts = append(opts, WithGrpcOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
+	}
+
+	if u.User != nil {
+		username := u.User.Username()
+		password, found := u.User.Password()
+		if found {
+			opts = append(opts, WithACLCreds(username, password))
+		}
+	}
+
+	return NewClient(u.Host, opts...)
+}
+
+// Close closes all the connections to the Dgraph Cluster.
+func (d *Dgraph) Close() {
+	for _, conn := range d.conns {
+		_ = conn.Close()
+	}
+}
+
 // NewDgraphClient creates a new Dgraph (client) for interacting with Alphas.
 // The client is backed by multiple connections to the same or different
 // servers in a cluster.
 //
 // A single Dgraph (client) is thread safe for sharing with multiple goroutines.
 //
-// Deprecated: Use dgo.NewClient instead.
+// Deprecated: Use dgo.NewClient or dgo.Open instead.
 func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 	dcv25 := make([]apiv25.DgraphClient, len(clients))
 	for i, client := range clients {
@@ -80,7 +145,7 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 //		defer conn.Close()
 //		dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 //
-// Deprecated: Use dgo.NewClient instead.
+// Deprecated: Use dgo.NewClient or dgo.Open instead.
 func DialCloud(endpoint, key string) (*grpc.ClientConn, error) {
 	var grpcHost string
 	switch {
