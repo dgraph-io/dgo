@@ -7,9 +7,11 @@ package dgo
 
 import (
 	"context"
+	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"math/rand"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -102,12 +104,16 @@ func WithACLCreds(username, password string) ClientOption {
 }
 
 // NewClient creates a new Dgraph client for a single endpoint.
+// If ACL connection options are present, an login attempt is made
+// using the supplied credentials.
 func NewClient(endpoint string, opts ...ClientOption) (*Dgraph, error) {
 	return NewRoundRobinClient([]string{endpoint}, opts...)
 }
 
 // NewRoundRobinClient creates a new Dgraph client for a list
 // of endpoints. It will round robin among the provided endpoints.
+// If ACL connection options are present, an login attempt is made
+// using the supplied credentials.
 func NewRoundRobinClient(endpoints []string, opts ...ClientOption) (*Dgraph, error) {
 	co := &clientOptions{}
 	for _, opt := range opts {
@@ -131,7 +137,11 @@ func NewRoundRobinClient(endpoints []string, opts ...ClientOption) (*Dgraph, err
 
 	d := &Dgraph{dc: dc, dcv25: dcv25}
 	if co.username != "" && co.password != "" {
-		if err := d.Login(context.Background(), co.username, co.password); err != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		if err := d.Login(ctx, co.username, co.password); err != nil {
+			d.Close()
 			return nil, fmt.Errorf("failed to sign in user: %w", err)
 		}
 	}
