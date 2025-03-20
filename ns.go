@@ -58,6 +58,13 @@ func WithSystemCertPool() ClientOption {
 	}
 }
 
+func WithSkipTLSVerify() ClientOption {
+	return func(o *clientOptions) error {
+		o.gopts = append(o.gopts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})))
+		return nil
+	}
+}
+
 // WithDgraphAPIKey will use the provided API key for authentication for Dgraph Cloud.
 func WithDgraphAPIKey(apiKey string) ClientOption {
 	return func(o *clientOptions) error {
