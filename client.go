@@ -27,17 +27,16 @@ import (
 	apiv25 "github.com/dgraph-io/dgo/v240/protos/api.v25"
 )
 
-type sslMode string
-
 const (
 	cloudPort    = "443"
 	dgraphScheme = "dgraph://"
 	// optional parameter for providing a Dgraph Cloud API key
 	cloudAPIKeyParam = "apikey"
 	// optional parameter for providing a Dgraph SSL mode
-	sslModeParam           = "sslmode"
-	sslModeDisable sslMode = "disable"
-	sslModeRequire sslMode = "require"
+	sslModeParam    = "sslmode"
+	sslModeDisable  = "disable"
+	sslModeRequire  = "require"
+	sslModeVerifyCA = "verify-ca"
 )
 
 // Dgraph is a transaction-aware client to a Dgraph cluster.
@@ -69,50 +68,56 @@ func (a *authCreds) RequireTransportSecurity() bool {
 // For example `dgraph://localhost:9080?sslmode=require`
 // It connects to the gRPC endpoint and, if credentials are provided, signs in the user.
 func Open(connStr string) (*Dgraph, error) {
-	if !strings.HasPrefix(connStr, dgraphScheme) {
-		return nil, fmt.Errorf("invalid connection string: must start with %s", dgraphScheme)
-	}
-
 	u, err := url.Parse(connStr)
 	if err != nil {
 		return nil, fmt.Errorf("invalid connection string: %w", err)
 	}
 
-	opts := []ClientOption{}
-
-	certPoolAdded := false
-	if sslMode, ok := u.Query()[sslModeParam]; ok {
-		if sslMode[0] == string(sslModeRequire) {
-			opts = append(opts, WithSystemCertPool())
-			certPoolAdded = true
-		}
+	if !strings.HasPrefix(connStr, dgraphScheme) {
+		return nil, fmt.Errorf("invalid connection string: must start with %s", dgraphScheme)
 	}
 
-	if apiKey, ok := u.Query()[cloudAPIKeyParam]; ok {
-		key := apiKey[0]
-		if len(key) < 12 {
-			return nil, fmt.Errorf("invalid API key")
+	opts := []ClientOption{}
+
+	apiKey := u.Query().Get(cloudAPIKeyParam)
+	sslMode := u.Query().Get(sslModeParam)
+
+	if apiKey != "" {
+		if len(apiKey) < 12 {
+			return nil, errors.New("invalid API key")
 		}
-		if !certPoolAdded {
-			opts = append(opts, WithSystemCertPool())
-		}
-		opts = append(opts, WithDgraphAPIKey(apiKey[0]))
-	} else if !certPoolAdded {
+		// Dgraph Cloud requires SSL
+		sslMode = sslModeVerifyCA
+		opts = append(opts, WithDgraphAPIKey(apiKey))
+	}
+
+	if sslMode == "" {
+		sslMode = sslModeDisable
+	}
+	switch sslMode {
+	case sslModeDisable:
 		opts = append(opts, WithGrpcOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
+	case sslModeRequire:
+		opts = append(opts, WithSkipTLSVerify())
+	case sslModeVerifyCA:
+		opts = append(opts, WithSystemCertPool())
+	default:
+		return nil, fmt.Errorf("invalid SSL mode: %s (must be one of %s, %s, %s)", sslMode, sslModeDisable, sslModeRequire, sslModeVerifyCA)
 	}
 
 	if u.User != nil {
 		username := u.User.Username()
-		password, found := u.User.Password()
-		if found {
-			opts = append(opts, WithACLCreds(username, password))
+		password, _ := u.User.Password()
+		if username == "" || password == "" {
+			return nil, errors.New("invalid connection string: both username and password must be provided")
 		}
+		opts = append(opts, WithACLCreds(username, password))
 	}
 
 	return NewClient(u.Host, opts...)
 }
 
-// Close closes all the connections to the Dgraph Cluster.
+// Close shutdown down all the connections to the Dgraph Cluster.
 func (d *Dgraph) Close() {
 	for _, conn := range d.conns {
 		_ = conn.Close()
