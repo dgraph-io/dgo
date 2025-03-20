@@ -67,6 +67,8 @@ func (a *authCreds) RequireTransportSecurity() bool {
 // dgraph://<optional-login>:<optional-password>@<host>:<port>?<optional-params>
 // For example `dgraph://localhost:9080?sslmode=require`
 // It connects to the gRPC endpoint and, if credentials are provided, signs in the user.
+// An error can be returned if the Dgraph cluster is not yet ready to accept requests--the text
+// of the error in this case will contain the string "Please retry".
 func Open(connStr string) (*Dgraph, error) {
 	u, err := url.Parse(connStr)
 	if err != nil {
