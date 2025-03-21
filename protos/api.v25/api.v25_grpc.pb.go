@@ -32,6 +32,7 @@ const (
 	Dgraph_AllocateIDs_FullMethodName     = "/api.v25.Dgraph/AllocateIDs"
 	Dgraph_SignInUser_FullMethodName      = "/api.v25.Dgraph/SignInUser"
 	Dgraph_Alter_FullMethodName           = "/api.v25.Dgraph/Alter"
+	Dgraph_RunDQL_FullMethodName          = "/api.v25.Dgraph/RunDQL"
 	Dgraph_CreateNamespace_FullMethodName = "/api.v25.Dgraph/CreateNamespace"
 	Dgraph_DropNamespace_FullMethodName   = "/api.v25.Dgraph/DropNamespace"
 	Dgraph_UpdateNamespace_FullMethodName = "/api.v25.Dgraph/UpdateNamespace"
@@ -46,6 +47,7 @@ type DgraphClient interface {
 	AllocateIDs(ctx context.Context, in *AllocateIDsRequest, opts ...grpc.CallOption) (*AllocateIDsResponse, error)
 	SignInUser(ctx context.Context, in *SignInUserRequest, opts ...grpc.CallOption) (*SignInUserResponse, error)
 	Alter(ctx context.Context, in *AlterRequest, opts ...grpc.CallOption) (*AlterResponse, error)
+	RunDQL(ctx context.Context, in *RunDQLRequest, opts ...grpc.CallOption) (*RunDQLResponse, error)
 	CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*CreateNamespaceResponse, error)
 	DropNamespace(ctx context.Context, in *DropNamespaceRequest, opts ...grpc.CallOption) (*DropNamespaceResponse, error)
 	UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...grpc.CallOption) (*UpdateNamespaceResponse, error)
@@ -96,6 +98,15 @@ func (c *dgraphClient) Alter(ctx context.Context, in *AlterRequest, opts ...grpc
 	return out, nil
 }
 
+func (c *dgraphClient) RunDQL(ctx context.Context, in *RunDQLRequest, opts ...grpc.CallOption) (*RunDQLResponse, error) {
+	out := new(RunDQLResponse)
+	err := c.cc.Invoke(ctx, Dgraph_RunDQL_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dgraphClient) CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*CreateNamespaceResponse, error) {
 	out := new(CreateNamespaceResponse)
 	err := c.cc.Invoke(ctx, Dgraph_CreateNamespace_FullMethodName, in, out, opts...)
@@ -140,6 +151,7 @@ type DgraphServer interface {
 	AllocateIDs(context.Context, *AllocateIDsRequest) (*AllocateIDsResponse, error)
 	SignInUser(context.Context, *SignInUserRequest) (*SignInUserResponse, error)
 	Alter(context.Context, *AlterRequest) (*AlterResponse, error)
+	RunDQL(context.Context, *RunDQLRequest) (*RunDQLResponse, error)
 	CreateNamespace(context.Context, *CreateNamespaceRequest) (*CreateNamespaceResponse, error)
 	DropNamespace(context.Context, *DropNamespaceRequest) (*DropNamespaceResponse, error)
 	UpdateNamespace(context.Context, *UpdateNamespaceRequest) (*UpdateNamespaceResponse, error)
@@ -162,6 +174,9 @@ func (UnimplementedDgraphServer) SignInUser(context.Context, *SignInUserRequest)
 }
 func (UnimplementedDgraphServer) Alter(context.Context, *AlterRequest) (*AlterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Alter not implemented")
+}
+func (UnimplementedDgraphServer) RunDQL(context.Context, *RunDQLRequest) (*RunDQLResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RunDQL not implemented")
 }
 func (UnimplementedDgraphServer) CreateNamespace(context.Context, *CreateNamespaceRequest) (*CreateNamespaceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateNamespace not implemented")
@@ -260,6 +275,24 @@ func _Dgraph_Alter_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Dgraph_RunDQL_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RunDQLRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DgraphServer).RunDQL(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Dgraph_RunDQL_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DgraphServer).RunDQL(ctx, req.(*RunDQLRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Dgraph_CreateNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateNamespaceRequest)
 	if err := dec(in); err != nil {
@@ -354,6 +387,10 @@ var Dgraph_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Alter",
 			Handler:    _Dgraph_Alter_Handler,
+		},
+		{
+			MethodName: "RunDQL",
+			Handler:    _Dgraph_RunDQL_Handler,
 		},
 		{
 			MethodName: "CreateNamespace",
