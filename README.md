@@ -71,7 +71,7 @@ Valid connection string args:
 
 | Arg     | Value                           | Description                                                                                                                                                   |
 | ------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| apikey  | <key>                           | a Dgraph Cloud API key (implies sslmode=verify-ca)                                                                                                            |
+| apikey  | <key>                           | a Dgraph Cloud API Key                                                                                                                                        |
 | sslmode | disable \| require \| verify-ca | TLS option, the default is `disable`. If `verify-ca` is set, the TLS certificate configured in the Dgraph cluster must be from a valid certificate authority. |
 
 Some example connection strings:
@@ -85,7 +85,7 @@ Some example connection strings:
 Using the `Open` function with a connection string:
 
 ```go
-// open a connection to a ACL-enabled, non-TLS cluster and login as groot
+// open a connection to an ACL-enabled, non-TLS cluster and login as groot
 client, err := dgo.Open("dgraph://groot:password@localhost:8090")
 // Check error
 defer client.Close()
@@ -446,4 +446,15 @@ docker compose -f t/docker-compose.yml up -d
 # wait for cluster to be healthy
 go test -v ./...
 docker compose -f t/docker-compose.yml down
+```
+
+### Running tests against the latest Dgraph release
+
+If you don't have a `dgraph` image installed, you can run tests against the latest Dgraph image.
+
+```sh
+docker compose -f t/docker-compose-latest.yml up -d
+# wait for cluster to be healthy
+go test -v ./...
+docker compose -f t/docker-compose-latest.yml down
 ```
