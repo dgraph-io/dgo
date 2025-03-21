@@ -29,7 +29,7 @@ import (
 
 const (
 	cloudPort    = "443"
-	dgraphScheme = "dgraph://"
+	dgraphScheme = "dgraph"
 	// optional parameter for providing a Dgraph Cloud API key
 	cloudAPIKeyParam = "apikey"
 	// optional parameter for providing a Dgraph SSL mode
@@ -75,8 +75,8 @@ func Open(connStr string) (*Dgraph, error) {
 		return nil, fmt.Errorf("invalid connection string: %w", err)
 	}
 
-	if !strings.HasPrefix(connStr, dgraphScheme) {
-		return nil, fmt.Errorf("invalid connection string: must start with %s", dgraphScheme)
+	if u.Scheme != dgraphScheme {
+		return nil, fmt.Errorf("invalid scheme: must start with %s://", dgraphScheme)
 	}
 
 	opts := []ClientOption{}
@@ -85,11 +85,6 @@ func Open(connStr string) (*Dgraph, error) {
 	sslMode := u.Query().Get(sslModeParam)
 
 	if apiKey != "" {
-		if len(apiKey) < 12 {
-			return nil, errors.New("invalid API key")
-		}
-		// Dgraph Cloud requires SSL
-		sslMode = sslModeVerifyCA
 		opts = append(opts, WithDgraphAPIKey(apiKey))
 	}
 
