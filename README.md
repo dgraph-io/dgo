@@ -126,7 +126,7 @@ You can use either `Open` or `NewClient` to connect to Dgraph Cloud.
 Using `Open` with a connection string:
 
 ```go
-client, err := dgo.Open("dgraph://foo-bar.grpc.cloud.dgraph.io:443?apikey=AValidKeYFromDgrAPHCloud=")
+client, err := dgo.Open("dgraph://foo-bar.grpc.cloud.dgraph.io:443?sslmode=verify-ca&apikey=AValidKeYFromDgrAPHCloud=")
 // Check error
 defer client.Close()
 ```
@@ -134,7 +134,10 @@ defer client.Close()
 Using `NewClient`:
 
 ```go
-client, err := dgo.NewClient("foo-bar.grpc.cloud.dgraph.io:443", dgo.WithDgraphAPIKey("AValidKeYFromDgrAPHCloud="))
+client, err := dgo.NewClient("foo-bar.grpc.cloud.dgraph.io:443",
+  dgo.WithDgraphAPIKey("AValidKeYFromDgrAPHCloud="),
+  dgo.WithSystemCertPool(),
+)
 // Check error
 defer client.Close()
 ```
