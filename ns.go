@@ -137,7 +137,7 @@ func NewRoundRobinClient(endpoints []string, opts ...ClientOption) (*Dgraph, err
 
 	d := &Dgraph{dc: dc, dcv25: dcv25}
 	if co.username != "" && co.password != "" {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
 		if err := d.Login(ctx, co.username, co.password); err != nil {
