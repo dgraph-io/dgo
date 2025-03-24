@@ -18,6 +18,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
@@ -27,10 +28,20 @@ import (
 )
 
 const (
-	cloudPort = "443"
+	cloudPort    = "443"
+	dgraphScheme = "dgraph"
+	// optional parameter for providing a Dgraph Cloud API key
+	cloudAPIKeyParam = "apikey"
+	// optional parameter for providing an access token
+	bearerTokenParam = "bearertoken"
+	// optional parameter for providing a Dgraph SSL mode
+	sslModeParam    = "sslmode"
+	sslModeDisable  = "disable"
+	sslModeRequire  = "require"
+	sslModeVerifyCA = "verify-ca"
 )
 
-// Dgraph is a transaction aware client to a set of Dgraph server instances.
+// Dgraph is a transaction-aware client to a Dgraph cluster.
 type Dgraph struct {
 	jwtMutex sync.RWMutex
 	jwt      api.Jwt
@@ -54,13 +65,89 @@ func (a *authCreds) RequireTransportSecurity() bool {
 	return true
 }
 
+// Open creates a new Dgraph client by parsing a connection string of the form:
+// dgraph://<optional-login>:<optional-password>@<host>:<port>?<optional-params>
+// For example `dgraph://localhost:9080?sslmode=require`
+//
+// Parameters:
+// - apikey: a Dgraph Cloud API key for authentication
+// - bearertoken: a token for bearer authentication
+// - sslmode: SSL connection mode (options: disable, require, verify-ca)
+//   - disable: No TLS (default)
+//   - require: Use TLS but skip certificate verification
+//   - verify-ca: Use TLS and verify the certificate against system CA
+//
+// If credentials are provided, Open connects to the gRPC endpoint and authenticates the user.
+// An error can be returned if the Dgraph cluster is not yet ready to accept requests--the text
+// of the error in this case will contain the string "Please retry".
+func Open(connStr string) (*Dgraph, error) {
+	u, err := url.Parse(connStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid connection string: %w", err)
+	}
+
+	if u.Scheme != dgraphScheme {
+		return nil, fmt.Errorf("invalid scheme: must start with %s://", dgraphScheme)
+	}
+
+	opts := []ClientOption{}
+
+	apiKey := u.Query().Get(cloudAPIKeyParam)
+	bearerToken := u.Query().Get(bearerTokenParam)
+	sslMode := u.Query().Get(sslModeParam)
+
+	if apiKey != "" && bearerToken != "" {
+		return nil, errors.New("invalid connection string: both apikey and bearertoken cannot be provided")
+	}
+
+	if apiKey != "" {
+		opts = append(opts, WithDgraphAPIKey(apiKey))
+	}
+
+	if bearerToken != "" {
+		opts = append(opts, WithBearerToken(bearerToken))
+	}
+
+	if sslMode == "" {
+		sslMode = sslModeDisable
+	}
+	switch sslMode {
+	case sslModeDisable:
+		opts = append(opts, WithGrpcOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
+	case sslModeRequire:
+		opts = append(opts, WithSkipTLSVerify())
+	case sslModeVerifyCA:
+		opts = append(opts, WithSystemCertPool())
+	default:
+		return nil, fmt.Errorf("invalid SSL mode: %s (must be one of %s, %s, %s)", sslMode, sslModeDisable, sslModeRequire, sslModeVerifyCA)
+	}
+
+	if u.User != nil {
+		username := u.User.Username()
+		password, _ := u.User.Password()
+		if username == "" || password == "" {
+			return nil, errors.New("invalid connection string: both username and password must be provided")
+		}
+		opts = append(opts, WithACLCreds(username, password))
+	}
+
+	return NewClient(u.Host, opts...)
+}
+
+// Close shutdown down all the connections to the Dgraph Cluster.
+func (d *Dgraph) Close() {
+	for _, conn := range d.conns {
+		_ = conn.Close()
+	}
+}
+
 // NewDgraphClient creates a new Dgraph (client) for interacting with Alphas.
 // The client is backed by multiple connections to the same or different
 // servers in a cluster.
 //
 // A single Dgraph (client) is thread safe for sharing with multiple goroutines.
 //
-// Deprecated: Use dgo.NewClient instead.
+// Deprecated: Use dgo.NewClient or dgo.Open instead.
 func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 	dcv25 := make([]apiv25.DgraphClient, len(clients))
 	for i, client := range clients {
@@ -80,7 +167,7 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 //		defer conn.Close()
 //		dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 //
-// Deprecated: Use dgo.NewClient instead.
+// Deprecated: Use dgo.NewClient or dgo.Open instead.
 func DialCloud(endpoint, key string) (*grpc.ClientConn, error) {
 	var grpcHost string
 	switch {

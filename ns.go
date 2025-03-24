@@ -7,9 +7,11 @@ package dgo
 
 import (
 	"context"
+	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"math/rand"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -37,14 +39,15 @@ func (a *bearerCreds) RequireTransportSecurity() bool {
 }
 
 type clientOptions struct {
-	gopts []grpc.DialOption
+	gopts              []grpc.DialOption
+	username, password string
 }
 
 // ClientOption is a function that modifies the client options.
 type ClientOption func(*clientOptions) error
 
-// withSystemCertPool will use the system cert pool and setup a TLS connection with Dgraph cluster.
-func withSystemCertPool() ClientOption {
+// WithSystemCertPool will use the system cert pool and setup a TLS connection with Dgraph cluster.
+func WithSystemCertPool() ClientOption {
 	return func(o *clientOptions) error {
 		pool, err := x509.SystemCertPool()
 		if err != nil {
@@ -57,13 +60,16 @@ func withSystemCertPool() ClientOption {
 	}
 }
 
+func WithSkipTLSVerify() ClientOption {
+	return func(o *clientOptions) error {
+		o.gopts = append(o.gopts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})))
+		return nil
+	}
+}
+
 // WithDgraphAPIKey will use the provided API key for authentication for Dgraph Cloud.
 func WithDgraphAPIKey(apiKey string) ClientOption {
 	return func(o *clientOptions) error {
-		if err := withSystemCertPool()(o); err != nil {
-			return err
-		}
-
 		o.gopts = append(o.gopts, grpc.WithPerRPCCredentials(&authCreds{token: apiKey}))
 		return nil
 	}
@@ -74,10 +80,6 @@ func WithDgraphAPIKey(apiKey string) ClientOption {
 // This can be used to connect to Hypermode Cloud.
 func WithBearerToken(token string) ClientOption {
 	return func(o *clientOptions) error {
-		if err := withSystemCertPool()(o); err != nil {
-			return err
-		}
-
 		o.gopts = append(o.gopts, grpc.WithPerRPCCredentials(&bearerCreds{token: token}))
 		return nil
 	}
@@ -92,13 +94,26 @@ func WithGrpcOption(opt grpc.DialOption) ClientOption {
 	}
 }
 
+// WithACLCreds will use the provided username and password for ACL authentication.
+func WithACLCreds(username, password string) ClientOption {
+	return func(o *clientOptions) error {
+		o.username = username
+		o.password = password
+		return nil
+	}
+}
+
 // NewClient creates a new Dgraph client for a single endpoint.
+// If ACL connection options are present, an login attempt is made
+// using the supplied credentials.
 func NewClient(endpoint string, opts ...ClientOption) (*Dgraph, error) {
 	return NewRoundRobinClient([]string{endpoint}, opts...)
 }
 
 // NewRoundRobinClient creates a new Dgraph client for a list
 // of endpoints. It will round robin among the provided endpoints.
+// If ACL connection options are present, an login attempt is made
+// using the supplied credentials.
 func NewRoundRobinClient(endpoints []string, opts ...ClientOption) (*Dgraph, error) {
 	co := &clientOptions{}
 	for _, opt := range opts {
@@ -120,14 +135,17 @@ func NewRoundRobinClient(endpoints []string, opts ...ClientOption) (*Dgraph, err
 		dcv25[i] = apiv25.NewDgraphClient(conn)
 	}
 
-	return &Dgraph{dc: dc, dcv25: dcv25}, nil
-}
+	d := &Dgraph{dc: dc, dcv25: dcv25}
+	if co.username != "" && co.password != "" {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
 
-// Close closes all the connections to the Dgraph Cluster.
-func (d *Dgraph) Close() {
-	for _, conn := range d.conns {
-		_ = conn.Close()
+		if err := d.Login(ctx, co.username, co.password); err != nil {
+			d.Close()
+			return nil, fmt.Errorf("failed to sign in user: %w", err)
+		}
 	}
+	return d, nil
 }
 
 func (d *Dgraph) anyClientv25() apiv25.DgraphClient {

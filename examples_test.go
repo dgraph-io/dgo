@@ -13,9 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
 	"github.com/dgraph-io/dgo/v240"
 	"github.com/dgraph-io/dgo/v240/protos/api"
 )
@@ -27,25 +24,20 @@ const (
 type CancelFunc func()
 
 func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
-	dg, err := dgo.NewClient(dgraphAddress, dgo.WithGrpcOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
-	if err != nil {
-		log.Fatalf("Error while trying to create a new client %v", err)
-	}
-
-	// Perform login call. If the Dgraph cluster does not have ACL and
-	// enterprise features enabled, this call should be skipped.
+	var (
+		err error
+		dg  *dgo.Dgraph
+	)
 	for {
-		// Keep retrying until we succeed or receive a non-retriable error.
-		err = dg.Login(context.Background(), "groot", "password")
+		dg, err = dgo.Open(fmt.Sprintf("dgraph://groot:password@%s?sslmode=disable", dgraphAddress))
 		if err == nil || !strings.Contains(err.Error(), "Please retry") {
 			break
 		}
 		time.Sleep(time.Second)
 	}
 	if err != nil {
-		log.Fatalf("While trying to login %v", err.Error())
+		log.Fatalf("Error while trying to open client %v", err.Error())
 	}
-
 	return dg, func() { dg.Close() }
 }
 
