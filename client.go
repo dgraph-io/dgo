@@ -32,6 +32,8 @@ const (
 	dgraphScheme = "dgraph"
 	// optional parameter for providing a Dgraph Cloud API key
 	cloudAPIKeyParam = "apikey"
+	// optional parameter for providing an access token
+	bearerTokenParam = "bearertoken"
 	// optional parameter for providing a Dgraph SSL mode
 	sslModeParam    = "sslmode"
 	sslModeDisable  = "disable"
@@ -66,7 +68,16 @@ func (a *authCreds) RequireTransportSecurity() bool {
 // Open creates a new Dgraph client by parsing a connection string of the form:
 // dgraph://<optional-login>:<optional-password>@<host>:<port>?<optional-params>
 // For example `dgraph://localhost:9080?sslmode=require`
-// It connects to the gRPC endpoint and, if credentials are provided, signs in the user.
+//
+// Parameters:
+// - apikey: a Dgraph Cloud API key for authentication
+// - bearertoken: a token for bearer authentication
+// - sslmode: SSL connection mode (options: disable, require, verify-ca)
+//   - disable: No TLS (default)
+//   - require: Use TLS but skip certificate verification
+//   - verify-ca: Use TLS and verify the certificate against system CA
+//
+// If credentials are provided, Open connects to the gRPC endpoint and authenticates the user.
 // An error can be returned if the Dgraph cluster is not yet ready to accept requests--the text
 // of the error in this case will contain the string "Please retry".
 func Open(connStr string) (*Dgraph, error) {
@@ -82,10 +93,19 @@ func Open(connStr string) (*Dgraph, error) {
 	opts := []ClientOption{}
 
 	apiKey := u.Query().Get(cloudAPIKeyParam)
+	bearerToken := u.Query().Get(bearerTokenParam)
 	sslMode := u.Query().Get(sslModeParam)
+
+	if apiKey != "" && bearerToken != "" {
+		return nil, errors.New("invalid connection string: both apikey and bearertoken cannot be provided")
+	}
 
 	if apiKey != "" {
 		opts = append(opts, WithDgraphAPIKey(apiKey))
+	}
+
+	if bearerToken != "" {
+		opts = append(opts, WithBearerToken(bearerToken))
 	}
 
 	if sslMode == "" {
