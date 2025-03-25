@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: © Hypermode Inc. <hello@hypermode.com>
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package dgo
 
 import (
@@ -55,8 +60,7 @@ func (d *Dgraph) SetSchema(ctx context.Context, nsName string, schema string) er
 }
 
 func (d *Dgraph) doAlter(ctx context.Context, req *apiv25.AlterRequest) error {
-	dc := d.anyClientv25()
-	_, err := doWithRetryLogin(ctx, d, func() (*apiv25.AlterResponse, error) {
+	_, err := doWithRetryLogin(ctx, d, func(dc apiv25.DgraphClient) (*apiv25.AlterResponse, error) {
 		return dc.Alter(d.getContext(ctx), req)
 	})
 	return err
