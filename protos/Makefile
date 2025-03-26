@@ -5,7 +5,7 @@
 
 .PHONY: clean
 clean:
-	@mkdir -p api && rm -f api/api.pb.go
+	@rm -rf api && mkdir -p api
 
 .PHONY: check
 check:

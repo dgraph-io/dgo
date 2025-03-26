@@ -100,6 +100,7 @@ func (gqlErr *GqlError) Error() string {
 	buf.WriteString(gqlErr.Message)
 	return buf.String()
 }
+
 func MakeGQLRequest(t *testing.T, endpoint string, params *GraphQLParams,
 	token *HttpToken) *GraphQLResponse {
 	resp := MakeGQLRequestHelper(t, endpoint, params, token)
