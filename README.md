@@ -1,4 +1,4 @@
-# dgo [![GoDoc](https://godoc.org/github.com/hypermodeinc/dgo?status.svg)](https://pkg.go.dev/github.com/hypermodeinc/dgo/v240)
+# dgo [![GoDoc](https://pkg.go.dev/badge/github.com/dgraph-io/dgo)](https://pkg.go.dev/github.com/dgraph-io/dgo/v240)
 
 Official Dgraph Go client which communicates with the server using [gRPC](https://grpc.io/).
 
@@ -37,23 +37,14 @@ repository.**
 Depending on the version of Dgraph that you are connecting to, you will have to use a different
 version of this client and their corresponding import paths.
 
-| Dgraph version | dgo version  | dgo import path                 |
-| -------------- | ------------ | ------------------------------- |
-| dgraph 20.11.0 | dgo 200.03.0 | "github.com/dgraph-io/dgo/v200" |
-| dgraph 21.X.Y  | dgo 210.X.Y  | "github.com/dgraph-io/dgo/v210" |
-| dgraph 22.X.Y  | dgo 210.X.Y  | "github.com/dgraph-io/dgo/v210" |
-| dgraph 23.X.Y  | dgo 230.X.Y  | "github.com/dgraph-io/dgo/v230" |
-| dgraph 24.X.Y  | dgo 240.X.Y  | "github.com/dgraph-io/dgo/v240" |
-
-Note: One of the most important API breakages from dgo v1 to v2 is in the function `dgo.Txn.Mutate`.
-This function returns an `*api.Assigned` value in v1 but an `*api.Response` in v2.
+| Dgraph version | dgo version | dgo import path                 |
+| -------------- | ----------- | ------------------------------- |
+| dgraph 23.X.Y  | dgo 230.X.Y | "github.com/dgraph-io/dgo/v230" |
+| dgraph 24.X.Y  | dgo 240.X.Y | "github.com/dgraph-io/dgo/v240" |
 
 Note: We have removed functions `DialSlashEndpoint`, `DialSlashGraphQLEndpoint` from `v230.0.0`.
 `DialCloud` is now marked deprecated and will be removed in a future release, use either `Open` or
 `NewClient` (see below).
-
-Note: There is no breaking API change from v2 to v200 but we have decided to follow the
-[CalVer Versioning Scheme](https://dgraph.io/blog/post/dgraph-calendar-versioning).
 
 ## Using a client
 
