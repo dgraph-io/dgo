@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - release/v240
   pull_request:
     types:
       - opened
@@ -12,6 +13,7 @@ on:
       - ready_for_review
     branches:
       - main
+      - release/v240
 
 permissions:
   contents: read
