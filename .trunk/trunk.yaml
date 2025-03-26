@@ -25,7 +25,6 @@ lint:
     - linters: [ALL]
       paths:
         - protos/api/*.pb.go
-        - protos/api.v25/*.pb.go
   enabled:
     - trivy@0.60.0
     - renovate@39.194.0
