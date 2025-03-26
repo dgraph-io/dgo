@@ -59,6 +59,8 @@ Note: There is no breaking API change from v2 to v200 but we have decided to fol
 
 ### Creating a client
 
+Note `NewDgraphClient` is marked as deprecated, but is still available in this release.
+
 #### Connection Strings
 
 The dgo package supports connecting to a Dgraph cluster using connection strings. Dgraph connections
@@ -123,7 +125,8 @@ defer client.Close()
 
 #### Connecting To Dgraph Cloud
 
-You can use either `Open` or `NewClient` to connect to Dgraph Cloud.
+You can use either `Open` or `NewClient` to connect to Dgraph Cloud. Note `DialCloud` is marked
+deprecated but is still supported in this version.
 
 Using `Open` with a connection string:
 
