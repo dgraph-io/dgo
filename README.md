@@ -1,4 +1,4 @@
-# dgo [![GoDoc](https://godoc.org/github.com/hypermodeinc/dgo?status.svg)](https://pkg.go.dev/github.com/hypermodeinc/dgo/v240)
+# dgo [![GoDoc](https://pkg.go.dev/badge/github.com/dgraph-io/dgo)](https://pkg.go.dev/github.com/dgraph-io/dgo/v240)
 
 Official Dgraph Go client which communicates with the server using [gRPC](https://grpc.io/).
 
@@ -37,53 +37,112 @@ repository.**
 Depending on the version of Dgraph that you are connecting to, you will have to use a different
 version of this client and their corresponding import paths.
 
-| Dgraph version | dgo version  | dgo import path                 |
-| -------------- | ------------ | ------------------------------- |
-| dgraph 20.11.0 | dgo 200.03.0 | "github.com/dgraph-io/dgo/v200" |
-| dgraph 21.X.Y  | dgo 210.X.Y  | "github.com/dgraph-io/dgo/v210" |
-| dgraph 22.X.Y  | dgo 210.X.Y  | "github.com/dgraph-io/dgo/v210" |
-| dgraph 23.X.Y  | dgo 230.X.Y  | "github.com/dgraph-io/dgo/v230" |
-| dgraph 24.X.Y  | dgo 240.X.Y  | "github.com/dgraph-io/dgo/v240" |
-
-Note: One of the most important API breakages from dgo v1 to v2 is in the function `dgo.Txn.Mutate`.
-This function returns an `*api.Assigned` value in v1 but an `*api.Response` in v2.
+| Dgraph version | dgo version | dgo import path                 |
+| -------------- | ----------- | ------------------------------- |
+| dgraph 23.X.Y  | dgo 230.X.Y | "github.com/dgraph-io/dgo/v230" |
+| dgraph 24.X.Y  | dgo 240.X.Y | "github.com/dgraph-io/dgo/v240" |
 
 Note: We have removed functions `DialSlashEndpoint`, `DialSlashGraphQLEndpoint` from `v230.0.0`.
-Please use `DialCloud` instead.
-
-Note: There is no breaking API change from v2 to v200 but we have decided to follow the
-[CalVer Versioning Scheme](https://dgraph.io/blog/post/dgraph-calendar-versioning).
+`DialCloud` is now marked deprecated and will be removed in a future release, use either `Open` or
+`NewClient` (see below).
 
 ## Using a client
 
 ### Creating a client
 
-`dgraphClient` object can be initialized by passing it a list of `api.DgraphClient` clients as
-variadic arguments. Connecting to multiple Dgraph servers in the same cluster allows for better
-distribution of workload.
+Note `NewDgraphClient` is marked as deprecated, but is still available in this release.
 
-The following code snippet shows just one connection.
+#### Connection Strings
+
+The dgo package supports connecting to a Dgraph cluster using connection strings. Dgraph connections
+strings take the form `dgraph://{username:password@}host:port?args`.
+
+`username` and `password` are optional. If username is provided, a password must also be present. If
+supplied, these credentials are used to log into a Dgraph cluster through the ACL mechanism.
+
+Valid connection string args:
+
+| Arg         | Value                           | Description                                                                                                                                                   |
+| ----------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| apikey      | \<key\>                         | a Dgraph Cloud API Key                                                                                                                                        |
+| bearertoken | \<token\>                       | an access token                                                                                                                                               |
+| sslmode     | disable \| require \| verify-ca | TLS option, the default is `disable`. If `verify-ca` is set, the TLS certificate configured in the Dgraph cluster must be from a valid certificate authority. |
+
+Some example connection strings:
+
+| Value                                                                                                        | Explanation                                                                         |
+| ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| dgraph://localhost:9080                                                                                      | Connect to localhost, no ACL, no TLS                                                |
+| dgraph://sally:supersecret@dg.example.com:443?sslmode=verify-ca                                              | Connect to remote server, use ACL and require TLS and a valid certificate from a CA |
+| dgraph://foo-bar.grpc.us-west-2.aws.cloud.dgraph.io:443?sslmode=verify-ca&apikey=\<your-api-connection-key\> | Connect to a Dgraph Cloud cluster                                                   |
+| dgraph://foo-bar.grpc.hypermode.com?sslmode=verify-ca&bearertoken=\<some access token\>                      | Connect to a Dgraph cluster protected by a secure gateway                           |
+
+Using the `Open` function with a connection string:
 
 ```go
-conn, err := grpc.NewClient("localhost:9080", grpc.WithTransportCredentials(insecure.NewCredentials()))
+// open a connection to an ACL-enabled, non-TLS cluster and login as groot
+client, err := dgo.Open("dgraph://groot:password@localhost:8090")
 // Check error
-defer conn.Close()
-dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
+defer client.Close()
+// Use the client
 ```
 
-The client can be configured to use gRPC compression:
+#### Advanced Client Creation
+
+For more control, you can create a client using the `NewClient` and `NewRoundRobinClient` functions.
 
 ```go
-dialOpts := append([]grpc.DialOption{},
-  grpc.WithTransportCredentials(insecure.NewCredentials()),
-  grpc.WithDefaultCallOptions(grpc.UseCompressor(gzip.Name)))
-d, err := grpc.NewClient("localhost:9080", dialOpts...)
+// endpoints for three alpha nodes
+endpoints := []string{"localhost:9180", "localhost:9182", "localhost:9183"}
+
+client, err := dgo.NewRoundRobinClient(endpoints,
+  // add Dgraph ACL credentials
+  dgo.WithACLCreds("groot", "password"),
+  // add insecure transport credentials
+  dgo.WithGrpcOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
+  // add retry policy
+  dgo.WithGrpcOption(grpc.WithDefaultServiceConfig(`{
+      "methodConfig": [{
+        "retryPolicy": {
+          "MaxAttempts": 4
+        }
+      }]
+    }`)),
+)
+// Check error
+defer client.Close()
+// Use the client
+```
+
+#### Connecting To Dgraph Cloud
+
+You can use either `Open` or `NewClient` to connect to Dgraph Cloud. Note `DialCloud` is marked
+deprecated but is still supported in this version.
+
+Using `Open` with a connection string:
+
+```go
+client, err := dgo.Open("dgraph://foo-bar.grpc.cloud.dgraph.io:443?sslmode=verify-ca&apikey=AValidKeYFromDgrAPHCloud=")
+// Check error
+defer client.Close()
+```
+
+Using `NewClient`:
+
+```go
+client, err := dgo.NewClient("foo-bar.grpc.cloud.dgraph.io:443",
+  dgo.WithDgraphAPIKey("AValidKeYFromDgrAPHCloud="),
+  dgo.WithSystemCertPool(),
+)
+// Check error
+defer client.Close()
 ```
 
 ### Login into a namespace
 
 If your server has Access Control Lists enabled (Dgraph v1.1 or above), the client must be logged in
-for accessing data. Use `Login` endpoint:
+for accessing data. If you do not use the `WithACLCreds` option with `NewClient` or a connection
+string with username:password, use the `Login` endpoint.
 
 Calling login will obtain and remember the access and refresh JWT tokens. All subsequent operations
 via the logged in client will send along the stored access token.
@@ -99,17 +158,6 @@ API.
 ```go
 err := dgraphClient.LoginIntoNamespace(ctx, "user", "passwd", 0x10)
 // Check error
-```
-
-### Connecting To Dgraph Cloud
-
-Please use the following snippet to connect to a Dgraph Cloud backend.
-
-```go
-conn, err := dgo.DialCloud("https://your.endpoint.dgraph.io/graphql", "api-token")
-// Check error
-defer conn.Close()
-dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 ```
 
 ### Altering the database
