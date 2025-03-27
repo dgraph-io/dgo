@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -27,11 +28,14 @@ import (
 )
 
 const (
-	cloudPort = "443"
+	cloudPort      = "443"
+	requestTimeout = 30 * time.Second
 )
 
 // Dgraph is a transaction-aware client to a Dgraph cluster.
 type Dgraph struct {
+	useV24 bool
+
 	jwtMutex sync.RWMutex
 	jwt      api.Jwt
 
@@ -66,7 +70,13 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 	for i, client := range clients {
 		dcv25[i] = apiv25.NewDgraphClient(api.GetConn(client))
 	}
-	return &Dgraph{dc: clients, dcv25: dcv25}
+
+	d := &Dgraph{useV24: true, dc: clients, dcv25: dcv25}
+	if err := d.ping(); err != nil {
+		// We ignore the error here
+		return nil
+	}
+	return d
 }
 
 // DialCloud creates a new TLS connection to a Dgraph Cloud backend

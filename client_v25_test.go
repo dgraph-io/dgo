@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// This test only ensures that connection strings are parsed correctly.
 func TestOpen(t *testing.T) {
 	var err error
 
@@ -29,10 +30,10 @@ func TestOpen(t *testing.T) {
 	require.ErrorContains(t, err, "invalid connection string: host url must have both host and port")
 
 	_, err = dgo.Open("dgraph://localhost:")
-	require.NoError(t, err)
+	require.ErrorContains(t, err, "missing port after port-separator colon")
 
 	_, err = dgo.Open("dgraph://localhost:9180?sslmode=verify-ca")
-	require.NoError(t, err)
+	require.ErrorContains(t, err, "first record does not look like a TLS handshake")
 
 	_, err = dgo.Open("dgraph://localhost:9180?sslmode=prefer")
 	require.ErrorContains(t, err, "invalid SSL mode: prefer (must be one of disable, require, verify-ca)")
@@ -47,17 +48,26 @@ func TestOpen(t *testing.T) {
 	require.ErrorContains(t, err, "invalid connection string: both apikey and bearertoken cannot be provided")
 
 	_, err = dgo.Open("dgraph://localhost:9180?sslmode=verify-ca&bearertoken=hfs")
-	require.NoError(t, err)
+	require.ErrorContains(t, err, "first record does not look like a TLS handshake")
 
 	_, err = dgo.Open("dgraph://localhost:9180?sslmode=verify-ca&apikey=hfs")
-	require.NoError(t, err)
+	require.ErrorContains(t, err, "first record does not look like a TLS handshake")
 
 	_, err = dgo.Open("dgraph://localhost:9180?sslmode=require&bearertoken=hfs")
-	require.NoError(t, err)
+	require.ErrorContains(t, err, "first record does not look like a TLS handshake")
 
 	_, err = dgo.Open("dgraph://localhost:9180?sslmode=require&apikey=hfs")
+	require.ErrorContains(t, err, "first record does not look like a TLS handshake")
+
+	_, err = dgo.Open("dgraph://localhost:9180?sslm")
 	require.NoError(t, err)
 
 	_, err = dgo.Open("dgraph://localhost:9180?sslm")
+	require.NoError(t, err)
+
+	_, err = dgo.Open("dgraph://user:pass@localhost:9180")
+	require.ErrorContains(t, err, "invalid username or password")
+
+	_, err = dgo.Open("dgraph://groot:password@localhost:9180")
 	require.NoError(t, err)
 }
