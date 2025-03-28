@@ -13,11 +13,12 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 
 	"github.com/dgraph-io/dgo/v240/protos/api"
 	apiv25 "github.com/dgraph-io/dgo/v240/protos/api.v25"
@@ -230,8 +231,13 @@ func NewRoundRobinClient(endpoints []string, opts ...ClientOption) (*Dgraph, err
 	}
 
 	d := &Dgraph{dc: dc, dcv25: dcv25}
+	if err := d.ping(); err != nil {
+		d.Close()
+		return nil, err
+	}
+
 	if co.username != "" && co.password != "" {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 		defer cancel()
 
 		if err := d.signInUser(ctx, co.username, co.password); err != nil {
@@ -239,6 +245,7 @@ func NewRoundRobinClient(endpoints []string, opts ...ClientOption) (*Dgraph, err
 			return nil, fmt.Errorf("failed to sign in user: %w", err)
 		}
 	}
+
 	return d, nil
 }
 
@@ -251,6 +258,10 @@ func (d *Dgraph) Close() {
 
 // signInUser logs the user in using the provided username and password.
 func (d *Dgraph) signInUser(ctx context.Context, username, password string) error {
+	if d.useV24 {
+		return d.login(ctx, username, password, 0)
+	}
+
 	d.jwtMutex.Lock()
 	defer d.jwtMutex.Unlock()
 
@@ -263,5 +274,21 @@ func (d *Dgraph) signInUser(ctx context.Context, username, password string) erro
 
 	d.jwt.AccessJwt = resp.AccessJwt
 	d.jwt.RefreshJwt = resp.RefreshJwt
+	return nil
+}
+
+func (d *Dgraph) ping() error {
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	defer cancel()
+
+	if _, err := d.dcv25[0].Ping(ctx, nil); err != nil {
+		if status.Code(err) != codes.Unimplemented {
+			return fmt.Errorf("error pinging the database: %v", err)
+		}
+		d.useV24 = true
+	} else {
+		d.useV24 = false
+	}
+
 	return nil
 }

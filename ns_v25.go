@@ -7,6 +7,7 @@ package dgo
 
 import (
 	"context"
+	"errors"
 	"math/rand"
 
 	apiv25 "github.com/dgraph-io/dgo/v240/protos/api.v25"
@@ -14,6 +15,10 @@ import (
 
 const (
 	RootNamespace = "root"
+)
+
+var (
+	ErrUnsupportedAPI = errors.New("API is not supported by the version of dgraph cluster")
 )
 
 type txnOptions struct {
@@ -126,6 +131,10 @@ func (d *Dgraph) anyClientv25() apiv25.DgraphClient {
 
 func doWithRetryLogin[T any](ctx context.Context, d *Dgraph,
 	f func(dc apiv25.DgraphClient) (*T, error)) (*T, error) {
+
+	if d.useV24 {
+		return nil, ErrUnsupportedAPI
+	}
 
 	dc := d.anyClientv25()
 	resp, err := f(dc)
