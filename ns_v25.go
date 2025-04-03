@@ -132,7 +132,7 @@ func (d *Dgraph) anyClientv25() apiv25.DgraphClient {
 func doWithRetryLogin[T any](ctx context.Context, d *Dgraph,
 	f func(dc apiv25.DgraphClient) (*T, error)) (*T, error) {
 
-	if d.useV24 {
+	if d.useV1 {
 		return nil, ErrUnsupportedAPI
 	}
 

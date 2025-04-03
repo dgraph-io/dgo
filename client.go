@@ -34,7 +34,7 @@ const (
 
 // Dgraph is a transaction-aware client to a Dgraph cluster.
 type Dgraph struct {
-	useV24 bool
+	useV1 bool
 
 	jwtMutex sync.RWMutex
 	jwt      api.Jwt
@@ -71,11 +71,12 @@ func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
 		dcv25[i] = apiv25.NewDgraphClient(api.GetConn(client))
 	}
 
-	d := &Dgraph{useV24: true, dc: clients, dcv25: dcv25}
-	if err := d.ping(); err != nil {
-		// We ignore the error here
-		return nil
-	}
+	d := &Dgraph{useV1: true, dc: clients, dcv25: dcv25}
+
+	// we ignore the error here, because there is not much we can do about
+	// the error. We want to make best effort to figure out what API to use.
+	_ = d.ping()
+
 	return d
 }
 
@@ -159,16 +160,12 @@ func (d *Dgraph) GetJwt() api.Jwt {
 
 // Login logs in the current client using the provided credentials into
 // default namespace (0). Valid for the duration the client is alive.
-//
-// Deprecated: user SignInUser instead.
 func (d *Dgraph) Login(ctx context.Context, userid string, password string) error {
 	return d.login(ctx, userid, password, 0)
 }
 
 // LoginIntoNamespace logs in the current client using the provided credentials.
 // Valid for the duration the client is alive.
-//
-// Deprecated: use SignInUser instead.
 func (d *Dgraph) LoginIntoNamespace(ctx context.Context,
 	userid string, password string, namespace uint64) error {
 

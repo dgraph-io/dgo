@@ -258,7 +258,7 @@ func (d *Dgraph) Close() {
 
 // signInUser logs the user in using the provided username and password.
 func (d *Dgraph) signInUser(ctx context.Context, username, password string) error {
-	if d.useV24 {
+	if d.useV1 {
 		return d.login(ctx, username, password, 0)
 	}
 
@@ -281,13 +281,16 @@ func (d *Dgraph) ping() error {
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
+	// By default, we assume the server is using v1 API
+	d.useV1 = true
+
 	if _, err := d.dcv25[0].Ping(ctx, nil); err != nil {
 		if status.Code(err) != codes.Unimplemented {
 			return fmt.Errorf("error pinging the database: %v", err)
 		}
-		d.useV24 = true
+		d.useV1 = true
 	} else {
-		d.useV24 = false
+		d.useV1 = false
 	}
 
 	return nil
