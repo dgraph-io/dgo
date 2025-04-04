@@ -7,8 +7,8 @@ package dgo
 
 import (
 	"context"
+	"errors"
 
-	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
