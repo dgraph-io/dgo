@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/dgraph-io/dgo/v240"
+	"github.com/dgraph-io/dgo/v250"
 )
 
 func TestDialCLoud(t *testing.T) {

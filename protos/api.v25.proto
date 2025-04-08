@@ -12,7 +12,7 @@ syntax = "proto3";
 
 package api.v25;
 
-option go_package = "github.com/dgraph-io/dgo/v240/protos/api.v25";
+option go_package = "github.com/dgraph-io/dgo/v250/protos/api.v25";
 
 option java_package = "io.dgraph.v25";
 option java_outer_classname = "DgraphProto";

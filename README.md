@@ -1,4 +1,4 @@
-# dgo [![GoDoc](https://pkg.go.dev/badge/github.com/dgraph-io/dgo)](https://pkg.go.dev/github.com/dgraph-io/dgo/v240)
+# dgo [![GoDoc](https://pkg.go.dev/badge/github.com/dgraph-io/dgo)](https://pkg.go.dev/github.com/dgraph-io/dgo/v250)
 
 Official Dgraph Go client which communicates with the server using [gRPC](https://grpc.io/).
 
@@ -41,6 +41,7 @@ version of this client and their corresponding import paths.
 | -------------- | ----------- | ------------------------------- |
 | dgraph 23.X.Y  | dgo 230.X.Y | "github.com/dgraph-io/dgo/v230" |
 | dgraph 24.X.Y  | dgo 240.X.Y | "github.com/dgraph-io/dgo/v240" |
+| dgraph 25.X.Y  | dgo 250.X.Y | "github.com/dgraph-io/dgo/v250" |
 
 Note: We have removed functions `DialSlashEndpoint`, `DialSlashGraphQLEndpoint` from `v230.0.0`.
 `DialCloud` is now marked deprecated and will be removed in a future release, use either `Open` or
