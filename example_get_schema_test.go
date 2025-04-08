@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/dgraph-io/dgo/v240/protos/api"
+	"github.com/dgraph-io/dgo/v250/protos/api"
 )
 
 func Example_getSchema() {

@@ -10,7 +10,7 @@ import (
 	"errors"
 	"math/rand"
 
-	apiv25 "github.com/dgraph-io/dgo/v240/protos/api.v25"
+	apiv25 "github.com/dgraph-io/dgo/v250/protos/api.v25"
 )
 
 const (
