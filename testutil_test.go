@@ -8,13 +8,13 @@ package dgo_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -142,63 +142,62 @@ func HttpLogin(params *LoginParams) (*HttpToken, error) {
 	}
 	body, err := json.Marshal(gqlParams)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to marshal body")
+		return nil, fmt.Errorf("unable to marshal body: %w", err)
 	}
 
 	req, err := http.NewRequest("POST", params.Endpoint, bytes.NewBuffer(body))
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to create request")
+		return nil, fmt.Errorf("unable to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, errors.Wrapf(err, "login through curl failed")
+		return nil, fmt.Errorf("login through curl failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to read from response")
+		return nil, fmt.Errorf("unable to read from response: %w", err)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New(fmt.Sprintf("got non 200 response from the server with %s ",
-			string(respBody)))
+		return nil, fmt.Errorf("got non 200 response from the server with %s ", string(respBody))
 	}
 	var outputJson map[string]interface{}
 	if err := json.Unmarshal(respBody, &outputJson); err != nil {
 		var errOutputJson map[string]interface{}
 		if err := json.Unmarshal(respBody, &errOutputJson); err == nil {
 			if _, ok := errOutputJson["errors"]; ok {
-				return nil, errors.Errorf("response error: %v", string(respBody))
+				return nil, fmt.Errorf("response error: %v", string(respBody))
 			}
 		}
-		return nil, errors.Wrapf(err, "unable to unmarshal the output to get JWTs")
+		return nil, fmt.Errorf("unable to unmarshal the output to get JWTs: %w", err)
 	}
 
 	data, found := outputJson["data"].(map[string]interface{})
 	if !found {
-		return nil, errors.Wrapf(err, "data entry found in the output")
+		return nil, fmt.Errorf("data entry found in the output: %w", err)
 	}
 
 	l, found := data["login"].(map[string]interface{})
 	if !found {
-		return nil, errors.Wrapf(err, "data entry found in the output")
+		return nil, fmt.Errorf("data entry found in the output: %w", err)
 	}
 
 	response, found := l["response"].(map[string]interface{})
 	if !found {
-		return nil, errors.Wrapf(err, "data entry found in the output")
+		return nil, fmt.Errorf("data entry found in the output: %w", err)
 	}
 
 	newAccessJwt, found := response["accessJWT"].(string)
 	if !found || newAccessJwt == "" {
-		return nil, errors.Errorf("no access JWT found in the output")
+		return nil, errors.New("no access JWT found in the output")
 	}
 	newRefreshJwt, found := response["refreshJWT"].(string)
 	if !found || newRefreshJwt == "" {
-		return nil, errors.Errorf("no refresh JWT found in the output")
+		return nil, errors.New("no refresh JWT found in the output")
 	}
 
 	return &HttpToken{
