@@ -61,7 +61,9 @@ func (d *Dgraph) SetSchema(ctx context.Context, nsName string, schema string) er
 
 func (d *Dgraph) doAlter(ctx context.Context, req *apiv25.AlterRequest) error {
 	_, err := doWithRetryLogin(ctx, d, func(dc apiv25.DgraphClient) (*apiv25.AlterResponse, error) {
-		return dc.Alter(d.getContext(ctx), req)
+		return RetryWithExponentialBackoff(func() (*apiv25.AlterResponse, error) {
+			return dc.Alter(d.getContext(ctx), req)
+		})
 	})
 	return err
 }

@@ -180,12 +180,16 @@ func (d *Dgraph) LoginIntoNamespace(ctx context.Context,
 // Deprecated: use DropAllNamespaces, DropAll, DropData, DropPredicate, DropType, SetSchema instead.
 func (d *Dgraph) Alter(ctx context.Context, op *api.Operation) error {
 	dc := d.anyClient()
-	_, err := dc.Alter(d.getContext(ctx), op)
+	_, err := RetryWithExponentialBackoff(func() (*api.Payload, error) {
+		return  dc.Alter(d.getContext(ctx), op)
+	})
 	if isJwtExpired(err) {
 		if err := d.retryLogin(ctx); err != nil {
 			return err
 		}
-		_, err = dc.Alter(d.getContext(ctx), op)
+		_, err = RetryWithExponentialBackoff(func() (*api.Payload, error) {
+			return  dc.Alter(d.getContext(ctx), op)
+		})
 	}
 	return err
 }

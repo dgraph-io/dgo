@@ -176,7 +176,9 @@ func (txn *Txn) Do(ctx context.Context, req *api.Request) (*api.Response, error)
 	}
 
 	var responseHeaders metadata.MD
-	resp, err := txn.dc.Query(ctx, req, grpc.Header(&responseHeaders))
+	resp, err := RetryWithExponentialBackoff(func() (*api.Response, error) {
+		return txn.dc.Query(ctx, req, grpc.Header(&responseHeaders))
+	})
 	appendHdr(&responseHeaders, resp)
 
 	if isJwtExpired(err) {
@@ -187,7 +189,9 @@ func (txn *Txn) Do(ctx context.Context, req *api.Request) (*api.Response, error)
 
 		ctx = txn.dg.getContext(ctx)
 		var responseHeaders metadata.MD
-		resp, err = txn.dc.Query(ctx, req, grpc.Header(&responseHeaders))
+		resp, err = RetryWithExponentialBackoff(func() (*api.Response, error) {
+			return txn.dc.Query(ctx, req, grpc.Header(&responseHeaders))
+		})
 		appendHdr(&responseHeaders, resp)
 	}
 
