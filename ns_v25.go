@@ -79,7 +79,7 @@ func (d *Dgraph) RunDQLWithVars(ctx context.Context, nsName string, q string,
 	}
 
 	req := &apiv25.RunDQLRequest{NsName: nsName, DqlQuery: q, Vars: vars,
-		ReadOnly: topts.readOnly, BestEffort: topts.bestEffort}
+		ReadOnly: topts.readOnly, BestEffort: topts.bestEffort, RespFormat: topts.respFormat}
 	return doWithRetryLogin(ctx, d, func(dc apiv25.DgraphClient) (*apiv25.RunDQLResponse, error) {
 		return dc.RunDQL(d.getContext(ctx), req)
 	})

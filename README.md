@@ -13,24 +13,39 @@ repository.**
 
 ## Table of contents
 
-- [dgo](#dgo-)
-  - [Table of contents](#table-of-contents)
-  - [Supported Versions](#supported-versions)
-  - [Using a client](#using-a-client)
-    - [Creating a client](#creating-a-client)
-    - [Login into a namespace](#login-into-a-namespace)
-    - [Connecting To Dgraph Cloud](#connecting-to-dgraph-cloud)
-    - [Altering the database](#altering-the-database)
-    - [Creating a transaction](#creating-a-transaction)
-    - [Running a mutation](#running-a-mutation)
-    - [Running a query](#running-a-query)
-    - [Query with RDF response](#query-with-rdf-response)
-    - [Running an Upsert: Query + Mutation](#running-an-upsert-query--mutation)
-    - [Running Conditional Upsert](#running-conditional-upsert)
-    - [Committing a transaction](#committing-a-transaction)
-    - [Setting Metadata Headers](#setting-metadata-headers)
-  - [Development](#development)
-    - [Running tests](#running-tests)
+- [Supported Versions](#supported-versions)
+- [v25 APIs](#v25-apis)
+  - [Connection Strings](#connection-strings)
+  - [Advanced Client Creation](#advanced-client-creation)
+  - [Connecting To Dgraph Cloud](#connecting-to-dgraph-cloud)
+  - [Dropping All Data](#dropping-all-data)
+  - [Set Schema](#set-schema)
+  - [Running a Mutation](#running-a-mutation)
+  - [Running a Query](#running-a-query)
+  - [Running a Query With Variables](#running-a-query-with-variables)
+  - [Running a Best Effort Query](#running-a-best-effort-query)
+  - [Running a ReadOnly Query](#running-a-readonly-query)
+  - [Running a Query with RDF Response](#running-a-query-with-rdf-response)
+  - [Running an Upsert](#running-an-upsert)
+  - [Running a Conditional Upsert](#running-a-conditional-upsert)
+  - [Creating a New Namespace](#creating-a-new-namespace)
+  - [Dropping a Namespace](#dropping-a-namespace)
+  - [Rename a Namespace](#rename-a-namespace)
+  - [List All Namespaces](#list-all-namespaces)
+- [v1 APIs](#v1-apis)
+  - [Creating a Client](#creating-a-client)
+  - [Login into a namespace](#login-into-a-namespace)
+  - [Altering the database](#altering-the-database)
+  - [Creating a transaction](#creating-a-transaction)
+  - [Running a mutation](#running-a-mutation-1)
+  - [Running a query](#running-a-query-1)
+  - [Query with RDF response](#query-with-rdf-response)
+  - [Running an Upsert: Query + Mutation](#running-an-upsert-query--mutation)
+  - [Running Conditional Upsert](#running-conditional-upsert)
+  - [Committing a transaction](#committing-a-transaction)
+  - [Setting Metadata Headers](#setting-metadata-headers)
+- [Development](#development)
+  - [Running tests](#running-tests)
 
 ## Supported Versions
 
@@ -41,19 +56,15 @@ version of this client and their corresponding import paths.
 | -------------- | ----------- | ------------------------------- |
 | dgraph 23.X.Y  | dgo 230.X.Y | "github.com/dgraph-io/dgo/v230" |
 | dgraph 24.X.Y  | dgo 240.X.Y | "github.com/dgraph-io/dgo/v240" |
+| dgraph 25.X.Y  | dgo 240.X.Y | "github.com/dgraph-io/dgo/v240" |
 | dgraph 25.X.Y  | dgo 250.X.Y | "github.com/dgraph-io/dgo/v250" |
 
-Note: We have removed functions `DialSlashEndpoint`, `DialSlashGraphQLEndpoint` from `v230.0.0`.
-`DialCloud` is now marked deprecated and will be removed in a future release, use either `Open` or
-`NewClient` (see below).
+## v25 APIs
 
-## Using a client
+These are _experimental_ APIs that we are still making changes to. If you have any feedback, please
+let us know either on Discord or GitHub.
 
-### Creating a client
-
-Note `NewDgraphClient` is marked as deprecated, but is still available in this release.
-
-#### Connection Strings
+### Connection Strings
 
 The dgo package supports connecting to a Dgraph cluster using connection strings. Dgraph connections
 strings take the form `dgraph://{username:password@}host:port?args`.
@@ -85,40 +96,43 @@ Using the `Open` function with a connection string:
 client, err := dgo.Open("dgraph://groot:password@localhost:8090")
 // Check error
 defer client.Close()
-// Use the client
+// Use the clients
 ```
 
-#### Advanced Client Creation
+### Advanced Client Creation
 
-For more control, you can create a client using the `NewClient` and `NewRoundRobinClient` functions.
+For more control, you can create a client using the `NewClient` function.
 
 ```go
-// endpoints for three alpha nodes
-endpoints := []string{"localhost:9180", "localhost:9182", "localhost:9183"}
-
-client, err := dgo.NewRoundRobinClient(endpoints,
+client, err := dgo.NewClient("localhost:9181",
   // add Dgraph ACL credentials
   dgo.WithACLCreds("groot", "password"),
   // add insecure transport credentials
   dgo.WithGrpcOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
-  // add retry policy
-  dgo.WithGrpcOption(grpc.WithDefaultServiceConfig(`{
-      "methodConfig": [{
-        "retryPolicy": {
-          "MaxAttempts": 4
-        }
-      }]
-    }`)),
 )
 // Check error
 defer client.Close()
 // Use the client
 ```
 
-#### Connecting To Dgraph Cloud
+You can connect to multiple alphas using `NewRoundRobinClient`.
+
+```go
+client, err := dgo.NewRoundRobinClient([]string{"localhost:9181", "localhost:9182", "localhost:9183"},
+  // add Dgraph ACL credentials
+  dgo.WithACLCreds("groot", "password"),
+  // add insecure transport credentials
+  dgo.WithGrpcOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
+)
+// Check error
+defer client.Close()
+// Use the client
+```
+
+### Connecting To Dgraph Cloud
 
 You can use either `Open` or `NewClient` to connect to Dgraph Cloud. Note `DialCloud` is marked
-deprecated but is still supported in this version.
+deprecated and will be removed in later versions.
 
 Using `Open` with a connection string:
 
@@ -137,6 +151,229 @@ client, err := dgo.NewClient("foo-bar.grpc.cloud.dgraph.io:443",
 )
 // Check error
 defer client.Close()
+```
+
+### Dropping All Data
+
+In order to drop all data in the Dgraph Cluster and start fresh, use the `DropAllNamespaces`
+function.
+
+```go
+err := client.DropAllNamespaces(context.TODO())
+// Handle error
+```
+
+### Set Schema
+
+To set the schema, use the `SetSchema` function.
+
+```go
+sch := `
+  name: string @index(exact) .
+  email: string @index(exact) @unique .
+  age: int .
+`
+err := client.SetSchema(context.TODO(), dgo.RootNamespace, sch)
+// Handle error
+```
+
+### Running a Mutation
+
+To run a mutation, use the `RunDQL` function.
+
+```go
+mutationDQL := `{
+  set {
+    _:alice <name> "Alice" .
+    _:alice <email> "alice@example.com" .
+    _:alice <age> "29" .
+  }
+}`
+resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, mutationDQL)
+// Handle error
+// Print map of blank UIDs
+fmt.Printf("%+v\n", resp.BlankUids)
+```
+
+### Running a Query
+
+To run a query, use the same `RunDQL` function.
+
+```go
+queryDQL := `{
+  alice(func: eq(name, "Alice")) {
+    name
+    email
+    age
+  }
+}`
+resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL)
+// Handle error
+fmt.Printf("%s\n", resp.QueryResult)
+```
+
+### Running a Query With Variables
+
+To run a query with variables, using `RunDQLWithVars`.
+
+```go
+queryDQL = `query Alice($name: string) {
+  alice(func: eq(name, $name)) {
+    name
+    email
+    age
+  }
+}`
+vars := map[string]string{"$name": "Alice"}
+resp, err := client.RunDQLWithVars(context.TODO(), dgo.RootNamespace, queryDQL, vars)
+// Handle error
+fmt.Printf("%s\n", resp.QueryResult)
+```
+
+### Running a Best Effort Query
+
+To run a `BestEffort` query, use the same `RunDQL` function with `TxnOption`.
+
+```go
+queryDQL := `{
+  alice(func: eq(name, "Alice")) {
+    name
+    email
+    age
+  }
+}`
+resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL, dgo.WithBestEffort())
+// Handle error
+fmt.Printf("%s\n", resp.QueryResult)
+```
+
+### Running a ReadOnly Query
+
+To run a `ReadOnly` query, use the same `RunDQL` function with `TxnOption`.
+
+```go
+queryDQL := `{
+  alice(func: eq(name, "Alice")) {
+    name
+    email
+    age
+  }
+}`
+resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL, dgo.WithReadOnly())
+// Handle error
+fmt.Printf("%s\n", resp.QueryResult)
+```
+
+### Running a Query with RDF Response
+
+To get the query response in RDF format instead of JSON format, use the following `TxnOption`.
+
+```go
+queryDQL := `{
+  alice(func: eq(name, "Alice")) {
+    name
+    email
+    age
+  }
+}`
+resp, err = client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL, dgo.WithResponseFormat(api_v25.RespFormat_RDF))
+// Handle error
+fmt.Printf("%s\n", resp.QueryResult)
+```
+
+### Running an Upsert
+
+The `RunDQL` function also allows you to run upserts as well.
+
+```go
+upsertQuery := `upsert {
+  query {
+    user as var(func: eq(email, "alice@example.com"))
+  }
+  mutation {
+    set {
+      uid(user) <age> "30" .
+      uid(user) <name> "Alice Sayum" .
+    }
+  }
+}`
+resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, upsertQuery)
+// Handle error
+fmt.Printf("%s\n", resp.QueryResult)
+fmt.Printf("%+v\n", resp.BlankUids)
+```
+
+### Running a Conditional Upsert
+
+```go
+upsertQuery := `upsert {
+  query {
+    user as var(func: eq(email, "alice@example.com"))
+  }
+  mutation @if(eq(len(user), 1)) {
+    set {
+      uid(user) <age> "30" .
+      uid(user) <name> "Alice Sayum" .
+    }
+  }
+}`
+resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, upsertQuery)
+// Handle error
+fmt.Printf("%s\n", resp.QueryResult)
+```
+
+### Creating a New Namespace
+
+Dgraph v25 supports namespaces that have names. You can create one using the dgo client.
+
+```go
+err := client.CreateNamespace(context.TODO(), "finance-graph")
+// Handle error
+```
+
+You can now pass this name to `SetSchema`, `RunDQL` or similar functions.
+
+### Dropping a Namespace
+
+To drop a namespace:
+
+```go
+err := client.DropNamespace(context.TODO(), "finance-graph")
+// Handle error
+```
+
+### Rename a Namespace
+
+A namespace can be renamed as follows.
+
+```go
+err := client.RenameNamespace(context.TODO(), "finance-graph", "new-finance-graph")
+// Handle error
+```
+
+### List All Namespaces
+
+```go
+namespaces, err := client.ListNamespaces(context.TODO())
+// Handle error
+fmt.Printf("%+v\n", namespaces)
+```
+
+## v1 APIs
+
+### Creating a Client
+
+`dgraphClient` object can be initialized by passing it a list of `api.DgraphClient` clients as
+variadic arguments. Connecting to multiple Dgraph servers in the same cluster allows for better
+distribution of workload.
+
+The following code snippet shows just one connection.
+
+```go
+conn, err := grpc.Dial("localhost:9080", grpc.WithInsecure())
+// Check error
+defer conn.Close()
+dgraphClient := dgo.NewDgraphClient(api.NewDgraphClient(conn))
 ```
 
 ### Login into a namespace

@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -238,9 +237,8 @@ func isJwtExpired(err error) bool {
 		return false
 	}
 
-	st, ok := status.FromError(err)
-	return ok && st.Code() == codes.Unauthenticated &&
-		strings.Contains(err.Error(), "Token is expired")
+	_, ok := status.FromError(err)
+	return ok && strings.Contains(err.Error(), "Token is expired")
 }
 
 func (d *Dgraph) anyClient() api.DgraphClient {
