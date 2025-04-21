@@ -28,15 +28,17 @@ import (
 const _ = grpc.SupportPackageIsVersion8
 
 const (
-	Dgraph_Ping_FullMethodName            = "/api.v25.Dgraph/Ping"
-	Dgraph_AllocateIDs_FullMethodName     = "/api.v25.Dgraph/AllocateIDs"
-	Dgraph_SignInUser_FullMethodName      = "/api.v25.Dgraph/SignInUser"
-	Dgraph_Alter_FullMethodName           = "/api.v25.Dgraph/Alter"
-	Dgraph_RunDQL_FullMethodName          = "/api.v25.Dgraph/RunDQL"
-	Dgraph_CreateNamespace_FullMethodName = "/api.v25.Dgraph/CreateNamespace"
-	Dgraph_DropNamespace_FullMethodName   = "/api.v25.Dgraph/DropNamespace"
-	Dgraph_UpdateNamespace_FullMethodName = "/api.v25.Dgraph/UpdateNamespace"
-	Dgraph_ListNamespaces_FullMethodName  = "/api.v25.Dgraph/ListNamespaces"
+	Dgraph_Ping_FullMethodName                   = "/api.v25.Dgraph/Ping"
+	Dgraph_AllocateIDs_FullMethodName            = "/api.v25.Dgraph/AllocateIDs"
+	Dgraph_SignInUser_FullMethodName             = "/api.v25.Dgraph/SignInUser"
+	Dgraph_Alter_FullMethodName                  = "/api.v25.Dgraph/Alter"
+	Dgraph_RunDQL_FullMethodName                 = "/api.v25.Dgraph/RunDQL"
+	Dgraph_CreateNamespace_FullMethodName        = "/api.v25.Dgraph/CreateNamespace"
+	Dgraph_DropNamespace_FullMethodName          = "/api.v25.Dgraph/DropNamespace"
+	Dgraph_UpdateNamespace_FullMethodName        = "/api.v25.Dgraph/UpdateNamespace"
+	Dgraph_ListNamespaces_FullMethodName         = "/api.v25.Dgraph/ListNamespaces"
+	Dgraph_InitiateSnapshotStream_FullMethodName = "/api.v25.Dgraph/InitiateSnapshotStream"
+	Dgraph_StreamSnapshot_FullMethodName         = "/api.v25.Dgraph/StreamSnapshot"
 )
 
 // DgraphClient is the client API for Dgraph service.
@@ -52,6 +54,8 @@ type DgraphClient interface {
 	DropNamespace(ctx context.Context, in *DropNamespaceRequest, opts ...grpc.CallOption) (*DropNamespaceResponse, error)
 	UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...grpc.CallOption) (*UpdateNamespaceResponse, error)
 	ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...grpc.CallOption) (*ListNamespacesResponse, error)
+	InitiateSnapshotStream(ctx context.Context, in *InitiateSnapshotStreamRequest, opts ...grpc.CallOption) (*InitiateSnapshotStreamResponse, error)
+	StreamSnapshot(ctx context.Context, opts ...grpc.CallOption) (Dgraph_StreamSnapshotClient, error)
 }
 
 type dgraphClient struct {
@@ -152,6 +156,51 @@ func (c *dgraphClient) ListNamespaces(ctx context.Context, in *ListNamespacesReq
 	return out, nil
 }
 
+func (c *dgraphClient) InitiateSnapshotStream(ctx context.Context, in *InitiateSnapshotStreamRequest, opts ...grpc.CallOption) (*InitiateSnapshotStreamResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(InitiateSnapshotStreamResponse)
+	err := c.cc.Invoke(ctx, Dgraph_InitiateSnapshotStream_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dgraphClient) StreamSnapshot(ctx context.Context, opts ...grpc.CallOption) (Dgraph_StreamSnapshotClient, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &Dgraph_ServiceDesc.Streams[0], Dgraph_StreamSnapshot_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &dgraphStreamSnapshotClient{ClientStream: stream}
+	return x, nil
+}
+
+type Dgraph_StreamSnapshotClient interface {
+	Send(*StreamSnapshotRequest) error
+	CloseAndRecv() (*StreamSnapshotResponse, error)
+	grpc.ClientStream
+}
+
+type dgraphStreamSnapshotClient struct {
+	grpc.ClientStream
+}
+
+func (x *dgraphStreamSnapshotClient) Send(m *StreamSnapshotRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *dgraphStreamSnapshotClient) CloseAndRecv() (*StreamSnapshotResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(StreamSnapshotResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // DgraphServer is the server API for Dgraph service.
 // All implementations must embed UnimplementedDgraphServer
 // for forward compatibility
@@ -165,6 +214,8 @@ type DgraphServer interface {
 	DropNamespace(context.Context, *DropNamespaceRequest) (*DropNamespaceResponse, error)
 	UpdateNamespace(context.Context, *UpdateNamespaceRequest) (*UpdateNamespaceResponse, error)
 	ListNamespaces(context.Context, *ListNamespacesRequest) (*ListNamespacesResponse, error)
+	InitiateSnapshotStream(context.Context, *InitiateSnapshotStreamRequest) (*InitiateSnapshotStreamResponse, error)
+	StreamSnapshot(Dgraph_StreamSnapshotServer) error
 	mustEmbedUnimplementedDgraphServer()
 }
 
@@ -198,6 +249,12 @@ func (UnimplementedDgraphServer) UpdateNamespace(context.Context, *UpdateNamespa
 }
 func (UnimplementedDgraphServer) ListNamespaces(context.Context, *ListNamespacesRequest) (*ListNamespacesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListNamespaces not implemented")
+}
+func (UnimplementedDgraphServer) InitiateSnapshotStream(context.Context, *InitiateSnapshotStreamRequest) (*InitiateSnapshotStreamResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InitiateSnapshotStream not implemented")
+}
+func (UnimplementedDgraphServer) StreamSnapshot(Dgraph_StreamSnapshotServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamSnapshot not implemented")
 }
 func (UnimplementedDgraphServer) mustEmbedUnimplementedDgraphServer() {}
 
@@ -374,6 +431,50 @@ func _Dgraph_ListNamespaces_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Dgraph_InitiateSnapshotStream_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InitiateSnapshotStreamRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DgraphServer).InitiateSnapshotStream(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Dgraph_InitiateSnapshotStream_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DgraphServer).InitiateSnapshotStream(ctx, req.(*InitiateSnapshotStreamRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Dgraph_StreamSnapshot_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(DgraphServer).StreamSnapshot(&dgraphStreamSnapshotServer{ServerStream: stream})
+}
+
+type Dgraph_StreamSnapshotServer interface {
+	SendAndClose(*StreamSnapshotResponse) error
+	Recv() (*StreamSnapshotRequest, error)
+	grpc.ServerStream
+}
+
+type dgraphStreamSnapshotServer struct {
+	grpc.ServerStream
+}
+
+func (x *dgraphStreamSnapshotServer) SendAndClose(m *StreamSnapshotResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *dgraphStreamSnapshotServer) Recv() (*StreamSnapshotRequest, error) {
+	m := new(StreamSnapshotRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // Dgraph_ServiceDesc is the grpc.ServiceDesc for Dgraph service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -417,7 +518,17 @@ var Dgraph_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "ListNamespaces",
 			Handler:    _Dgraph_ListNamespaces_Handler,
 		},
+		{
+			MethodName: "InitiateSnapshotStream",
+			Handler:    _Dgraph_InitiateSnapshotStream_Handler,
+		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "StreamSnapshot",
+			Handler:       _Dgraph_StreamSnapshot_Handler,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "api.v25.proto",
 }

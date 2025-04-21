@@ -1346,6 +1346,234 @@ func (x *Namespace) GetId() uint64 {
 	return 0
 }
 
+type InitiateSnapshotStreamRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InitiateSnapshotStreamRequest) Reset() {
+	*x = InitiateSnapshotStreamRequest{}
+	mi := &file_api_v25_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InitiateSnapshotStreamRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InitiateSnapshotStreamRequest) ProtoMessage() {}
+
+func (x *InitiateSnapshotStreamRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v25_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InitiateSnapshotStreamRequest.ProtoReflect.Descriptor instead.
+func (*InitiateSnapshotStreamRequest) Descriptor() ([]byte, []int) {
+	return file_api_v25_proto_rawDescGZIP(), []int{22}
+}
+
+type InitiateSnapshotStreamResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Groups        []uint32               `protobuf:"varint,1,rep,packed,name=groups,proto3" json:"groups,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InitiateSnapshotStreamResponse) Reset() {
+	*x = InitiateSnapshotStreamResponse{}
+	mi := &file_api_v25_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InitiateSnapshotStreamResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InitiateSnapshotStreamResponse) ProtoMessage() {}
+
+func (x *InitiateSnapshotStreamResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v25_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InitiateSnapshotStreamResponse.ProtoReflect.Descriptor instead.
+func (*InitiateSnapshotStreamResponse) Descriptor() ([]byte, []int) {
+	return file_api_v25_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *InitiateSnapshotStreamResponse) GetGroups() []uint32 {
+	if x != nil {
+		return x.Groups
+	}
+	return nil
+}
+
+type StreamSnapshotRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	GroupId       uint32                 `protobuf:"varint,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	Pairs         *KVS                   `protobuf:"bytes,2,opt,name=pairs,proto3" json:"pairs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StreamSnapshotRequest) Reset() {
+	*x = StreamSnapshotRequest{}
+	mi := &file_api_v25_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StreamSnapshotRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StreamSnapshotRequest) ProtoMessage() {}
+
+func (x *StreamSnapshotRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v25_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StreamSnapshotRequest.ProtoReflect.Descriptor instead.
+func (*StreamSnapshotRequest) Descriptor() ([]byte, []int) {
+	return file_api_v25_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *StreamSnapshotRequest) GetGroupId() uint32 {
+	if x != nil {
+		return x.GroupId
+	}
+	return 0
+}
+
+func (x *StreamSnapshotRequest) GetPairs() *KVS {
+	if x != nil {
+		return x.Pairs
+	}
+	return nil
+}
+
+type StreamSnapshotResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Done          bool                   `protobuf:"varint,1,opt,name=done,proto3" json:"done,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StreamSnapshotResponse) Reset() {
+	*x = StreamSnapshotResponse{}
+	mi := &file_api_v25_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StreamSnapshotResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StreamSnapshotResponse) ProtoMessage() {}
+
+func (x *StreamSnapshotResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v25_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StreamSnapshotResponse.ProtoReflect.Descriptor instead.
+func (*StreamSnapshotResponse) Descriptor() ([]byte, []int) {
+	return file_api_v25_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *StreamSnapshotResponse) GetDone() bool {
+	if x != nil {
+		return x.Done
+	}
+	return false
+}
+
+type KVS struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Data          []byte                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	Done          bool                   `protobuf:"varint,2,opt,name=done,proto3" json:"done,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *KVS) Reset() {
+	*x = KVS{}
+	mi := &file_api_v25_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *KVS) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*KVS) ProtoMessage() {}
+
+func (x *KVS) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v25_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use KVS.ProtoReflect.Descriptor instead.
+func (*KVS) Descriptor() ([]byte, []int) {
+	return file_api_v25_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *KVS) GetData() []byte {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+func (x *KVS) GetDone() bool {
+	if x != nil {
+		return x.Done
+	}
+	return false
+}
+
 var File_api_v25_proto protoreflect.FileDescriptor
 
 var file_api_v25_proto_rawDesc = []byte{
@@ -1493,7 +1721,24 @@ var file_api_v25_proto_rawDesc = []byte{
 	0x3a, 0x02, 0x38, 0x01, 0x22, 0x2f, 0x0a, 0x09, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63,
 	0x65, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x04, 0x52, 0x02, 0x69, 0x64, 0x2a, 0x24, 0x0a, 0x09, 0x4c, 0x65, 0x61, 0x73, 0x65, 0x54, 0x79,
+	0x04, 0x52, 0x02, 0x69, 0x64, 0x22, 0x1f, 0x0a, 0x1d, 0x49, 0x6e, 0x69, 0x74, 0x69, 0x61, 0x74,
+	0x65, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x38, 0x0a, 0x1e, 0x49, 0x6e, 0x69, 0x74, 0x69, 0x61,
+	0x74, 0x65, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x67, 0x72, 0x6f, 0x75,
+	0x70, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0d, 0x52, 0x06, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x73,
+	0x22, 0x56, 0x0a, 0x15, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68,
+	0x6f, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x67, 0x72, 0x6f,
+	0x75, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x67, 0x72, 0x6f,
+	0x75, 0x70, 0x49, 0x64, 0x12, 0x22, 0x0a, 0x05, 0x70, 0x61, 0x69, 0x72, 0x73, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x0c, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x76, 0x32, 0x35, 0x2e, 0x4b, 0x56,
+	0x53, 0x52, 0x05, 0x70, 0x61, 0x69, 0x72, 0x73, 0x22, 0x2c, 0x0a, 0x16, 0x53, 0x74, 0x72, 0x65,
+	0x61, 0x6d, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x6f, 0x6e, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08,
+	0x52, 0x04, 0x64, 0x6f, 0x6e, 0x65, 0x22, 0x2d, 0x0a, 0x03, 0x4b, 0x56, 0x53, 0x12, 0x12, 0x0a,
+	0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x64, 0x61, 0x74,
+	0x61, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x6f, 0x6e, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52,
+	0x04, 0x64, 0x6f, 0x6e, 0x65, 0x2a, 0x24, 0x0a, 0x09, 0x4c, 0x65, 0x61, 0x73, 0x65, 0x54, 0x79,
 	0x70, 0x65, 0x12, 0x06, 0x0a, 0x02, 0x4e, 0x53, 0x10, 0x00, 0x12, 0x07, 0x0a, 0x03, 0x55, 0x49,
 	0x44, 0x10, 0x01, 0x12, 0x06, 0x0a, 0x02, 0x54, 0x53, 0x10, 0x02, 0x2a, 0x8b, 0x01, 0x0a, 0x07,
 	0x41, 0x6c, 0x74, 0x65, 0x72, 0x4f, 0x70, 0x12, 0x08, 0x0a, 0x04, 0x4e, 0x4f, 0x4e, 0x45, 0x10,
@@ -1506,7 +1751,7 @@ var file_api_v25_proto_rawDesc = []byte{
 	0x49, 0x4e, 0x5f, 0x4e, 0x53, 0x10, 0x05, 0x12, 0x10, 0x0a, 0x0c, 0x53, 0x43, 0x48, 0x45, 0x4d,
 	0x41, 0x5f, 0x49, 0x4e, 0x5f, 0x4e, 0x53, 0x10, 0x06, 0x2a, 0x1f, 0x0a, 0x0a, 0x52, 0x65, 0x73,
 	0x70, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x12, 0x08, 0x0a, 0x04, 0x4a, 0x53, 0x4f, 0x4e, 0x10,
-	0x00, 0x12, 0x07, 0x0a, 0x03, 0x52, 0x44, 0x46, 0x10, 0x01, 0x32, 0xa2, 0x05, 0x0a, 0x06, 0x44,
+	0x00, 0x12, 0x07, 0x0a, 0x03, 0x52, 0x44, 0x46, 0x10, 0x01, 0x32, 0xe6, 0x06, 0x0a, 0x06, 0x44,
 	0x67, 0x72, 0x61, 0x70, 0x68, 0x12, 0x35, 0x0a, 0x04, 0x50, 0x69, 0x6e, 0x67, 0x12, 0x14, 0x2e,
 	0x61, 0x70, 0x69, 0x2e, 0x76, 0x32, 0x35, 0x2e, 0x50, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x71, 0x75,
 	0x65, 0x73, 0x74, 0x1a, 0x15, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x76, 0x32, 0x35, 0x2e, 0x50, 0x69,
@@ -1548,13 +1793,25 @@ var file_api_v25_proto_rawDesc = []byte{
 	0x70, 0x69, 0x2e, 0x76, 0x32, 0x35, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x4e, 0x61, 0x6d, 0x65, 0x73,
 	0x70, 0x61, 0x63, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1f, 0x2e, 0x61,
 	0x70, 0x69, 0x2e, 0x76, 0x32, 0x35, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x4e, 0x61, 0x6d, 0x65, 0x73,
-	0x70, 0x61, 0x63, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42,
-	0x4a, 0x0a, 0x0d, 0x69, 0x6f, 0x2e, 0x64, 0x67, 0x72, 0x61, 0x70, 0x68, 0x2e, 0x76, 0x32, 0x35,
-	0x42, 0x0b, 0x44, 0x67, 0x72, 0x61, 0x70, 0x68, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x5a, 0x2c, 0x67,
-	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x64, 0x67, 0x72, 0x61, 0x70, 0x68,
-	0x2d, 0x69, 0x6f, 0x2f, 0x64, 0x67, 0x6f, 0x2f, 0x76, 0x32, 0x35, 0x30, 0x2f, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x73, 0x2f, 0x61, 0x70, 0x69, 0x2e, 0x76, 0x32, 0x35, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x70, 0x61, 0x63, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
+	0x6b, 0x0a, 0x16, 0x49, 0x6e, 0x69, 0x74, 0x69, 0x61, 0x74, 0x65, 0x53, 0x6e, 0x61, 0x70, 0x73,
+	0x68, 0x6f, 0x74, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x12, 0x26, 0x2e, 0x61, 0x70, 0x69, 0x2e,
+	0x76, 0x32, 0x35, 0x2e, 0x49, 0x6e, 0x69, 0x74, 0x69, 0x61, 0x74, 0x65, 0x53, 0x6e, 0x61, 0x70,
+	0x73, 0x68, 0x6f, 0x74, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x27, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x76, 0x32, 0x35, 0x2e, 0x49, 0x6e, 0x69, 0x74,
+	0x69, 0x61, 0x74, 0x65, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x53, 0x74, 0x72, 0x65,
+	0x61, 0x6d, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x55, 0x0a, 0x0e,
+	0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x12, 0x1e,
+	0x2e, 0x61, 0x70, 0x69, 0x2e, 0x76, 0x32, 0x35, 0x2e, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x53,
+	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1f,
+	0x2e, 0x61, 0x70, 0x69, 0x2e, 0x76, 0x32, 0x35, 0x2e, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x53,
+	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x00, 0x28, 0x01, 0x42, 0x4a, 0x0a, 0x0d, 0x69, 0x6f, 0x2e, 0x64, 0x67, 0x72, 0x61, 0x70, 0x68,
+	0x2e, 0x76, 0x32, 0x35, 0x42, 0x0b, 0x44, 0x67, 0x72, 0x61, 0x70, 0x68, 0x50, 0x72, 0x6f, 0x74,
+	0x6f, 0x5a, 0x2c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x64, 0x67,
+	0x72, 0x61, 0x70, 0x68, 0x2d, 0x69, 0x6f, 0x2f, 0x64, 0x67, 0x6f, 0x2f, 0x76, 0x32, 0x35, 0x30,
+	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x73, 0x2f, 0x61, 0x70, 0x69, 0x2e, 0x76, 0x32, 0x35, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1570,73 +1827,83 @@ func file_api_v25_proto_rawDescGZIP() []byte {
 }
 
 var file_api_v25_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_api_v25_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_api_v25_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
 var file_api_v25_proto_goTypes = []any{
-	(LeaseType)(0),                  // 0: api.v25.LeaseType
-	(AlterOp)(0),                    // 1: api.v25.AlterOp
-	(RespFormat)(0),                 // 2: api.v25.RespFormat
-	(*PingRequest)(nil),             // 3: api.v25.PingRequest
-	(*PingResponse)(nil),            // 4: api.v25.PingResponse
-	(*AllocateIDsRequest)(nil),      // 5: api.v25.AllocateIDsRequest
-	(*AllocateIDsResponse)(nil),     // 6: api.v25.AllocateIDsResponse
-	(*SignInUserRequest)(nil),       // 7: api.v25.SignInUserRequest
-	(*SignInUserResponse)(nil),      // 8: api.v25.SignInUserResponse
-	(*AlterRequest)(nil),            // 9: api.v25.AlterRequest
-	(*AlterResponse)(nil),           // 10: api.v25.AlterResponse
-	(*RunDQLRequest)(nil),           // 11: api.v25.RunDQLRequest
-	(*RunDQLResponse)(nil),          // 12: api.v25.RunDQLResponse
-	(*TxnContext)(nil),              // 13: api.v25.TxnContext
-	(*Latency)(nil),                 // 14: api.v25.Latency
-	(*Metrics)(nil),                 // 15: api.v25.Metrics
-	(*CreateNamespaceRequest)(nil),  // 16: api.v25.CreateNamespaceRequest
-	(*CreateNamespaceResponse)(nil), // 17: api.v25.CreateNamespaceResponse
-	(*DropNamespaceRequest)(nil),    // 18: api.v25.DropNamespaceRequest
-	(*DropNamespaceResponse)(nil),   // 19: api.v25.DropNamespaceResponse
-	(*UpdateNamespaceRequest)(nil),  // 20: api.v25.UpdateNamespaceRequest
-	(*UpdateNamespaceResponse)(nil), // 21: api.v25.UpdateNamespaceResponse
-	(*ListNamespacesRequest)(nil),   // 22: api.v25.ListNamespacesRequest
-	(*ListNamespacesResponse)(nil),  // 23: api.v25.ListNamespacesResponse
-	(*Namespace)(nil),               // 24: api.v25.Namespace
-	nil,                             // 25: api.v25.RunDQLRequest.VarsEntry
-	nil,                             // 26: api.v25.RunDQLResponse.BlankUidsEntry
-	nil,                             // 27: api.v25.Metrics.UidsTouchedEntry
-	nil,                             // 28: api.v25.ListNamespacesResponse.NsListEntry
+	(LeaseType)(0),                         // 0: api.v25.LeaseType
+	(AlterOp)(0),                           // 1: api.v25.AlterOp
+	(RespFormat)(0),                        // 2: api.v25.RespFormat
+	(*PingRequest)(nil),                    // 3: api.v25.PingRequest
+	(*PingResponse)(nil),                   // 4: api.v25.PingResponse
+	(*AllocateIDsRequest)(nil),             // 5: api.v25.AllocateIDsRequest
+	(*AllocateIDsResponse)(nil),            // 6: api.v25.AllocateIDsResponse
+	(*SignInUserRequest)(nil),              // 7: api.v25.SignInUserRequest
+	(*SignInUserResponse)(nil),             // 8: api.v25.SignInUserResponse
+	(*AlterRequest)(nil),                   // 9: api.v25.AlterRequest
+	(*AlterResponse)(nil),                  // 10: api.v25.AlterResponse
+	(*RunDQLRequest)(nil),                  // 11: api.v25.RunDQLRequest
+	(*RunDQLResponse)(nil),                 // 12: api.v25.RunDQLResponse
+	(*TxnContext)(nil),                     // 13: api.v25.TxnContext
+	(*Latency)(nil),                        // 14: api.v25.Latency
+	(*Metrics)(nil),                        // 15: api.v25.Metrics
+	(*CreateNamespaceRequest)(nil),         // 16: api.v25.CreateNamespaceRequest
+	(*CreateNamespaceResponse)(nil),        // 17: api.v25.CreateNamespaceResponse
+	(*DropNamespaceRequest)(nil),           // 18: api.v25.DropNamespaceRequest
+	(*DropNamespaceResponse)(nil),          // 19: api.v25.DropNamespaceResponse
+	(*UpdateNamespaceRequest)(nil),         // 20: api.v25.UpdateNamespaceRequest
+	(*UpdateNamespaceResponse)(nil),        // 21: api.v25.UpdateNamespaceResponse
+	(*ListNamespacesRequest)(nil),          // 22: api.v25.ListNamespacesRequest
+	(*ListNamespacesResponse)(nil),         // 23: api.v25.ListNamespacesResponse
+	(*Namespace)(nil),                      // 24: api.v25.Namespace
+	(*InitiateSnapshotStreamRequest)(nil),  // 25: api.v25.InitiateSnapshotStreamRequest
+	(*InitiateSnapshotStreamResponse)(nil), // 26: api.v25.InitiateSnapshotStreamResponse
+	(*StreamSnapshotRequest)(nil),          // 27: api.v25.StreamSnapshotRequest
+	(*StreamSnapshotResponse)(nil),         // 28: api.v25.StreamSnapshotResponse
+	(*KVS)(nil),                            // 29: api.v25.KVS
+	nil,                                    // 30: api.v25.RunDQLRequest.VarsEntry
+	nil,                                    // 31: api.v25.RunDQLResponse.BlankUidsEntry
+	nil,                                    // 32: api.v25.Metrics.UidsTouchedEntry
+	nil,                                    // 33: api.v25.ListNamespacesResponse.NsListEntry
 }
 var file_api_v25_proto_depIdxs = []int32{
 	0,  // 0: api.v25.AllocateIDsRequest.lease_type:type_name -> api.v25.LeaseType
 	1,  // 1: api.v25.AlterRequest.op:type_name -> api.v25.AlterOp
-	25, // 2: api.v25.RunDQLRequest.vars:type_name -> api.v25.RunDQLRequest.VarsEntry
+	30, // 2: api.v25.RunDQLRequest.vars:type_name -> api.v25.RunDQLRequest.VarsEntry
 	2,  // 3: api.v25.RunDQLRequest.resp_format:type_name -> api.v25.RespFormat
 	13, // 4: api.v25.RunDQLResponse.txn:type_name -> api.v25.TxnContext
-	26, // 5: api.v25.RunDQLResponse.blank_uids:type_name -> api.v25.RunDQLResponse.BlankUidsEntry
+	31, // 5: api.v25.RunDQLResponse.blank_uids:type_name -> api.v25.RunDQLResponse.BlankUidsEntry
 	14, // 6: api.v25.RunDQLResponse.latency:type_name -> api.v25.Latency
 	15, // 7: api.v25.RunDQLResponse.metrics:type_name -> api.v25.Metrics
-	27, // 8: api.v25.Metrics.uids_touched:type_name -> api.v25.Metrics.UidsTouchedEntry
-	28, // 9: api.v25.ListNamespacesResponse.ns_list:type_name -> api.v25.ListNamespacesResponse.NsListEntry
-	24, // 10: api.v25.ListNamespacesResponse.NsListEntry.value:type_name -> api.v25.Namespace
-	3,  // 11: api.v25.Dgraph.Ping:input_type -> api.v25.PingRequest
-	5,  // 12: api.v25.Dgraph.AllocateIDs:input_type -> api.v25.AllocateIDsRequest
-	7,  // 13: api.v25.Dgraph.SignInUser:input_type -> api.v25.SignInUserRequest
-	9,  // 14: api.v25.Dgraph.Alter:input_type -> api.v25.AlterRequest
-	11, // 15: api.v25.Dgraph.RunDQL:input_type -> api.v25.RunDQLRequest
-	16, // 16: api.v25.Dgraph.CreateNamespace:input_type -> api.v25.CreateNamespaceRequest
-	18, // 17: api.v25.Dgraph.DropNamespace:input_type -> api.v25.DropNamespaceRequest
-	20, // 18: api.v25.Dgraph.UpdateNamespace:input_type -> api.v25.UpdateNamespaceRequest
-	22, // 19: api.v25.Dgraph.ListNamespaces:input_type -> api.v25.ListNamespacesRequest
-	4,  // 20: api.v25.Dgraph.Ping:output_type -> api.v25.PingResponse
-	6,  // 21: api.v25.Dgraph.AllocateIDs:output_type -> api.v25.AllocateIDsResponse
-	8,  // 22: api.v25.Dgraph.SignInUser:output_type -> api.v25.SignInUserResponse
-	10, // 23: api.v25.Dgraph.Alter:output_type -> api.v25.AlterResponse
-	12, // 24: api.v25.Dgraph.RunDQL:output_type -> api.v25.RunDQLResponse
-	17, // 25: api.v25.Dgraph.CreateNamespace:output_type -> api.v25.CreateNamespaceResponse
-	19, // 26: api.v25.Dgraph.DropNamespace:output_type -> api.v25.DropNamespaceResponse
-	21, // 27: api.v25.Dgraph.UpdateNamespace:output_type -> api.v25.UpdateNamespaceResponse
-	23, // 28: api.v25.Dgraph.ListNamespaces:output_type -> api.v25.ListNamespacesResponse
-	20, // [20:29] is the sub-list for method output_type
-	11, // [11:20] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	32, // 8: api.v25.Metrics.uids_touched:type_name -> api.v25.Metrics.UidsTouchedEntry
+	33, // 9: api.v25.ListNamespacesResponse.ns_list:type_name -> api.v25.ListNamespacesResponse.NsListEntry
+	29, // 10: api.v25.StreamSnapshotRequest.pairs:type_name -> api.v25.KVS
+	24, // 11: api.v25.ListNamespacesResponse.NsListEntry.value:type_name -> api.v25.Namespace
+	3,  // 12: api.v25.Dgraph.Ping:input_type -> api.v25.PingRequest
+	5,  // 13: api.v25.Dgraph.AllocateIDs:input_type -> api.v25.AllocateIDsRequest
+	7,  // 14: api.v25.Dgraph.SignInUser:input_type -> api.v25.SignInUserRequest
+	9,  // 15: api.v25.Dgraph.Alter:input_type -> api.v25.AlterRequest
+	11, // 16: api.v25.Dgraph.RunDQL:input_type -> api.v25.RunDQLRequest
+	16, // 17: api.v25.Dgraph.CreateNamespace:input_type -> api.v25.CreateNamespaceRequest
+	18, // 18: api.v25.Dgraph.DropNamespace:input_type -> api.v25.DropNamespaceRequest
+	20, // 19: api.v25.Dgraph.UpdateNamespace:input_type -> api.v25.UpdateNamespaceRequest
+	22, // 20: api.v25.Dgraph.ListNamespaces:input_type -> api.v25.ListNamespacesRequest
+	25, // 21: api.v25.Dgraph.InitiateSnapshotStream:input_type -> api.v25.InitiateSnapshotStreamRequest
+	27, // 22: api.v25.Dgraph.StreamSnapshot:input_type -> api.v25.StreamSnapshotRequest
+	4,  // 23: api.v25.Dgraph.Ping:output_type -> api.v25.PingResponse
+	6,  // 24: api.v25.Dgraph.AllocateIDs:output_type -> api.v25.AllocateIDsResponse
+	8,  // 25: api.v25.Dgraph.SignInUser:output_type -> api.v25.SignInUserResponse
+	10, // 26: api.v25.Dgraph.Alter:output_type -> api.v25.AlterResponse
+	12, // 27: api.v25.Dgraph.RunDQL:output_type -> api.v25.RunDQLResponse
+	17, // 28: api.v25.Dgraph.CreateNamespace:output_type -> api.v25.CreateNamespaceResponse
+	19, // 29: api.v25.Dgraph.DropNamespace:output_type -> api.v25.DropNamespaceResponse
+	21, // 30: api.v25.Dgraph.UpdateNamespace:output_type -> api.v25.UpdateNamespaceResponse
+	23, // 31: api.v25.Dgraph.ListNamespaces:output_type -> api.v25.ListNamespacesResponse
+	26, // 32: api.v25.Dgraph.InitiateSnapshotStream:output_type -> api.v25.InitiateSnapshotStreamResponse
+	28, // 33: api.v25.Dgraph.StreamSnapshot:output_type -> api.v25.StreamSnapshotResponse
+	23, // [23:34] is the sub-list for method output_type
+	12, // [12:23] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_api_v25_proto_init() }
@@ -1650,7 +1917,7 @@ func file_api_v25_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_api_v25_proto_rawDesc,
 			NumEnums:      3,
-			NumMessages:   26,
+			NumMessages:   31,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

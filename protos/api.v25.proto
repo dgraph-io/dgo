@@ -29,6 +29,8 @@ service Dgraph {
   rpc DropNamespace(DropNamespaceRequest) returns (DropNamespaceResponse) {}
   rpc UpdateNamespace(UpdateNamespaceRequest) returns (UpdateNamespaceResponse) {}
   rpc ListNamespaces(ListNamespacesRequest) returns (ListNamespacesResponse) {}
+  rpc InitiateSnapshotStream (InitiateSnapshotStreamRequest)    returns (InitiateSnapshotStreamResponse) {}
+  rpc StreamSnapshot(stream StreamSnapshotRequest) returns (StreamSnapshotResponse) {}
 }
 
 message PingRequest {}
@@ -158,3 +160,24 @@ message Namespace {
   string name = 1;
   uint64 id = 2;
 }
+
+message InitiateSnapshotStreamRequest {}
+
+message InitiateSnapshotStreamResponse {
+    repeated uint32 groups = 1;
+}
+
+message StreamSnapshotRequest {
+  uint32 group_id =1;
+  KVS pairs = 2;
+}
+
+message StreamSnapshotResponse {
+    bool done = 1;
+}
+
+message KVS {
+  bytes data = 1;
+  bool done = 2;
+}
+
