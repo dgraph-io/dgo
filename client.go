@@ -23,7 +23,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/dgraph-io/dgo/v250/protos/api"
-	apiv25 "github.com/dgraph-io/dgo/v250/protos/api.v25"
+	apiv2 "github.com/dgraph-io/dgo/v250/protos/api.v2"
 )
 
 const (
@@ -40,7 +40,7 @@ type Dgraph struct {
 
 	conns []*grpc.ClientConn
 	dc    []api.DgraphClient
-	dcv25 []apiv25.DgraphClient
+	dcv2  []apiv2.DgraphClient
 }
 
 type authCreds struct {
@@ -65,12 +65,12 @@ func (a *authCreds) RequireTransportSecurity() bool {
 //
 // Deprecated: Use dgo.NewClient or dgo.Open instead.
 func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
-	dcv25 := make([]apiv25.DgraphClient, len(clients))
+	dcv2 := make([]apiv2.DgraphClient, len(clients))
 	for i, client := range clients {
-		dcv25[i] = apiv25.NewDgraphClient(api.GetConn(client))
+		dcv2[i] = apiv2.NewDgraphClient(api.GetConn(client))
 	}
 
-	d := &Dgraph{useV1: true, dc: clients, dcv25: dcv25}
+	d := &Dgraph{useV1: true, dc: clients, dcv2: dcv2}
 
 	// we ignore the error here, because there is not much we can do about
 	// the error. We want to make best effort to figure out what API to use.

@@ -14,7 +14,7 @@ repository.**
 ## Table of contents
 
 - [Supported Versions](#supported-versions)
-- [v25 APIs](#v25-apis)
+- [v2 APIs](#v2-apis)
   - [Connection Strings](#connection-strings)
   - [Advanced Client Creation](#advanced-client-creation)
   - [Connecting To Dgraph Cloud](#connecting-to-dgraph-cloud)
@@ -59,7 +59,7 @@ version of this client and their corresponding import paths.
 | dgraph 25.X.Y  | dgo 240.X.Y | "github.com/dgraph-io/dgo/v240" |
 | dgraph 25.X.Y  | dgo 250.X.Y | "github.com/dgraph-io/dgo/v250" |
 
-## v25 APIs
+## v2 APIs
 
 These are _experimental_ APIs that we are still making changes to. If you have any feedback, please
 let us know either on Discord or GitHub.
@@ -276,7 +276,7 @@ queryDQL := `{
     age
   }
 }`
-resp, err = client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL, dgo.WithResponseFormat(api_v25.RespFormat_RDF))
+resp, err = client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL, dgo.WithResponseFormat(api_v2.RespFormat_RDF))
 // Handle error
 fmt.Printf("%s\n", resp.QueryResult)
 ```
