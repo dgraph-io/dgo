@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/dgo/v250"
-	api_v25 "github.com/dgraph-io/dgo/v250/protos/api.v25"
+	apiv2 "github.com/dgraph-io/dgo/v250/protos/api.v2"
 
 	"github.com/stretchr/testify/require"
 )
@@ -103,7 +103,7 @@ func TestREADME(t *testing.T) {
 	require.Equal(t, m["alice"][0].Age, 29)
 
 	// RDF Response, note that we can execute the RDFs received from query response
-	resp, err = client.RunDQL(ctx, dgo.RootNamespace, queryDQL, dgo.WithResponseFormat(api_v25.RespFormat_RDF))
+	resp, err = client.RunDQL(ctx, dgo.RootNamespace, queryDQL, dgo.WithResponseFormat(apiv2.RespFormat_RDF))
 	require.NoError(t, err)
 	mutationDQL = fmt.Sprintf(`{
 		set {

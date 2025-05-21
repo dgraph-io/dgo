@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/dgraph-io/dgo/v250/protos/api"
-	apiv25 "github.com/dgraph-io/dgo/v250/protos/api.v25"
+	apiv2 "github.com/dgraph-io/dgo/v250/protos/api.v2"
 )
 
 const (
@@ -107,7 +107,7 @@ func WithACLCreds(username, password string) ClientOption {
 
 // WithResponseFormat sets the response format for queries. By default, the
 // response format is JSON. We can also specify RDF format.
-func WithResponseFormat(respFormat apiv25.RespFormat) TxnOption {
+func WithResponseFormat(respFormat apiv2.RespFormat) TxnOption {
 	return func(o *txnOptions) error {
 		o.respFormat = respFormat
 		return nil
@@ -219,7 +219,7 @@ func NewRoundRobinClient(endpoints []string, opts ...ClientOption) (*Dgraph, err
 
 	conns := make([]*grpc.ClientConn, len(endpoints))
 	dc := make([]api.DgraphClient, len(endpoints))
-	dcv25 := make([]apiv25.DgraphClient, len(endpoints))
+	dcv2 := make([]apiv2.DgraphClient, len(endpoints))
 	for i, endpoint := range endpoints {
 		conn, err := grpc.NewClient(endpoint, co.gopts...)
 		if err != nil {
@@ -227,10 +227,10 @@ func NewRoundRobinClient(endpoints []string, opts ...ClientOption) (*Dgraph, err
 		}
 		conns[i] = conn
 		dc[i] = api.NewDgraphClient(conn)
-		dcv25[i] = apiv25.NewDgraphClient(conn)
+		dcv2[i] = apiv2.NewDgraphClient(conn)
 	}
 
-	d := &Dgraph{dc: dc, dcv25: dcv25}
+	d := &Dgraph{dc: dc, dcv2: dcv2}
 	if err := d.ping(); err != nil {
 		d.Close()
 		return nil, err
@@ -265,8 +265,8 @@ func (d *Dgraph) signInUser(ctx context.Context, username, password string) erro
 	d.jwtMutex.Lock()
 	defer d.jwtMutex.Unlock()
 
-	dc := d.anyClientv25()
-	req := &apiv25.SignInUserRequest{UserId: username, Password: password}
+	dc := d.anyClientv2()
+	req := &apiv2.SignInUserRequest{UserId: username, Password: password}
 	resp, err := dc.SignInUser(ctx, req)
 	if err != nil {
 		return err
@@ -284,7 +284,7 @@ func (d *Dgraph) ping() error {
 	// By default, we assume the server is using v1 API
 	d.useV1 = true
 
-	if _, err := d.dcv25[0].Ping(ctx, nil); err != nil {
+	if _, err := d.dcv2[0].Ping(ctx, nil); err != nil {
 		if status.Code(err) != codes.Unimplemented {
 			return fmt.Errorf("error pinging the database: %v", err)
 		}

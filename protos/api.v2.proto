@@ -10,11 +10,11 @@
 
 syntax = "proto3";
 
-package api.v25;
+package api.v2;
 
-option go_package = "github.com/dgraph-io/dgo/v250/protos/api.v25";
+option go_package = "github.com/dgraph-io/dgo/v250/protos/api.v2";
 
-option java_package = "io.dgraph.v25";
+option java_package = "io.dgraph.v2";
 option java_outer_classname = "DgraphProto";
 
 service Dgraph {
