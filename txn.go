@@ -63,7 +63,7 @@ func (d *Dgraph) NewTxn() *Txn {
 }
 
 // NewTxnInNamespace creates a new transaction in a namespace.
-// If the namepace is non-existent, the transction will run
+// If the namespace is non-existent, the transaction will run
 // in the default namespace. Note that a Tnx created with this function
 // against an ACL-enabled Dgraph cluster will not complete successfully as the
 // namespace from the JWT is used to calculate the namespace ID.
