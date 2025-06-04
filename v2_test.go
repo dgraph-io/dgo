@@ -205,6 +205,8 @@ func TestNamespaces(t *testing.T) {
 }
 
 func TestTxNamespaces(t *testing.T) {
+	t.Skip("Skipping until namespace-str is supported in v25")
+
 	client, close := getDgraphClientNoAcl()
 	defer close()
 
@@ -247,14 +249,14 @@ func TestTxNamespaces(t *testing.T) {
 		  }`
 	resp, err := client.RunDQL(ctx, "foo", queryDQL)
 	require.NoError(t, err)
-	require.Equal(t, string(resp.QueryResult), `{"alice":[{"name":"Alice"}]}`)
+	require.Equal(t, `{"alice":[{"name":"Alice"}]}`, string(resp.QueryResult))
 
 	// Query with v1 api with namespace set
 	txn := client.NewTxnInNamespace("foo")
 	respV1, err := txn.Query(ctx, queryDQL)
 	require.NoError(t, err)
 	require.NotEmpty(t, respV1.Json)
-	require.Equal(t, string(respV1.Json), `{"alice":[{"name":"Alice"}]}`)
+	require.Equal(t, `{"alice":[{"name":"Alice"}]}`, string(respV1.Json))
 	require.NoError(t, txn.Discard(ctx))
 
 	// Query readonly with v1 api with namespace set
@@ -262,7 +264,7 @@ func TestTxNamespaces(t *testing.T) {
 	respV1, err = txn.Query(ctx, queryDQL)
 	require.NoError(t, err)
 	require.NotEmpty(t, respV1.Json)
-	require.Equal(t, string(respV1.Json), `{"alice":[{"name":"Alice"}]}`)
+	require.Equal(t, `{"alice":[{"name":"Alice"}]}`, string(respV1.Json))
 	require.NoError(t, txn.Discard(ctx))
 
 	// Query in a non-existent namespace
@@ -270,6 +272,6 @@ func TestTxNamespaces(t *testing.T) {
 	respV1, err = txn.Query(ctx, queryDQL)
 	require.NoError(t, err)
 	require.NotEmpty(t, respV1.Json)
-	require.Equal(t, string(respV1.Json), `{"alice":[]}`)
+	require.Equal(t, `{"alice":[]}`, string(respV1.Json))
 	require.NoError(t, txn.Discard(ctx))
 }
