@@ -75,3 +75,34 @@ services:
     command:
       /gobin/dgraph zero -o 100 --raft='idx=1' --my=zero1:5180 --replicas=3 --logtostderr -v=2
       --bindall
+
+  zero_noacl:
+    image: dgraph/dgraph:local
+    container_name: zero_noacl
+    working_dir: /zero_noacl_data
+    ports:
+      - 5081:5080
+      - 6081:6080
+    volumes:
+      - type: bind
+        source: $GOPATH/bin
+        target: /gobin
+        read_only: true
+    command: >
+      /gobin/dgraph zero --my=zero_noacl:5080 --logtostderr -v=2 --bindall
+
+  alpha_noacl:
+    image: dgraph/dgraph:local
+    container_name: alpha_noacl
+    working_dir: /alpha_noacl_data
+    ports:
+      - 8084:8080
+      - 9084:9080
+    volumes:
+      - type: bind
+        source: $GOPATH/bin
+        target: /gobin
+        read_only: true
+    command: >
+      /gobin/dgraph alpha --my=alpha_noacl:7080 --zero=zero_noacl:5080 --logtostderr -v=2 --security
+      whitelist=0.0.0.0/0 --bindall

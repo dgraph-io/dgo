@@ -36,7 +36,8 @@ var (
 //     is a no-op if Commit has already been called, so it's safe to defer a call
 //     to Discard immediately after NewTxn.
 type Txn struct {
-	context *api.TxnContext
+	context   *api.TxnContext
+	namespace string
 
 	keys  map[string]struct{}
 	preds map[string]struct{}
@@ -61,10 +62,31 @@ func (d *Dgraph) NewTxn() *Txn {
 	}
 }
 
+// NewTxnInNamespace creates a new transaction in a namespace.
+// If the namepace is non-existent, the transction will run
+// in the default namespace. Note that a Tnx created with this function
+// against an ACL-enabled Dgraph cluster will not complete successfully as the
+// namespace from the JWT is used to calculate the namespace ID.
+func (d *Dgraph) NewTxnInNamespace(namespace string) *Txn {
+	txn := d.NewTxn()
+	txn.namespace = namespace
+	return txn
+}
+
 // NewReadOnlyTxn sets the txn to readonly transaction.
 func (d *Dgraph) NewReadOnlyTxn() *Txn {
 	txn := d.NewTxn()
 	txn.readOnly = true
+	return txn
+}
+
+// NewReadOnlyTxnInNamespace creates a new read-only transaction in a namespace.
+// If the namepace is non-existent, the transction will run in the default namespace.
+// Note that a Tnx created with this function against an ACL-enabled Dgraph cluster will not
+// complete successfully as the namespace from the JWT is used to calculate the namespace ID.
+func (d *Dgraph) NewReadOnlyTxnInNamespace(namespace string) *Txn {
+	txn := d.NewReadOnlyTxn()
+	txn.namespace = namespace
 	return txn
 }
 
@@ -164,6 +186,10 @@ func (txn *Txn) Do(ctx context.Context, req *api.Request) (*api.Response, error)
 	ctx = txn.dg.getContext(ctx)
 	req.StartTs = txn.context.StartTs
 	req.Hash = txn.context.Hash
+
+	if txn.namespace != "" {
+		ctx = metadata.AppendToOutgoingContext(ctx, "namespace-str", txn.namespace)
+	}
 
 	// Append the GRPC Response headers to the responses. Needed for Cloud.
 	appendHdr := func(hdrs *metadata.MD, resp *api.Response) {

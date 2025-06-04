@@ -12,10 +12,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgraph-io/dgo/v250"
-	apiv2 "github.com/dgraph-io/dgo/v250/protos/api.v2"
-
 	"github.com/stretchr/testify/require"
+
+	"github.com/dgraph-io/dgo/v250"
+	"github.com/dgraph-io/dgo/v250/protos/api"
+	apiv2 "github.com/dgraph-io/dgo/v250/protos/api.v2"
 )
 
 func TestREADME(t *testing.T) {
@@ -184,6 +185,7 @@ func TestNamespaces(t *testing.T) {
 	require.NoError(t, client.DropAllNamespaces(ctx))
 	require.NoError(t, client.CreateNamespace(ctx, "finance-graph"))
 	require.NoError(t, client.CreateNamespace(ctx, "inventory-graph"))
+	require.Error(t, client.CreateNamespace(ctx, "inventory-graph"), "Recreating namespace should fail")
 
 	require.NoError(t, client.SetSchema(ctx, "finance-graph", "name: string @index(exact) ."))
 	require.NoError(t, client.SetSchema(ctx, "inventory-graph", "name: string @index(exact) ."))
@@ -199,4 +201,75 @@ func TestNamespaces(t *testing.T) {
 	require.NoError(t, client.DropNamespace(ctx, "new-finance-graph"))
 	require.NoError(t, client.DropNamespace(ctx, "finance-graph"))
 	require.NoError(t, client.DropNamespace(ctx, "inventory-graph"))
+	require.NoError(t, client.DropNamespace(ctx, "inventory-graph"), "Dropping non-existent namespace should not fail")
+}
+
+func TestTxNamespaces(t *testing.T) {
+	client, close := getDgraphClientNoAcl()
+	defer close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	// Drop everything and set schema
+	require.NoError(t, client.DropAllNamespaces(ctx))
+	require.NoError(t, client.CreateNamespace(ctx, "foo"))
+
+	require.NoError(t, client.SetSchema(ctx, "foo", "name: string @index(exact) ."))
+
+	namespaces, err := client.ListNamespaces(ctx)
+	require.NoError(t, err)
+	var ns uint64
+	for _, n := range namespaces {
+		if n.Name == "foo" {
+			ns = n.Id
+		}
+	}
+	require.NotZero(t, ns)
+
+	txnMut := client.NewTxnInNamespace("foo")
+	mu := &api.Mutation{
+		SetNquads: []byte(`_:alice <name> "Alice" .`),
+	}
+	assigned, err := txnMut.Mutate(ctx, mu)
+	require.NoError(t, err)
+	require.NotEmpty(t, assigned.Uids["alice"])
+
+	err = txnMut.Commit(ctx)
+	require.NoError(t, err)
+	require.NoError(t, txnMut.Discard(ctx))
+
+	// Query with v2 api
+	queryDQL := `{
+			alice(func: eq(name, "Alice")) {
+			  name
+			}
+		  }`
+	resp, err := client.RunDQL(ctx, "foo", queryDQL)
+	require.NoError(t, err)
+	require.Equal(t, string(resp.QueryResult), `{"alice":[{"name":"Alice"}]}`)
+
+	// Query with v1 api with namespace set
+	txn := client.NewTxnInNamespace("foo")
+	respV1, err := txn.Query(ctx, queryDQL)
+	require.NoError(t, err)
+	require.NotEmpty(t, respV1.Json)
+	require.Equal(t, string(respV1.Json), `{"alice":[{"name":"Alice"}]}`)
+	require.NoError(t, txn.Discard(ctx))
+
+	// Query readonly with v1 api with namespace set
+	txn = client.NewReadOnlyTxnInNamespace("foo")
+	respV1, err = txn.Query(ctx, queryDQL)
+	require.NoError(t, err)
+	require.NotEmpty(t, respV1.Json)
+	require.Equal(t, string(respV1.Json), `{"alice":[{"name":"Alice"}]}`)
+	require.NoError(t, txn.Discard(ctx))
+
+	// Query in a non-existent namespace
+	txn = client.NewReadOnlyTxnInNamespace("bar")
+	respV1, err = txn.Query(ctx, queryDQL)
+	require.NoError(t, err)
+	require.NotEmpty(t, respV1.Json)
+	require.Equal(t, string(respV1.Json), `{"alice":[]}`)
+	require.NoError(t, txn.Discard(ctx))
 }

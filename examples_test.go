@@ -18,7 +18,8 @@ import (
 )
 
 const (
-	dgraphAddress = "127.0.0.1:9180"
+	dgraphAddress      = "127.0.0.1:9180"
+	dgraphAddressNoAcl = "127.0.0.1:9084"
 )
 
 type CancelFunc func()
@@ -30,6 +31,25 @@ func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
 	)
 	for {
 		dg, err = dgo.Open(fmt.Sprintf("dgraph://groot:password@%s?sslmode=disable", dgraphAddress))
+		//dg, err = dgo.Open(fmt.Sprintf("dgraph://%s?sslmode=disable", dgraphAddress))
+		if err == nil || !strings.Contains(err.Error(), "Please retry") {
+			break
+		}
+		time.Sleep(time.Second)
+	}
+	if err != nil {
+		log.Fatalf("Error while trying to open client %v", err.Error())
+	}
+	return dg, func() { dg.Close() }
+}
+
+func getDgraphClientNoAcl() (*dgo.Dgraph, CancelFunc) {
+	var (
+		err error
+		dg  *dgo.Dgraph
+	)
+	for {
+		dg, err = dgo.Open(fmt.Sprintf("dgraph://%s?sslmode=disable", dgraphAddressNoAcl))
 		if err == nil || !strings.Contains(err.Error(), "Please retry") {
 			break
 		}
