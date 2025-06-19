@@ -256,6 +256,12 @@ func (d *Dgraph) Close() {
 	}
 }
 
+// GetAPIv2Client returns the apiv2 DgraphClient that is useful for advanced
+// cases when grpc API that are not exposed in dgo needs to be used.
+func (d *Dgraph) GetAPIv2Client() []apiv2.DgraphClient {
+	return d.dcv2
+}
+
 // signInUser logs the user in using the provided username and password.
 func (d *Dgraph) signInUser(ctx context.Context, username, password string) error {
 	if d.useV1 {
