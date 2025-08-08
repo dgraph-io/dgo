@@ -359,6 +359,42 @@ namespaces, err := client.ListNamespaces(context.TODO())
 fmt.Printf("%+v\n", namespaces)
 ```
 
+### v2 Transactions
+
+Transactions can be created using the `NewTxn` function. This is the same function that is available
+in the v1 APIs -- v2 adds a number of new options to the transaction including namepaces via the
+`WithNamespace` option.
+
+```go
+txn := dgraphClient.NewTxn()
+defer txn.Discard(ctx)
+```
+
+#### v2 Transactions with Namespaces
+
+```go
+txn := dgraphClient.NewTxn(dgo.WithNamespace("finance-graph"))
+defer txn.Discard(ctx)
+```
+
+Note that the namespace needs to exist in order for operations on this transaction to succeed.
+Operations may not explicitly fail if the namespace does not exist, and will operate on the global
+namespace instead. You can ensure that the namespace exists by using the `ListNamespaces` function.
+
+#### v2 Transactions with ReadOnly and BestEffort Options
+
+```go
+txn := dgraphClient.NewTxn(dgo.WithReadOnly())
+defer txn.Discard(ctx)
+```
+
+```go
+txn := dgraphClient.NewTxn(dgo.WithBestEffort())
+defer txn.Discard(ctx)
+```
+
+Note that `WithBestEffort` implies a `ReadOnly` transaction, so `WithReadOnly` is not needed.
+
 ## v1 APIs
 
 ### Creating a Client
@@ -675,9 +711,9 @@ dg.Alter(ctx, &op)
 
 ### Running tests
 
-Make sure you have `dgraph` installed in your GOPATH before you run the tests. The dgo test suite
-requires that a Dgraph cluster with ACL enabled be running locally. To start such a cluster, you may
-use the docker compose file located in the testing directory `t`.
+Make sure you have a linux-compatible `dgraph` binary installed in your $GOPATH/bin before you run
+the tests. The dgo test suite requires that a Dgraph cluster with ACL enabled be running locally. To
+start such a cluster, you may use the docker compose file located in the testing directory `t`.
 
 ```sh
 docker compose -f t/docker-compose.yml up -d
