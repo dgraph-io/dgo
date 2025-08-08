@@ -51,42 +51,42 @@ type Txn struct {
 	dc api.DgraphClient
 }
 
-// NewTxn creates a new transaction.
-func (d *Dgraph) NewTxn() *Txn {
-	return &Txn{
+// NewTxn creates a new transaction with optional configuration.
+// Options include WithReadOnly(), WithBestEffort(), and WithNamespace(namespace).
+func (d *Dgraph) NewTxn(opts ...TxnOption) *Txn {
+	txn := &Txn{
 		dg:      d,
 		dc:      d.anyClient(),
 		context: &api.TxnContext{},
 		keys:    make(map[string]struct{}),
 		preds:   make(map[string]struct{}),
 	}
-}
 
-// NewTxnInNamespace creates a new transaction in a namespace.
-// If the namespace is non-existent, the transaction will run
-// in the default namespace. Note that a Tnx created with this function
-// against an ACL-enabled Dgraph cluster will not complete successfully as the
-// namespace from the JWT is used to calculate the namespace ID.
-func (d *Dgraph) NewTxnInNamespace(namespace string) *Txn {
-	txn := d.NewTxn()
-	txn.namespace = namespace
+	// Apply options if provided
+	if len(opts) > 0 {
+		topts, err := buildTxnOptions(opts...)
+		if err != nil {
+			// In order to keep the API backwards compatible, we'll panic if an error is returned.
+			// At the moment, no TxnOption returns an error.
+			panic(err)
+		} else {
+			if !topts.readOnly && topts.bestEffort {
+				panic("Best effort only works for read-only queries.")
+			}
+			txn.readOnly = topts.readOnly
+			txn.bestEffort = topts.bestEffort
+			txn.namespace = topts.namespace
+		}
+	}
+
 	return txn
 }
 
 // NewReadOnlyTxn sets the txn to readonly transaction.
+// @deprecated Use NewTxn(dgo.WithReadOnly()) instead.
 func (d *Dgraph) NewReadOnlyTxn() *Txn {
 	txn := d.NewTxn()
 	txn.readOnly = true
-	return txn
-}
-
-// NewReadOnlyTxnInNamespace creates a new read-only transaction in a namespace.
-// If the namepace is non-existent, the transction will run in the default namespace.
-// Note that a Tnx created with this function against an ACL-enabled Dgraph cluster will not
-// complete successfully as the namespace from the JWT is used to calculate the namespace ID.
-func (d *Dgraph) NewReadOnlyTxnInNamespace(namespace string) *Txn {
-	txn := d.NewReadOnlyTxn()
-	txn.namespace = namespace
 	return txn
 }
 
@@ -96,6 +96,7 @@ func (d *Dgraph) NewReadOnlyTxnInNamespace(namespace string) *Txn {
 //
 // This method will panic if the transaction is not read-only.
 // Returns the transaction itself.
+// @deprecated Use NewTxn(dgo.WithBestEffort()) instead.
 func (txn *Txn) BestEffort() *Txn {
 	if !txn.readOnly {
 		panic("Best effort only works for read-only queries.")

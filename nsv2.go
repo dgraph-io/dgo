@@ -25,6 +25,7 @@ type txnOptions struct {
 	readOnly   bool
 	bestEffort bool
 	respFormat apiv2.RespFormat
+	namespace  string
 }
 
 // TxnOption is a function that modifies the txn options.
@@ -38,11 +39,24 @@ func WithReadOnly() TxnOption {
 	}
 }
 
-// WithBestEffort sets the txn to be best effort.
+// WithBestEffort sets the txn to be best effort. BestEffort queries will ask the Dgraph Alpha to
+// get timestamps from memory in a best effort to reduce the number of outbound requests to
+// Zero. This may yield improved latencies in read-bound datasets. BestEffort queries imply
+// read-only transactions.
 func WithBestEffort() TxnOption {
 	return func(o *txnOptions) error {
 		o.readOnly = true
 		o.bestEffort = true
+		return nil
+	}
+}
+
+// WithNamespace sets the namespace for the transaction. If the namespace is non-existent,
+// operations on the transaction will operate on the global namespace. You can ensure that the
+// namespace exists by using the `ListNamespaces` function.
+func WithNamespace(namespace string) TxnOption {
+	return func(o *txnOptions) error {
+		o.namespace = namespace
 		return nil
 	}
 }
