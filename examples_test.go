@@ -31,7 +31,6 @@ func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
 	)
 	for {
 		dg, err = dgo.Open(fmt.Sprintf("dgraph://groot:password@%s?sslmode=disable", dgraphAddress))
-		//dg, err = dgo.Open(fmt.Sprintf("dgraph://%s?sslmode=disable", dgraphAddress))
 		if err == nil || !strings.Contains(err.Error(), "Please retry") {
 			break
 		}
