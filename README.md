@@ -179,7 +179,8 @@ err := client.SetSchema(context.TODO(), dgo.RootNamespace, sch)
 
 ### Running a Mutation
 
-To run a mutation, use the `RunDQL` function.
+To run a mutation, use the `RunDQL` function. Note that the namespace is set via the `WithNamespace`
+option, if not set, the global namespace is used.
 
 ```go
 mutationDQL := `{
@@ -189,10 +190,17 @@ mutationDQL := `{
     _:alice <age> "29" .
   }
 }`
-resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, mutationDQL)
+resp, err := client.RunDQL(context.TODO(), mutationDQL)
 // Handle error
 // Print map of blank UIDs
 fmt.Printf("%+v\n", resp.BlankUids)
+
+// Perform this mutation in a already created namespace named "finance-graph"
+resp, err = client.RunDQL(context.TODO(), mutationDQL, dgo.WithNamespace("finance-graph"))
+// Handle error
+// Print map of blank UIDs
+fmt.Printf("%+v\n", resp.BlankUids)
+
 ```
 
 ### Running a Query
@@ -207,7 +215,7 @@ queryDQL := `{
     age
   }
 }`
-resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL)
+resp, err := client.RunDQL(context.TODO(), queryDQL)
 // Handle error
 fmt.Printf("%s\n", resp.QueryResult)
 ```
@@ -225,7 +233,7 @@ queryDQL = `query Alice($name: string) {
   }
 }`
 vars := map[string]string{"$name": "Alice"}
-resp, err := client.RunDQLWithVars(context.TODO(), dgo.RootNamespace, queryDQL, vars)
+resp, err := client.RunDQLWithVars(context.TODO(), queryDQL, vars)
 // Handle error
 fmt.Printf("%s\n", resp.QueryResult)
 ```
@@ -242,7 +250,7 @@ queryDQL := `{
     age
   }
 }`
-resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL, dgo.WithBestEffort())
+resp, err := client.RunDQL(context.TODO(), queryDQL, dgo.WithBestEffort())
 // Handle error
 fmt.Printf("%s\n", resp.QueryResult)
 ```
@@ -259,7 +267,24 @@ queryDQL := `{
     age
   }
 }`
-resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL, dgo.WithReadOnly())
+resp, err := client.RunDQL(context.TODO(), queryDQL, dgo.WithReadOnly())
+// Handle error
+fmt.Printf("%s\n", resp.QueryResult)
+```
+
+### Running a Query in a Namespace
+
+To run a query in a namespace, use the same `RunDQL` function with `TxnOption`.
+
+```go
+queryDQL := `{
+  alice(func: eq(name, "Alice")) {
+    name
+    email
+    age
+  }
+}`
+resp, err := client.RunDQL(context.TODO(), queryDQL, dgo.WithNamespace("finance-graph"), dgo.WithReadOnly())
 // Handle error
 fmt.Printf("%s\n", resp.QueryResult)
 ```
