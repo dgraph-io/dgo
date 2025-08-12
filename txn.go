@@ -321,6 +321,10 @@ func (txn *Txn) commitOrAbort(ctx context.Context) error {
 	}
 
 	ctx = txn.dg.getContext(ctx)
+	if txn.namespace != "" {
+		ctx = metadata.AppendToOutgoingContext(ctx, "namespace-str", txn.namespace)
+	}
+
 	_, err := txn.dc.CommitOrAbort(ctx, txn.context)
 
 	if isJwtExpired(err) {
@@ -330,6 +334,10 @@ func (txn *Txn) commitOrAbort(ctx context.Context) error {
 		}
 
 		ctx = txn.dg.getContext(ctx)
+		if txn.namespace != "" {
+			ctx = metadata.AppendToOutgoingContext(ctx, "namespace-str", txn.namespace)
+		}
+
 		_, err = txn.dc.CommitOrAbort(ctx, txn.context)
 	}
 
