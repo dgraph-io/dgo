@@ -75,21 +75,26 @@ func buildTxnOptions(opts ...TxnOption) (*txnOptions, error) {
 	return topts, nil
 }
 
-// RunDQL runs a DQL query in the given namespace. A DQL query could be a mutation
-// or a query or an upsert which is a combination of mutations and queries.
-func (d *Dgraph) RunDQL(ctx context.Context, nsName string, q string, opts ...TxnOption) (
+// RunDQL runs a DQL query. A DQL query could be a mutation or a query or an upsert which is a
+// combination of mutations and queries. The namespace is set via the WithNamespace option, if
+// not set, the global namespace is used.
+func (d *Dgraph) RunDQL(ctx context.Context, q string, opts ...TxnOption) (
 	*apiv2.RunDQLResponse, error) {
 
-	return d.RunDQLWithVars(ctx, nsName, q, nil, opts...)
+	return d.RunDQLWithVars(ctx, q, nil, opts...)
 }
 
 // RunDQLWithVars is like RunDQL with variables.
-func (d *Dgraph) RunDQLWithVars(ctx context.Context, nsName string, q string,
+func (d *Dgraph) RunDQLWithVars(ctx context.Context, q string,
 	vars map[string]string, opts ...TxnOption) (*apiv2.RunDQLResponse, error) {
 
 	topts, err := buildTxnOptions(opts...)
 	if err != nil {
 		return nil, err
+	}
+	nsName := RootNamespace
+	if topts.namespace != "" {
+		nsName = topts.namespace
 	}
 
 	req := &apiv2.RunDQLRequest{NsName: nsName, DqlQuery: q, Vars: vars,
