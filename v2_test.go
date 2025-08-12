@@ -34,7 +34,7 @@ func TestREADME(t *testing.T) {
 		age: int .`))
 
 	query := `schema(pred: [name, age]) {type}`
-	resp, err := client.RunDQL(ctx, dgo.RootNamespace, query)
+	resp, err := client.RunDQL(ctx, query)
 	require.NoError(t, err)
 	require.JSONEq(t, `{"schema":[{"predicate":"age","type":"int"},{"predicate":"name","type":"string"}]}`,
 		string(resp.QueryResult))
@@ -47,7 +47,7 @@ func TestREADME(t *testing.T) {
 			  _:alice <age> "29" .
 			}
 		  }`
-	resp, err = client.RunDQL(ctx, dgo.RootNamespace, mutationDQL)
+	resp, err = client.RunDQL(ctx, mutationDQL)
 	require.NoError(t, err)
 	require.NotEmpty(t, resp.BlankUids["alice"])
 
@@ -59,7 +59,7 @@ func TestREADME(t *testing.T) {
 		  age
 		}
 	  }`
-	resp, err = client.RunDQL(ctx, dgo.RootNamespace, queryDQL)
+	resp, err = client.RunDQL(ctx, queryDQL)
 	require.NoError(t, err)
 	var m map[string][]struct {
 		Name  string `json:"name"`
@@ -80,7 +80,7 @@ func TestREADME(t *testing.T) {
 		}
 	  }`
 	vars := map[string]string{"$name": "Alice"}
-	resp, err = client.RunDQLWithVars(ctx, dgo.RootNamespace, queryDQLWithVar, vars)
+	resp, err = client.RunDQLWithVars(ctx, queryDQLWithVar, vars)
 	require.NoError(t, err)
 	require.NoError(t, json.Unmarshal(resp.QueryResult, &m))
 	require.Equal(t, m["alice"][0].Name, "Alice")
@@ -88,7 +88,7 @@ func TestREADME(t *testing.T) {
 	require.Equal(t, m["alice"][0].Age, 29)
 
 	// Best Effort
-	resp, err = client.RunDQL(ctx, dgo.RootNamespace, queryDQL, dgo.WithBestEffort())
+	resp, err = client.RunDQL(ctx, queryDQL, dgo.WithBestEffort())
 	require.NoError(t, err)
 	require.NoError(t, json.Unmarshal(resp.QueryResult, &m))
 	require.Equal(t, m["alice"][0].Name, "Alice")
@@ -96,7 +96,7 @@ func TestREADME(t *testing.T) {
 	require.Equal(t, m["alice"][0].Age, 29)
 
 	// ReadOnly
-	resp, err = client.RunDQL(ctx, dgo.RootNamespace, queryDQL, dgo.WithReadOnly())
+	resp, err = client.RunDQL(ctx, queryDQL, dgo.WithReadOnly())
 	require.NoError(t, err)
 	require.NoError(t, json.Unmarshal(resp.QueryResult, &m))
 	require.Equal(t, m["alice"][0].Name, "Alice")
@@ -104,17 +104,17 @@ func TestREADME(t *testing.T) {
 	require.Equal(t, m["alice"][0].Age, 29)
 
 	// RDF Response, note that we can execute the RDFs received from query response
-	resp, err = client.RunDQL(ctx, dgo.RootNamespace, queryDQL, dgo.WithResponseFormat(apiv2.RespFormat_RDF))
+	resp, err = client.RunDQL(ctx, queryDQL, dgo.WithResponseFormat(apiv2.RespFormat_RDF))
 	require.NoError(t, err)
 	mutationDQL = fmt.Sprintf(`{
 		set {
 		  %s
 		}
 	  }`, resp.QueryResult)
-	resp, err = client.RunDQL(ctx, dgo.RootNamespace, mutationDQL)
+	resp, err = client.RunDQL(ctx, mutationDQL)
 	require.NoError(t, err)
 	require.Empty(t, resp.BlankUids)
-	resp, err = client.RunDQL(ctx, dgo.RootNamespace, queryDQL, dgo.WithReadOnly())
+	resp, err = client.RunDQL(ctx, queryDQL, dgo.WithReadOnly())
 	require.NoError(t, err)
 	require.NoError(t, json.Unmarshal(resp.QueryResult, &m))
 	require.Equal(t, m["alice"][0].Name, "Alice")
@@ -133,7 +133,7 @@ func TestREADME(t *testing.T) {
 		}
 	  }
 	}`
-	resp, err = client.RunDQL(ctx, dgo.RootNamespace, upsertQuery)
+	resp, err = client.RunDQL(ctx, upsertQuery)
 	require.NoError(t, err)
 	require.Empty(t, resp.BlankUids)
 	require.Equal(t, m["alice"][0].Name, "Alice")
@@ -145,7 +145,7 @@ func TestREADME(t *testing.T) {
 		  age
 		}
 	  }`
-	resp, err = client.RunDQL(ctx, dgo.RootNamespace, queryDQL, dgo.WithReadOnly())
+	resp, err = client.RunDQL(ctx, queryDQL, dgo.WithReadOnly())
 	require.NoError(t, err)
 	require.NoError(t, json.Unmarshal(resp.QueryResult, &m))
 	require.Equal(t, m["alice"][0].Name, "Alice Sayum")
@@ -163,12 +163,12 @@ func TestREADME(t *testing.T) {
 		  }
 		}
 	  }`
-	resp, err = client.RunDQL(ctx, dgo.RootNamespace, upsertQuery)
+	resp, err = client.RunDQL(ctx, upsertQuery)
 	require.NoError(t, err)
 	require.Empty(t, resp.BlankUids)
 	require.Equal(t, m["alice"][0].Name, "Alice Sayum")
 
-	resp, err = client.RunDQL(ctx, dgo.RootNamespace, queryDQL, dgo.WithReadOnly())
+	resp, err = client.RunDQL(ctx, queryDQL, dgo.WithReadOnly())
 	require.NoError(t, err)
 	require.NoError(t, json.Unmarshal(resp.QueryResult, &m))
 	require.Equal(t, m["alice"][0].Age, 31)
@@ -247,7 +247,7 @@ func TestTxNamespaces(t *testing.T) {
 			  name
 			}
 		  }`
-	resp, err := client.RunDQL(ctx, "foo", queryDQL)
+	resp, err := client.RunDQL(ctx, queryDQL, dgo.WithNamespace("foo"))
 	require.NoError(t, err)
 	require.Equal(t, `{"alice":[{"name":"Alice"}]}`, string(resp.QueryResult))
 
@@ -267,6 +267,7 @@ func TestTxNamespaces(t *testing.T) {
 	require.Equal(t, `{"alice":[{"name":"Alice"}]}`, string(respV1.Json))
 	require.NoError(t, txn.Discard(ctx))
 
+	// Drop data in the namespace
 	require.NoError(t, client.DropData(ctx, "foo"))
 	txn = client.NewTxn(dgo.WithNamespace("foo"), dgo.WithReadOnly())
 	respV1, err = txn.Query(ctx, queryDQL)
@@ -277,6 +278,14 @@ func TestTxNamespaces(t *testing.T) {
 
 	// Query in a non-existent namespace
 	txn = client.NewTxn(dgo.WithNamespace("bar"), dgo.WithReadOnly())
+	respV1, err = txn.Query(ctx, queryDQL)
+	require.NoError(t, err)
+	require.NotEmpty(t, respV1.Json)
+	require.Equal(t, `{"alice":[]}`, string(respV1.Json))
+	require.NoError(t, txn.Discard(ctx))
+
+	// Query in the root namespace
+	txn = client.NewTxn(dgo.WithReadOnly())
 	respV1, err = txn.Query(ctx, queryDQL)
 	require.NoError(t, err)
 	require.NotEmpty(t, respV1.Json)
