@@ -205,7 +205,7 @@ func TestNamespaces(t *testing.T) {
 }
 
 func TestTxNamespaces(t *testing.T) {
-	//t.Skip("Skipping until namespace-str is supported in v25")
+	t.Skip("Skipping until namespace-str is supported in v25")
 
 	client, close := getDgraphClientNoAcl()
 	defer close()
