@@ -1,4 +1,4 @@
-module github.com/dgraph-io/dgo/v250
+module github.com/hypermodeinc/dgo/v250
 
 go 1.23.8
 
