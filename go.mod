@@ -2,12 +2,12 @@ module github.com/dgraph-io/dgo/v250
 
 go 1.23.8
 
-toolchain go1.24.5
+toolchain go1.25.0
 
 require (
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.74.2
-	google.golang.org/protobuf v1.36.6
+	google.golang.org/protobuf v1.36.7
 )
 
 require (
