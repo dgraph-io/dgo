@@ -21,13 +21,13 @@ jobs:
     runs-on: warp-ubuntu-latest-x64-4x
     steps:
       - name: Checkout Dgraph repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: dgraph
           repository: hypermodeinc/dgraph
           ref: main
       - name: Checkout Dgo repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: dgo
           repository: hypermodeinc/dgo
