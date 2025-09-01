@@ -12,16 +12,14 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/status"
 
 	"github.com/dgraph-io/dgo/v250/protos/api"
-	apiv2 "github.com/dgraph-io/dgo/v250/protos/api.v2"
 )
 
 const (
@@ -29,6 +27,7 @@ const (
 	cloudAPIKeyParam = "apikey"      // optional parameter for providing a Dgraph Cloud API key
 	bearerTokenParam = "bearertoken" // optional parameter for providing an access token
 	sslModeParam     = "sslmode"     // optional parameter for providing a Dgraph SSL mode
+	namespaceParam   = "namespace"   // optional parameter for providing a Dgraph namespace ID
 	sslModeDisable   = "disable"
 	sslModeRequire   = "require"
 	sslModeVerifyCA  = "verify-ca"
@@ -49,9 +48,10 @@ func (a *bearerCreds) RequireTransportSecurity() bool {
 }
 
 type clientOptions struct {
-	gopts    []grpc.DialOption
-	username string
-	password string
+	namespace uint64
+	gopts     []grpc.DialOption
+	username  string
+	password  string
 }
 
 // ClientOption is a function that modifies the client options.
@@ -96,7 +96,16 @@ func WithSystemCertPool() ClientOption {
 	}
 }
 
+// WithNamespace logs into the given namespace.
+func WithNamespace(nsID uint64) ClientOption {
+	return func(o *clientOptions) error {
+		o.namespace = nsID
+		return nil
+	}
+}
+
 // WithACLCreds will use the provided username and password for ACL authentication.
+// If namespace is not provided, it logs into the galaxy namespace.
 func WithACLCreds(username, password string) ClientOption {
 	return func(o *clientOptions) error {
 		o.username = username
@@ -107,7 +116,7 @@ func WithACLCreds(username, password string) ClientOption {
 
 // WithResponseFormat sets the response format for queries. By default, the
 // response format is JSON. We can also specify RDF format.
-func WithResponseFormat(respFormat apiv2.RespFormat) TxnOption {
+func WithResponseFormat(respFormat api.Request_RespFormat) TxnOption {
 	return func(o *txnOptions) error {
 		o.respFormat = respFormat
 		return nil
@@ -152,6 +161,7 @@ func Open(connStr string) (*Dgraph, error) {
 	apiKey := params.Get(cloudAPIKeyParam)
 	bearerToken := params.Get(bearerTokenParam)
 	sslMode := params.Get(sslModeParam)
+	nsID := params.Get(namespaceParam)
 
 	if u.Scheme != dgraphScheme {
 		return nil, fmt.Errorf("invalid scheme: must start with %s://", dgraphScheme)
@@ -184,6 +194,14 @@ func Open(connStr string) (*Dgraph, error) {
 	default:
 		return nil, fmt.Errorf("invalid SSL mode: %s (must be one of %s, %s, %s)",
 			sslMode, sslModeDisable, sslModeRequire, sslModeVerifyCA)
+	}
+
+	if nsID != "" {
+		nsID, err := strconv.ParseUint(nsID, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid namespace ID: %w", err)
+		}
+		opts = append(opts, WithNamespace(nsID))
 	}
 
 	if u.User != nil {
@@ -219,7 +237,6 @@ func NewRoundRobinClient(endpoints []string, opts ...ClientOption) (*Dgraph, err
 
 	conns := make([]*grpc.ClientConn, len(endpoints))
 	dc := make([]api.DgraphClient, len(endpoints))
-	dcv2 := make([]apiv2.DgraphClient, len(endpoints))
 	for i, endpoint := range endpoints {
 		conn, err := grpc.NewClient(endpoint, co.gopts...)
 		if err != nil {
@@ -227,20 +244,14 @@ func NewRoundRobinClient(endpoints []string, opts ...ClientOption) (*Dgraph, err
 		}
 		conns[i] = conn
 		dc[i] = api.NewDgraphClient(conn)
-		dcv2[i] = apiv2.NewDgraphClient(conn)
 	}
 
-	d := &Dgraph{dc: dc, dcv2: dcv2}
-	if err := d.ping(); err != nil {
-		d.Close()
-		return nil, err
-	}
-
+	d := &Dgraph{dc: dc}
 	if co.username != "" && co.password != "" {
 		ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 		defer cancel()
 
-		if err := d.signInUser(ctx, co.username, co.password); err != nil {
+		if err := d.login(ctx, co.username, co.password, co.namespace); err != nil {
 			d.Close()
 			return nil, fmt.Errorf("failed to sign in user: %w", err)
 		}
@@ -249,55 +260,15 @@ func NewRoundRobinClient(endpoints []string, opts ...ClientOption) (*Dgraph, err
 	return d, nil
 }
 
+// GetAPIClients returns the api.DgraphClient that is useful for advanced
+// cases when grpc API that are not exposed in dgo needs to be used.
+func (d *Dgraph) GetAPIClients() []api.DgraphClient {
+	return d.dc
+}
+
 // Close shutdown down all the connections to the Dgraph Cluster.
 func (d *Dgraph) Close() {
 	for _, conn := range d.conns {
 		_ = conn.Close()
 	}
-}
-
-// GetAPIv2Client returns the apiv2 DgraphClient that is useful for advanced
-// cases when grpc API that are not exposed in dgo needs to be used.
-func (d *Dgraph) GetAPIv2Client() []apiv2.DgraphClient {
-	return d.dcv2
-}
-
-// signInUser logs the user in using the provided username and password.
-func (d *Dgraph) signInUser(ctx context.Context, username, password string) error {
-	if d.useV1 {
-		return d.login(ctx, username, password, 0)
-	}
-
-	d.jwtMutex.Lock()
-	defer d.jwtMutex.Unlock()
-
-	dc := d.anyClientv2()
-	req := &apiv2.SignInUserRequest{UserId: username, Password: password}
-	resp, err := dc.SignInUser(ctx, req)
-	if err != nil {
-		return err
-	}
-
-	d.jwt.AccessJwt = resp.AccessJwt
-	d.jwt.RefreshJwt = resp.RefreshJwt
-	return nil
-}
-
-func (d *Dgraph) ping() error {
-	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
-	defer cancel()
-
-	// By default, we assume the server is using v1 API
-	d.useV1 = true
-
-	if _, err := d.dcv2[0].Ping(ctx, nil); err != nil {
-		if status.Code(err) != codes.Unimplemented {
-			return fmt.Errorf("error pinging the database: %v", err)
-		}
-		d.useV1 = true
-	} else {
-		d.useV1 = false
-	}
-
-	return nil
 }

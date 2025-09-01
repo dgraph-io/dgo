@@ -14,10 +14,9 @@ repository.**
 ## Table of contents
 
 - [Supported Versions](#supported-versions)
-- [v2 APIs](#v2-apis)
+- [New APIs in v25](#new-apis-in-v25)
   - [Connection Strings](#connection-strings)
   - [Advanced Client Creation](#advanced-client-creation)
-  - [Connecting To Dgraph Cloud](#connecting-to-dgraph-cloud)
   - [Dropping All Data](#dropping-all-data)
   - [Set Schema](#set-schema)
   - [Running a Mutation](#running-a-mutation)
@@ -30,9 +29,8 @@ repository.**
   - [Running a Conditional Upsert](#running-a-conditional-upsert)
   - [Creating a New Namespace](#creating-a-new-namespace)
   - [Dropping a Namespace](#dropping-a-namespace)
-  - [Rename a Namespace](#rename-a-namespace)
   - [List All Namespaces](#list-all-namespaces)
-- [v1 APIs](#v1-apis)
+- [Existing APIs](#existing-apis)
   - [Creating a Client](#creating-a-client)
   - [Login into a namespace](#login-into-a-namespace)
   - [Altering the database](#altering-the-database)
@@ -59,10 +57,7 @@ version of this client and their corresponding import paths.
 | dgraph 25.X.Y  | dgo 240.X.Y | "github.com/dgraph-io/dgo/v240" |
 | dgraph 25.X.Y  | dgo 250.X.Y | "github.com/dgraph-io/dgo/v250" |
 
-## v2 APIs
-
-These are _experimental_ APIs that we are still making changes to. If you have any feedback, please
-let us know either on Discord or GitHub.
+## New APIs in v25
 
 ### Connection Strings
 
@@ -129,37 +124,12 @@ defer client.Close()
 // Use the client
 ```
 
-### Connecting To Dgraph Cloud
-
-You can use either `Open` or `NewClient` to connect to Dgraph Cloud. Note `DialCloud` is marked
-deprecated and will be removed in later versions.
-
-Using `Open` with a connection string:
-
-```go
-client, err := dgo.Open("dgraph://foo-bar.grpc.cloud.dgraph.io:443?sslmode=verify-ca&apikey=AValidKeYFromDgrAPHCloud=")
-// Check error
-defer client.Close()
-```
-
-Using `NewClient`:
-
-```go
-client, err := dgo.NewClient("foo-bar.grpc.cloud.dgraph.io:443",
-  dgo.WithDgraphAPIKey("AValidKeYFromDgrAPHCloud="),
-  dgo.WithSystemCertPool(),
-)
-// Check error
-defer client.Close()
-```
-
 ### Dropping All Data
 
-In order to drop all data in the Dgraph Cluster and start fresh, use the `DropAllNamespaces`
-function.
+In order to drop all data in the Dgraph Cluster and start fresh, use the `DropAll` function.
 
 ```go
-err := client.DropAllNamespaces(context.TODO())
+err := client.DropAll(context.TODO())
 // Handle error
 ```
 
@@ -192,7 +162,7 @@ mutationDQL := `{
 resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, mutationDQL)
 // Handle error
 // Print map of blank UIDs
-fmt.Printf("%+v\n", resp.BlankUids)
+fmt.Printf("%+v\n", resp.Uids)
 ```
 
 ### Running a Query
@@ -209,7 +179,7 @@ queryDQL := `{
 }`
 resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL)
 // Handle error
-fmt.Printf("%s\n", resp.QueryResult)
+fmt.Printf("%s\n", resp.Json)
 ```
 
 ### Running a Query With Variables
@@ -227,7 +197,7 @@ queryDQL = `query Alice($name: string) {
 vars := map[string]string{"$name": "Alice"}
 resp, err := client.RunDQLWithVars(context.TODO(), dgo.RootNamespace, queryDQL, vars)
 // Handle error
-fmt.Printf("%s\n", resp.QueryResult)
+fmt.Printf("%s\n", resp.Json)
 ```
 
 ### Running a Best Effort Query
@@ -244,7 +214,7 @@ queryDQL := `{
 }`
 resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL, dgo.WithBestEffort())
 // Handle error
-fmt.Printf("%s\n", resp.QueryResult)
+fmt.Printf("%s\n", resp.Json)
 ```
 
 ### Running a ReadOnly Query
@@ -261,7 +231,7 @@ queryDQL := `{
 }`
 resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL, dgo.WithReadOnly())
 // Handle error
-fmt.Printf("%s\n", resp.QueryResult)
+fmt.Printf("%s\n", resp.Json)
 ```
 
 ### Running a Query with RDF Response
@@ -278,7 +248,7 @@ queryDQL := `{
 }`
 resp, err = client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL, dgo.WithResponseFormat(api_v2.RespFormat_RDF))
 // Handle error
-fmt.Printf("%s\n", resp.QueryResult)
+fmt.Printf("%s\n", resp.Rdf)
 ```
 
 ### Running an Upsert
@@ -299,8 +269,8 @@ upsertQuery := `upsert {
 }`
 resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, upsertQuery)
 // Handle error
-fmt.Printf("%s\n", resp.QueryResult)
-fmt.Printf("%+v\n", resp.BlankUids)
+fmt.Printf("%s\n", resp.Json)
+fmt.Printf("%+v\n", resp.Uids)
 ```
 
 ### Running a Conditional Upsert
@@ -319,35 +289,24 @@ upsertQuery := `upsert {
 }`
 resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, upsertQuery)
 // Handle error
-fmt.Printf("%s\n", resp.QueryResult)
+fmt.Printf("%s\n", resp.Json)
 ```
 
 ### Creating a New Namespace
 
-Dgraph v25 supports namespaces that have names. You can create one using the dgo client.
+Dgraph v25 supports creating namespaces using grpc API. You can create one using the dgo client.
 
 ```go
-err := client.CreateNamespace(context.TODO(), "finance-graph")
+_, err := client.CreateNamespace(context.TODO())
 // Handle error
 ```
-
-You can now pass this name to `SetSchema`, `RunDQL` or similar functions.
 
 ### Dropping a Namespace
 
 To drop a namespace:
 
 ```go
-err := client.DropNamespace(context.TODO(), "finance-graph")
-// Handle error
-```
-
-### Rename a Namespace
-
-A namespace can be renamed as follows.
-
-```go
-err := client.RenameNamespace(context.TODO(), "finance-graph", "new-finance-graph")
+_, err := client.DropNamespace(context.TODO())
 // Handle error
 ```
 
@@ -359,7 +318,7 @@ namespaces, err := client.ListNamespaces(context.TODO())
 fmt.Printf("%+v\n", namespaces)
 ```
 
-## v1 APIs
+## Existing APIs
 
 ### Creating a Client
 
@@ -517,8 +476,8 @@ q := `query all($a: string) {
     }
   }`
 
-res, err := txn.QueryWithVars(ctx, q, map[string]string{"$a": "Alice"})
-fmt.Printf("%s\n", res.Json)
+resp, err := txn.QueryWithVars(ctx, q, map[string]string{"$a": "Alice"})
+fmt.Printf("%s\n", resp.Json)
 ```
 
 You can also use `txn.Do` function to run a query.
@@ -528,9 +487,9 @@ req := &api.Request{
   Query: q,
   Vars: map[string]string{"$a": "Alice"},
 }
-res, err := txn.Do(ctx, req)
+resp, err := txn.Do(ctx, req)
 // Check error
-fmt.Printf("%s\n", res.Json)
+fmt.Printf("%s\n", resp.Json)
 ```
 
 When running a schema query for predicate `name`, the schema response is found in the `Json` field
@@ -548,9 +507,9 @@ q := `schema(pred: [name]) {
   lang
 }`
 
-res, err := txn.Query(ctx, q)
+resp, err := txn.Query(ctx, q)
 // Check error
-fmt.Printf("%s\n", res.Json)
+fmt.Printf("%s\n", resp.Json)
 ```
 
 ### Query with RDF response
@@ -570,12 +529,12 @@ const q = `
   }
 }
 `
-res, err := txn.QueryRDF(context.Background(), q)
+resp, err := txn.QueryRDF(context.Background(), q)
 // check error
 
 // <0x17> <name> "Alice" .
 // <0x17> <balance> 100 .
-fmt.Println(res.Rdf)
+fmt.Println(resp.Rdf)
 ```
 
 `txn.QueryRDFWithVars` is also available when you need to pass values for variables used in the

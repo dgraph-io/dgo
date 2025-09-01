@@ -8,7 +8,7 @@ package dgo
 import (
 	"context"
 
-	apiv2 "github.com/dgraph-io/dgo/v250/protos/api.v2"
+	api "github.com/dgraph-io/dgo/v250/protos/api"
 )
 
 // AllocateUIDs allocates a given number of Node UIDs in the Graph and returns a start and end UIDs,
@@ -17,13 +17,13 @@ import (
 // these UIDs are not allocated anywhere else throughout the operation of this cluster. This is useful
 // in bulk loader or live loader or similar applications.
 func (d *Dgraph) AllocateUIDs(ctx context.Context, howMany uint64) (uint64, uint64, error) {
-	return d.allocateIDs(ctx, howMany, apiv2.LeaseType_UID)
+	return d.allocateIDs(ctx, howMany, api.LeaseType_UID)
 }
 
 // AllocateTimestamps gets a sequence of timestamps allocated from Dgraph. These timestamps can be
 // used in bulk loader and similar applications.
 func (d *Dgraph) AllocateTimestamps(ctx context.Context, howMany uint64) (uint64, uint64, error) {
-	return d.allocateIDs(ctx, howMany, apiv2.LeaseType_TS)
+	return d.allocateIDs(ctx, howMany, api.LeaseType_TS)
 }
 
 // AllocateNamespaces allocates a given number of namespaces in the Graph and returns a start and end
@@ -31,14 +31,14 @@ func (d *Dgraph) AllocateTimestamps(ctx context.Context, howMany uint64) (uint64
 // Dgraph ensures that these namespaces are NOT allocated anywhere else throughout the operation of
 // this cluster. This is useful in bulk loader or live loader or similar applications.
 func (d *Dgraph) AllocateNamespaces(ctx context.Context, howMany uint64) (uint64, uint64, error) {
-	return d.allocateIDs(ctx, howMany, apiv2.LeaseType_NS)
+	return d.allocateIDs(ctx, howMany, api.LeaseType_NS)
 }
 
 func (d *Dgraph) allocateIDs(ctx context.Context, howMany uint64,
-	leaseType apiv2.LeaseType) (uint64, uint64, error) {
+	leaseType api.LeaseType) (uint64, uint64, error) {
 
-	req := &apiv2.AllocateIDsRequest{HowMany: howMany, LeaseType: leaseType}
-	resp, err := doWithRetryLogin(ctx, d, func(dc apiv2.DgraphClient) (*apiv2.AllocateIDsResponse, error) {
+	req := &api.AllocateIDsRequest{HowMany: howMany, LeaseType: leaseType}
+	resp, err := doWithRetryLogin(ctx, d, func(dc api.DgraphClient) (*api.AllocateIDsResponse, error) {
 		return dc.AllocateIDs(d.getContext(ctx), req)
 	})
 	if err != nil {
