@@ -31,7 +31,7 @@ service Dgraph {
   rpc ListNamespaces(ListNamespacesRequest) returns (ListNamespacesResponse) {}
 
   rpc UpdateExtSnapshotStreamingState(UpdateExtSnapshotStreamingStateRequest) returns (UpdateExtSnapshotStreamingStateResponse) {}
-  rpc StreamExtSnapshot(stream StreamExtSnapshotRequest) returns (stream StreamExtSnapshotResponse) {}
+  rpc StreamExtSnapshot(stream StreamExtSnapshotRequest) returns (StreamExtSnapshotResponse) {}
 }
 
 message PingRequest {}
@@ -178,9 +178,7 @@ message StreamExtSnapshotRequest {
   StreamPacket pkt = 3;
 }
 
-message StreamExtSnapshotResponse {
-  bool finish = 1;
-}
+message StreamExtSnapshotResponse {}
 
 message StreamPacket {
   bytes data = 1;
