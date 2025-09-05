@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   dgo-tests:
-    runs-on: warp-ubuntu-latest-x64-4x
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Dgraph repo
         uses: actions/checkout@v5
