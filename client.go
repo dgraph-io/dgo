@@ -23,7 +23,6 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/dgraph-io/dgo/v250/protos/api"
-	apiv2 "github.com/dgraph-io/dgo/v250/protos/api.v2"
 )
 
 const (
@@ -33,14 +32,10 @@ const (
 
 // Dgraph is a transaction-aware client to a Dgraph cluster.
 type Dgraph struct {
-	useV1 bool
-
 	jwtMutex sync.RWMutex
 	jwt      api.Jwt
-
-	conns []*grpc.ClientConn
-	dc    []api.DgraphClient
-	dcv2  []apiv2.DgraphClient
+	conns    []*grpc.ClientConn
+	dc       []api.DgraphClient
 }
 
 type authCreds struct {
@@ -65,18 +60,7 @@ func (a *authCreds) RequireTransportSecurity() bool {
 //
 // Deprecated: Use dgo.NewClient or dgo.Open instead.
 func NewDgraphClient(clients ...api.DgraphClient) *Dgraph {
-	dcv2 := make([]apiv2.DgraphClient, len(clients))
-	for i, client := range clients {
-		dcv2[i] = apiv2.NewDgraphClient(api.GetConn(client))
-	}
-
-	d := &Dgraph{useV1: true, dc: clients, dcv2: dcv2}
-
-	// we ignore the error here, because there is not much we can do about
-	// the error. We want to make best effort to figure out what API to use.
-	_ = d.ping()
-
-	return d
+	return &Dgraph{dc: clients}
 }
 
 // DialCloud creates a new TLS connection to a Dgraph Cloud backend
@@ -176,7 +160,7 @@ func (d *Dgraph) LoginIntoNamespace(ctx context.Context,
 //  2. Drop a predicate.
 //  3. Drop the database.
 //
-// Deprecated: use DropAllNamespaces, DropAll, DropData, DropPredicate, DropType, SetSchema instead.
+// Use DropAll, DropData, DropPredicate, DropType, SetSchema instead for better readability.
 func (d *Dgraph) Alter(ctx context.Context, op *api.Operation) error {
 	dc := d.anyClient()
 	_, err := dc.Alter(d.getContext(ctx), op)

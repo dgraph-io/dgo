@@ -24,6 +24,16 @@ service Dgraph {
 	rpc Alter (Operation)          returns (Payload) {}
 	rpc CommitOrAbort (TxnContext) returns (TxnContext) {}
 	rpc CheckVersion(Check)        returns (Version) {}
+
+	rpc RunDQL(RunDQLRequest) returns (Response) {}
+	rpc AllocateIDs(AllocateIDsRequest) returns (AllocateIDsResponse) {}
+
+	rpc UpdateExtSnapshotStreamingState(UpdateExtSnapshotStreamingStateRequest) returns (UpdateExtSnapshotStreamingStateResponse) {}
+	rpc StreamExtSnapshot(stream StreamExtSnapshotRequest) returns (StreamExtSnapshotResponse) {}
+
+	rpc CreateNamespace(CreateNamespaceRequest) returns (CreateNamespaceResponse) {}
+	rpc DropNamespace(DropNamespaceRequest) returns (DropNamespaceResponse) {}
+	rpc ListNamespaces(ListNamespacesRequest) returns (ListNamespacesResponse) {}
 }
 
 message Request {
@@ -190,6 +200,75 @@ message LoginRequest {
 message Jwt {
 	string access_jwt = 1;
 	string refresh_jwt = 2;
+}
+
+message RunDQLRequest {
+  string dql_query = 1;
+  map<string, string> vars = 2;
+  bool read_only = 3;
+  bool best_effort = 4;
+  Request.RespFormat resp_format = 5;
+}
+
+enum LeaseType {
+  NS = 0;
+  UID = 1;
+  TS = 2;
+}
+
+message AllocateIDsRequest {
+  uint64 how_many = 1;
+  LeaseType lease_type = 2;
+}
+
+message AllocateIDsResponse {
+  uint64 start = 1;
+  uint64 end = 2; // inclusive
+}
+
+message CreateNamespaceRequest {}
+
+message CreateNamespaceResponse {
+	uint64 namespace = 1;
+}
+
+message DropNamespaceRequest {
+	uint64 namespace = 1;
+}
+
+message DropNamespaceResponse {}
+
+message ListNamespacesRequest {}
+
+message ListNamespacesResponse {
+  map<uint64, Namespace> namespaces = 1;
+}
+
+message Namespace {
+  uint64 id = 1;
+}
+
+message UpdateExtSnapshotStreamingStateRequest {
+  bool start = 1;
+  bool finish = 2;
+  bool drop_data = 3;
+}
+
+message UpdateExtSnapshotStreamingStateResponse {
+  repeated uint32 groups = 1;
+}
+
+message StreamExtSnapshotRequest {
+  uint32 group_id = 1;
+  bool forward = 2;
+  StreamPacket pkt = 3;
+}
+
+message StreamExtSnapshotResponse {}
+
+message StreamPacket {
+  bytes data = 1;
+  bool done = 2;
 }
 
 // vim: noexpandtab sw=2 ts=2
