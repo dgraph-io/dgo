@@ -162,7 +162,7 @@ func (c *dgraphClient) StreamExtSnapshot(ctx context.Context, opts ...grpc.CallO
 
 type Dgraph_StreamExtSnapshotClient interface {
 	Send(*StreamExtSnapshotRequest) error
-	CloseAndRecv() (*StreamExtSnapshotResponse, error)
+	Recv() (*StreamExtSnapshotResponse, error)
 	grpc.ClientStream
 }
 
@@ -174,10 +174,7 @@ func (x *dgraphStreamExtSnapshotClient) Send(m *StreamExtSnapshotRequest) error 
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *dgraphStreamExtSnapshotClient) CloseAndRecv() (*StreamExtSnapshotResponse, error) {
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
+func (x *dgraphStreamExtSnapshotClient) Recv() (*StreamExtSnapshotResponse, error) {
 	m := new(StreamExtSnapshotResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -438,7 +435,7 @@ func _Dgraph_StreamExtSnapshot_Handler(srv interface{}, stream grpc.ServerStream
 }
 
 type Dgraph_StreamExtSnapshotServer interface {
-	SendAndClose(*StreamExtSnapshotResponse) error
+	Send(*StreamExtSnapshotResponse) error
 	Recv() (*StreamExtSnapshotRequest, error)
 	grpc.ServerStream
 }
@@ -447,7 +444,7 @@ type dgraphStreamExtSnapshotServer struct {
 	grpc.ServerStream
 }
 
-func (x *dgraphStreamExtSnapshotServer) SendAndClose(m *StreamExtSnapshotResponse) error {
+func (x *dgraphStreamExtSnapshotServer) Send(m *StreamExtSnapshotResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -569,6 +566,7 @@ var Dgraph_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "StreamExtSnapshot",
 			Handler:       _Dgraph_StreamExtSnapshot_Handler,
+			ServerStreams: true,
 			ClientStreams: true,
 		},
 	},
