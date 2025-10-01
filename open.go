@@ -169,8 +169,11 @@ func Open(connStr string) (*Dgraph, error) {
 	if apiKey != "" && bearerToken != "" {
 		return nil, errors.New("invalid connection string: both apikey and bearertoken cannot be provided")
 	}
-	if !strings.Contains(u.Host, ":") {
+	if len(strings.Split(u.Host, ":")) != 2 {
 		return nil, errors.New("invalid connection string: host url must have both host and port")
+	}
+	if strings.Split(u.Host, ":")[1] == "" {
+		return nil, errors.New("invalid connection string: missing port after port-separator colon")
 	}
 
 	opts := []ClientOption{}
@@ -255,6 +258,11 @@ func NewRoundRobinClient(endpoints []string, opts ...ClientOption) (*Dgraph, err
 			d.Close()
 			return nil, fmt.Errorf("failed to sign in user: %w", err)
 		}
+	}
+
+	if _, err := dc[0].CheckVersion(context.Background(), &api.Check{}); err != nil {
+		d.Close()
+		return nil, fmt.Errorf("failed to ping: %w", err)
 	}
 
 	return d, nil
