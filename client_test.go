@@ -35,7 +35,7 @@ func TestOpen(t *testing.T) {
 	require.ErrorContains(t, err, "invalid connection string: host url must have both host and port")
 
 	_, err = dgo.Open("dgraph://localhost:")
-	require.ErrorContains(t, err, "missing port after port-separator colon")
+	require.ErrorContains(t, err, "invalid connection string: missing port after port-separator colon")
 
 	_, err = dgo.Open("dgraph://localhost:9180?sslmode=verify-ca")
 	require.ErrorContains(t, err, "first record does not look like a TLS handshake")
@@ -77,7 +77,7 @@ func TestOpen(t *testing.T) {
 	require.ErrorContains(t, err, "invalid namespace ID: strconv.ParseUint: parsing \"root\": invalid syntax")
 
 	_, err = dgo.Open("dgraph://user:pass@localhost:9180?namespace=1")
-	require.NoError(t, err)
+	require.ErrorContains(t, err, "invalid username or password")
 
 	_, err = dgo.Open("dgraph://groot:password@localhost:9180")
 	require.NoError(t, err)
