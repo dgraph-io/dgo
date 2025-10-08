@@ -81,7 +81,7 @@ func WithSkipTLSVerify() ClientOption {
 	}
 }
 
-// WithSystemCertPool will use the system cert pool and setup a TLS connection with Dgraph cluster.
+// WithSystemCertPool will use the system cert pool and set up a TLS connection with Dgraph cluster.
 func WithSystemCertPool() ClientOption {
 	return func(o *clientOptions) error {
 		pool, err := x509.SystemCertPool()
@@ -104,7 +104,6 @@ func WithNamespace(nsID uint64) ClientOption {
 }
 
 // WithACLCreds will use the provided username and password for ACL authentication.
-// If namespace is not provided, it logs into the galaxy namespace.
 func WithACLCreds(username, password string) ClientOption {
 	return func(o *clientOptions) error {
 		o.username = username
@@ -219,7 +218,7 @@ func Open(connStr string) (*Dgraph, error) {
 }
 
 // NewClient creates a new Dgraph client for a single endpoint.
-// If ACL connection options are present, an login attempt is made
+// If ACL connection options are present, a login attempt is made
 // using the supplied credentials.
 func NewClient(endpoint string, opts ...ClientOption) (*Dgraph, error) {
 	return NewRoundRobinClient([]string{endpoint}, opts...)
@@ -227,7 +226,7 @@ func NewClient(endpoint string, opts ...ClientOption) (*Dgraph, error) {
 
 // NewRoundRobinClient creates a new Dgraph client for a list
 // of endpoints. It will round robin among the provided endpoints.
-// If ACL connection options are present, an login attempt is made
+// If ACL connection options are present, a login attempt is made
 // using the supplied credentials.
 func NewRoundRobinClient(endpoints []string, opts ...ClientOption) (*Dgraph, error) {
 	co := &clientOptions{}
