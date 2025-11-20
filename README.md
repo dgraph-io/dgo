@@ -8,7 +8,7 @@ Before using this client, we highly recommend that you go through [dgraph.io/tou
 [dgraph.io/docs]: https://dgraph.io/docs
 [dgraph.io/tour]: https://dgraph.io/tour
 
-**Use [Github Issues](https://github.com/hypermodeinc/dgo/issues) for reporting issues about this
+**Use [Github Issues](https://github.com/dgraph-io/dgo/issues) for reporting issues about this
 repository.**
 
 ## Table of contents
@@ -82,7 +82,7 @@ Some example connection strings:
 | dgraph://localhost:9080                                                                                      | Connect to localhost, no ACL, no TLS                                                |
 | dgraph://sally:supersecret@dg.example.com:443?sslmode=verify-ca                                              | Connect to remote server, use ACL and require TLS and a valid certificate from a CA |
 | dgraph://foo-bar.grpc.us-west-2.aws.cloud.dgraph.io:443?sslmode=verify-ca&apikey=\<your-api-connection-key\> | Connect to a Dgraph Cloud cluster                                                   |
-| dgraph://foo-bar.grpc.hypermode.com?sslmode=verify-ca&bearertoken=\<some access token\>                      | Connect to a Dgraph cluster protected by a secure gateway                           |
+| dgraph://foo-bar.grpc.example.com?sslmode=verify-ca&bearertoken=\<some access token\>                        | Connect to a Dgraph cluster protected by a secure gateway                           |
 
 Using the `Open` function with a connection string:
 

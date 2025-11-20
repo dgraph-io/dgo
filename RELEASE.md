@@ -24,7 +24,7 @@
    path is `"github.com/dgraph-io/dgo/v200"`. When we release v201.07.0, we would replace the import
    paths to `"github.com/dgraph-io/dgo/v201"`.
 
-3. Update [Supported Version](https://github.com/hypermodeinc/dgo/#supported-versions).
+3. Update [Supported Version](https://github.com/dgraph-io/dgo/#supported-versions).
 
 4. Commit all the changes and get them merged to master branch.
 

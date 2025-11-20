@@ -24,13 +24,13 @@ jobs:
         uses: actions/checkout@v5
         with:
           path: dgraph
-          repository: hypermodeinc/dgraph
+          repository: dgraph-io/dgraph
           ref: main
       - name: Checkout Dgo repo
         uses: actions/checkout@v5
         with:
           path: dgo
-          repository: hypermodeinc/dgo
+          repository: dgraph-io/dgo
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
