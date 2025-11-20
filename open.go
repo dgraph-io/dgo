@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: © Hypermode Inc. <hello@hypermode.com>
+ * SPDX-FileCopyrightText: © 2017-2025 Istari Digital, Inc.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -67,7 +67,6 @@ func WithDgraphAPIKey(apiKey string) ClientOption {
 
 // WithBearerToken uses the provided token and presents it as a Bearer Token
 // in the HTTP Authorization header for authentication against a Dgraph Cluster.
-// This can be used to connect to Hypermode Cloud.
 func WithBearerToken(token string) ClientOption {
 	return func(o *clientOptions) error {
 		o.gopts = append(o.gopts, grpc.WithPerRPCCredentials(&bearerCreds{token: token}))
