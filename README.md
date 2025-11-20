@@ -143,7 +143,7 @@ sch := `
   email: string @index(exact) @unique .
   age: int .
 `
-err := client.SetSchema(context.TODO(), dgo.RootNamespace, sch)
+err := client.SetSchema(context.TODO(), sch)
 // Handle error
 ```
 
@@ -159,7 +159,7 @@ mutationDQL := `{
     _:alice <age> "29" .
   }
 }`
-resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, mutationDQL)
+resp, err := client.RunDQL(context.TODO(), mutationDQL)
 // Handle error
 // Print map of blank UIDs
 fmt.Printf("%+v\n", resp.Uids)
@@ -177,7 +177,7 @@ queryDQL := `{
     age
   }
 }`
-resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL)
+resp, err := client.RunDQL(context.TODO(), queryDQL)
 // Handle error
 fmt.Printf("%s\n", resp.Json)
 ```
@@ -195,7 +195,7 @@ queryDQL = `query Alice($name: string) {
   }
 }`
 vars := map[string]string{"$name": "Alice"}
-resp, err := client.RunDQLWithVars(context.TODO(), dgo.RootNamespace, queryDQL, vars)
+resp, err := client.RunDQLWithVars(context.TODO(), queryDQL, vars)
 // Handle error
 fmt.Printf("%s\n", resp.Json)
 ```
@@ -212,7 +212,7 @@ queryDQL := `{
     age
   }
 }`
-resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL, dgo.WithBestEffort())
+resp, err := client.RunDQL(context.TODO(), queryDQL, dgo.WithBestEffort())
 // Handle error
 fmt.Printf("%s\n", resp.Json)
 ```
@@ -229,7 +229,7 @@ queryDQL := `{
     age
   }
 }`
-resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL, dgo.WithReadOnly())
+resp, err := client.RunDQL(context.TODO(), queryDQL, dgo.WithReadOnly())
 // Handle error
 fmt.Printf("%s\n", resp.Json)
 ```
@@ -246,7 +246,7 @@ queryDQL := `{
     age
   }
 }`
-resp, err = client.RunDQL(context.TODO(), dgo.RootNamespace, queryDQL, dgo.WithResponseFormat(api_v2.RespFormat_RDF))
+resp, err = client.RunDQL(context.TODO(), queryDQL, dgo.WithResponseFormat(api_v2.RespFormat_RDF))
 // Handle error
 fmt.Printf("%s\n", resp.Rdf)
 ```
@@ -267,7 +267,7 @@ upsertQuery := `upsert {
     }
   }
 }`
-resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, upsertQuery)
+resp, err := client.RunDQL(context.TODO(), upsertQuery)
 // Handle error
 fmt.Printf("%s\n", resp.Json)
 fmt.Printf("%+v\n", resp.Uids)
@@ -287,7 +287,7 @@ upsertQuery := `upsert {
     }
   }
 }`
-resp, err := client.RunDQL(context.TODO(), dgo.RootNamespace, upsertQuery)
+resp, err := client.RunDQL(context.TODO(), upsertQuery)
 // Handle error
 fmt.Printf("%s\n", resp.Json)
 ```
@@ -306,7 +306,7 @@ _, err := client.CreateNamespace(context.TODO())
 To drop a namespace:
 
 ```go
-_, err := client.DropNamespace(context.TODO())
+err := client.DropNamespace(context.TODO())
 // Handle error
 ```
 
@@ -514,7 +514,7 @@ fmt.Printf("%s\n", resp.Json)
 
 ### Query with RDF response
 
-You can get query result as a RDF response by calling `txn.QueryRDF`. The response would contain a
+You can get query result as an RDF response by calling `txn.QueryRDF`. The response would contain a
 `Rdf` field, which has the RDF encoded result.
 
 **Note:** If you are querying only for `uid` values, use a JSON format response.
