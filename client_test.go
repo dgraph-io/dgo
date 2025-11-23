@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/dgo/v250"
-	api "github.com/dgraph-io/dgo/v250/protos/api"
+	"github.com/dgraph-io/dgo/v250/protos/api"
 
 	"github.com/stretchr/testify/require"
 )
@@ -178,6 +178,23 @@ func TestREADME(t *testing.T) {
 	resp, err = client.RunDQL(ctx, mutationDQL)
 	require.NoError(t, err)
 	require.Empty(t, resp.Uids)
+	resp, err = client.RunDQL(ctx, queryDQL, dgo.WithReadOnly())
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(resp.Json, &m))
+	require.Equal(t, m["alice"][0].Name, "Alice")
+	require.Equal(t, m["alice"][0].Email, "alice@example.com")
+	require.Equal(t, m["alice"][0].Age, 29)
+
+	// JSON Response, check that we can execute the JSON received from query response
+	// DQL with JSON Data format should be valid as per https://docs.hypermode.com/dgraph/dql/json
+	jsonBytes, marshallErr := json.Marshal(m["alice"])
+	require.NoError(t, marshallErr)
+	mutationDQL = fmt.Sprintf(`{
+		"set": %s
+	  }`, jsonBytes)
+	resp, err = client.RunDQL(ctx, mutationDQL)
+	require.NoError(t, err)
+	require.NotEmpty(t, resp.Uids["alice"])
 	resp, err = client.RunDQL(ctx, queryDQL, dgo.WithReadOnly())
 	require.NoError(t, err)
 	require.NoError(t, json.Unmarshal(resp.Json, &m))
