@@ -297,7 +297,7 @@ fmt.Printf("%s\n", resp.Json)
 Dgraph v25 supports creating namespaces using grpc API. You can create one using the dgo client.
 
 ```go
-_, err := client.CreateNamespace(context.TODO())
+nsID, err := client.CreateNamespace(context.TODO())
 // Handle error
 ```
 
@@ -306,7 +306,7 @@ _, err := client.CreateNamespace(context.TODO())
 To drop a namespace:
 
 ```go
-err := client.DropNamespace(context.TODO())
+err := client.DropNamespace(context.TODO(), nsID)
 // Handle error
 ```
 
