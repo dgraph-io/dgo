@@ -73,6 +73,9 @@ func TestOpen(t *testing.T) {
 	_, err = dgo.Open("dgraph://user:pass@localhost:9180")
 	require.ErrorContains(t, err, "invalid username or password")
 
+	_, err = dgo.Open("dgraph://localhost:9180?namespace=1")
+	require.ErrorContains(t, err, "invalid connection string: both username and password must be provided for namespace")
+
 	_, err = dgo.Open("dgraph://user:pass@localhost:9180?namespace=root")
 	require.ErrorContains(t, err, "invalid namespace ID: strconv.ParseUint: parsing \"root\": invalid syntax")
 
