@@ -28,7 +28,7 @@ lint:
         - protos/api.v2/*.pb.go
   enabled:
     - golangci-lint2@2.4.0
-    - trivy@0.65.0
+    - trivy@0.71.2
     - renovate@41.93.2
     - actionlint@1.7.7
     - checkov@3.2.469
