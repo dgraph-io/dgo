@@ -34,7 +34,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: dgo/go.mod
+          # Build target is dgraph, so install the Go version dgraph requires
+          # (dgo/go.mod can lag behind dgraph's required toolchain).
+          go-version-file: dgraph/go.mod
       - name: Make Linux Build and Docker Image
         run: cd dgraph && make docker-image
       - name: Move dgraph binary to gopath
