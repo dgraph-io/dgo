@@ -71,18 +71,18 @@ Valid connection string args:
 
 | Arg         | Value                           | Description                                                                                                                                                   |
 | ----------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| apikey      | \<key\>                         | a Dgraph Cloud API Key                                                                                                                                        |
 | bearertoken | \<token\>                       | an access token                                                                                                                                               |
 | sslmode     | disable \| require \| verify-ca | TLS option, the default is `disable`. If `verify-ca` is set, the TLS certificate configured in the Dgraph cluster must be from a valid certificate authority. |
+| namespace   | \<namespace\>                   | a previously created integer-based namespace, username and password must be supplied                                                                          |
 
 Some example connection strings:
 
-| Value                                                                                                        | Explanation                                                                         |
-| ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| dgraph://localhost:9080                                                                                      | Connect to localhost, no ACL, no TLS                                                |
-| dgraph://sally:supersecret@dg.example.com:443?sslmode=verify-ca                                              | Connect to remote server, use ACL and require TLS and a valid certificate from a CA |
-| dgraph://foo-bar.grpc.us-west-2.aws.cloud.dgraph.io:443?sslmode=verify-ca&apikey=\<your-api-connection-key\> | Connect to a Dgraph Cloud cluster                                                   |
-| dgraph://foo-bar.grpc.example.com?sslmode=verify-ca&bearertoken=\<some access token\>                        | Connect to a Dgraph cluster protected by a secure gateway                           |
+| Value                                                                                 | Explanation                                                                         |
+| ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| dgraph://localhost:9080                                                               | Connect to localhost, no ACL, no TLS                                                |
+| dgraph://sally:supersecret@dg.example.com:443?sslmode=verify-ca                       | Connect to remote server, use ACL and require TLS and a valid certificate from a CA |
+| dgraph://foo-bar.grpc.example.com?sslmode=verify-ca&bearertoken=\<some access token\> | Connect to a Dgraph cluster protected by a secure gateway                           |
+| dgraph://sally:supersecret@dg.example.com:443?namespace=2                             | Connect to a ACL enabled Dgraph cluster in namespace 2                              |
 
 Using the `Open` function with a connection string:
 
@@ -297,7 +297,7 @@ fmt.Printf("%s\n", resp.Json)
 Dgraph v25 supports creating namespaces using grpc API. You can create one using the dgo client.
 
 ```go
-_, err := client.CreateNamespace(context.TODO())
+nsID, err := client.CreateNamespace(context.TODO())
 // Handle error
 ```
 
@@ -306,7 +306,7 @@ _, err := client.CreateNamespace(context.TODO())
 To drop a namespace:
 
 ```go
-err := client.DropNamespace(context.TODO())
+err := client.DropNamespace(context.TODO(), nsID)
 // Handle error
 ```
 

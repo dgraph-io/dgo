@@ -135,8 +135,9 @@ func WithGrpcOption(opt grpc.DialOption) ClientOption {
 // For example `dgraph://localhost:9080?sslmode=require`
 //
 // Parameters:
-// - apikey: a Dgraph Cloud API key for authentication
-// - bearertoken: a token for bearer authentication
+// - apikey: a Dgraph Cloud API key for authentication (deprecated)
+// - bearertoken: a token for bearer authentication (deprecated)
+// - namespace: a previously created integer-based namespace ID, login credentials must be provided
 // - sslmode: SSL connection mode (options: disable, require, verify-ca)
 //   - disable: No TLS (default)
 //   - require: Use TLS but skip certificate verification
@@ -198,6 +199,9 @@ func Open(connStr string) (*Dgraph, error) {
 	}
 
 	if nsID != "" {
+		if u.User == nil {
+			return nil, errors.New("invalid connection string: both username and password must be provided for namespace")
+		}
 		nsID, err := strconv.ParseUint(nsID, 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("invalid namespace ID: %w", err)
