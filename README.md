@@ -611,8 +611,26 @@ txn := dgraphClient.NewTxn()
 // Perform some queries and mutations.
 
 err := txn.Commit(ctx)
-if err == y.ErrAborted {
+if errors.Is(err, dgo.ErrAborted) {
   // Retry or handle error
+}
+```
+
+An aborted transaction returns a `*dgo.AbortedError`, which wraps `dgo.ErrAborted`. Test for it with
+`errors.Is`; comparing with `==` does not match. Its `Reason` field says why the server aborted the
+transaction, so you can choose how to retry:
+
+```go
+var ae *dgo.AbortedError
+if errors.As(err, &ae) {
+  switch ae.Reason {
+  case dgo.AbortReasonPredicateMove:
+    // A predicate is moving between groups. Back off, then retry with a new transaction.
+  case dgo.AbortReasonConflict, dgo.AbortReasonStaleStartTs:
+    // Retry with a new transaction.
+  default: // dgo.AbortReasonUnknown
+    // Older server, or a cause the server does not categorize. ae.Error() has the details.
+  }
 }
 ```
 

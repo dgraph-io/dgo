@@ -23,7 +23,8 @@ var (
 	ErrFinished = errors.New("Transaction has already been committed or discarded")
 	// ErrReadOnly is returned when a write/update is performed on a readonly transaction
 	ErrReadOnly = errors.New("Readonly transaction cannot run mutations or be committed")
-	// ErrAborted is returned when an operation is performed on an aborted transaction.
+	// ErrAborted is matched by every abort the server reports. Transactions return an
+	// *AbortedError wrapping it, so test with errors.Is(err, ErrAborted) rather than ==.
 	ErrAborted = errors.New("Transaction has been aborted. Please retry")
 )
 
@@ -207,7 +208,7 @@ func (txn *Txn) Do(ctx context.Context, req *api.Request) (*api.Response, error)
 		// If the transaction was aborted, return the right error
 		// so the caller can handle it.
 		if s, ok := status.FromError(err); ok && s.Code() == codes.Aborted {
-			err = ErrAborted
+			err = newAbortedError(s.Message())
 		}
 	}
 
@@ -217,8 +218,9 @@ func (txn *Txn) Do(ctx context.Context, req *api.Request) (*api.Response, error)
 // Commit commits any mutations that have been made in the transaction.
 // Once Commit has been called, the lifespan of the transaction is complete.
 //
-// Errors could be returned for various reasons. Notably, ErrAborted could be
-// returned if transactions that modify the same data are being run concurrently.
+// Errors could be returned for various reasons. Notably, an *AbortedError (for which
+// errors.Is(err, ErrAborted) is true) could be returned if transactions that modify
+// the same data are being run concurrently. Its Reason says why the server aborted.
 // It's up to the user to decide if they wish to retry.
 // In this case, the user should create a new transaction.
 func (txn *Txn) Commit(ctx context.Context) error {
@@ -231,7 +233,7 @@ func (txn *Txn) Commit(ctx context.Context) error {
 
 	err := txn.commitOrAbort(ctx)
 	if s, ok := status.FromError(err); ok && s.Code() == codes.Aborted {
-		err = ErrAborted
+		err = newAbortedError(s.Message())
 	}
 
 	return err
