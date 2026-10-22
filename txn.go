@@ -23,8 +23,9 @@ var (
 	ErrFinished = errors.New("Transaction has already been committed or discarded")
 	// ErrReadOnly is returned when a write/update is performed on a readonly transaction
 	ErrReadOnly = errors.New("Readonly transaction cannot run mutations or be committed")
-	// ErrAborted is matched by every abort the server reports. Transactions return an
-	// *AbortedError wrapping it, so test with errors.Is(err, ErrAborted) rather than ==.
+	// ErrAborted is returned when the server aborts a transaction. Commit, and Mutate or Do
+	// with mutations, return an *AbortedError wrapping it, so test with
+	// errors.Is(err, ErrAborted) rather than ==.
 	ErrAborted = errors.New("Transaction has been aborted. Please retry")
 )
 

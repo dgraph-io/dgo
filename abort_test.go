@@ -11,23 +11,28 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestParseAbortReason(t *testing.T) {
 	cases := map[string]AbortReason{
-		"conflict: Transaction has been aborted. Please retry":                        AbortReasonConflict,
-		"predicate-move: Commits on predicate name are blocked due to predicate move": AbortReasonPredicateMove,
+		"conflict: Transaction has been aborted. Please retry": AbortReasonConflict,
+		"predicate-move: Transaction has been aborted. Please retry. Commits on predicate name are " +
+			"blocked due to predicate move": AbortReasonPredicateMove,
 		// The detail can contain colons of its own; only the first one delimits the category.
-		"predicate-move: Mutation done in group: 1. Predicate name assigned to 2": AbortReasonPredicateMove,
-		"stale-startts: Transaction start timestamp is older than ...":            AbortReasonStaleStartTs,
+		"predicate-move: Transaction has been aborted. Please retry. Mutation done in group: 1. " +
+			"Predicate name assigned to 2": AbortReasonPredicateMove,
+		"stale-startts: Transaction has been aborted. Please retry. Its start timestamp is older " +
+			"than ...": AbortReasonStaleStartTs,
 		"  CONFLICT : detail": AbortReasonConflict,
 		"conflict":            AbortReasonConflict,
 
 		// A server without abort reasons, or a cause the server leaves uncategorized.
-		"Transaction has been aborted. Please retry": AbortReasonUnknown,
-		"Tablet for name is nil":                     AbortReasonUnknown,
-		"context deadline exceeded":                  AbortReasonUnknown,
-		"":                                           AbortReasonUnknown,
+		"Transaction has been aborted. Please retry":                            AbortReasonUnknown,
+		"Transaction has been aborted. Please retry. Tablet for name is nil":    AbortReasonUnknown,
+		"Transaction has been aborted. Please retry. context deadline exceeded": AbortReasonUnknown,
+		"": AbortReasonUnknown,
 		// A category this client does not know about yet.
 		"predicate-unavailable: something": AbortReasonUnknown,
 	}
@@ -37,7 +42,8 @@ func TestParseAbortReason(t *testing.T) {
 }
 
 func TestAbortedError(t *testing.T) {
-	const msg = "predicate-move: Commits on predicate name are blocked due to predicate move"
+	const msg = "predicate-move: Transaction has been aborted. Please retry. Commits on predicate name " +
+		"are blocked due to predicate move"
 	var err error = fmt.Errorf("committing: %w", newAbortedError(msg))
 
 	require.ErrorIs(t, err, ErrAborted)
@@ -48,6 +54,9 @@ func TestAbortedError(t *testing.T) {
 	require.Equal(t, AbortReasonPredicateMove, ae.Reason)
 	require.Equal(t, msg, ae.Message)
 	require.Equal(t, msg, ae.Error(), "Error returns the server's message verbatim")
+
+	require.Equal(t, codes.Aborted, status.Code(err), "status.Code sees through the wrapping")
+	require.Equal(t, msg, status.Convert(errors.Unwrap(err)).Message())
 
 	// No message from the server falls back to the legacy text.
 	require.Equal(t, ErrAborted.Error(), newAbortedError("").Error())

@@ -7,6 +7,9 @@ package dgo
 
 import (
 	"strings"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // AbortReason is the category of a transaction abort, as reported by the Dgraph server.
@@ -66,6 +69,12 @@ func (e *AbortedError) Error() string {
 // Unwrap returns ErrAborted, so that errors.Is(err, ErrAborted) holds for every abort.
 func (e *AbortedError) Unwrap() error {
 	return ErrAborted
+}
+
+// GRPCStatus reports the abort as the codes.Aborted status the server sent, so status.Code(err)
+// and status.Convert(err) see an abort rather than codes.Unknown.
+func (e *AbortedError) GRPCStatus() *status.Status {
+	return status.New(codes.Aborted, e.Error())
 }
 
 // newAbortedError builds the error returned for a server-side abort from the gRPC status message.
