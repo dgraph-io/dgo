@@ -104,5 +104,15 @@ func TestTxnErrAborted(t *testing.T) {
 
 	err = txn1.Commit(ctx1)
 	require.NoError(t, err)
-	require.Error(t, txn2.Commit(ctx2), dgo.ErrAborted, "2nd transaction should have aborted")
+	err = txn2.Commit(ctx2)
+	require.ErrorIs(t, err, dgo.ErrAborted, "2nd transaction should have aborted")
+
+	var ae *dgo.AbortedError
+	require.ErrorAs(t, err, &ae)
+	t.Logf("abort reason %q: %s", ae.Reason, ae.Message)
+	// A server that reports abort reasons calls this a conflict; an older one reports none.
+	require.Contains(t, []dgo.AbortReason{dgo.AbortReasonConflict, dgo.AbortReasonUnknown}, ae.Reason,
+		"unexpected abort reason for %q", ae.Message)
+	require.Contains(t, ae.Error(), dgo.ErrAborted.Error(),
+		"a conflict abort keeps the legacy sentence in its message")
 }
