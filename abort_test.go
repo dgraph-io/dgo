@@ -44,7 +44,7 @@ func TestParseAbortReason(t *testing.T) {
 func TestAbortedError(t *testing.T) {
 	const msg = "predicate-move: Transaction has been aborted. Please retry. Commits on predicate name " +
 		"are blocked due to predicate move"
-	var err error = fmt.Errorf("committing: %w", newAbortedError(msg))
+	err := fmt.Errorf("committing: %w", newAbortedError(msg))
 
 	require.ErrorIs(t, err, ErrAborted)
 	require.False(t, errors.Is(err, ErrFinished))
